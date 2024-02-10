@@ -8,6 +8,13 @@ import (
 func CreateRouter() *gin.Engine {
 	router := gin.Default()
 
+	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
+
+	router.POST("/dbs/:databaseId/colls/:collId/docs", handlers.DocumentsPost)
+	router.GET("/dbs/:databaseId/colls/:collId/docs", handlers.GetAllDocuments)
+	router.GET("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.GetDocument)
+	router.DELETE("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.DeleteDocument)
+
 	router.POST("/dbs/:databaseId/colls", handlers.CreateCollection)
 	router.GET("/dbs/:databaseId/colls", handlers.GetAllCollections)
 	router.GET("/dbs/:databaseId/colls/:collId", handlers.GetCollection)

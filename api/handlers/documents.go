@@ -4,28 +4,31 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/repositories"
 )
 
-func GetAllCollections(c *gin.Context) {
+func GetAllDocuments(c *gin.Context) {
 	databaseId := c.Param("databaseId")
+	collectionId := c.Param("collId")
 
-	collections, status := repositories.GetAllCollections(databaseId)
+	documents, status := repositories.GetAllDocuments(databaseId, collectionId)
 	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "DocumentCollections": collections, "_count": len(collections)})
+		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Documents": documents, "_count": len(documents)})
 		return
 	}
 
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func GetCollection(c *gin.Context) {
+func GetDocument(c *gin.Context) {
 	databaseId := c.Param("databaseId")
-	id := c.Param("collId")
+	collectionId := c.Param("collId")
+	documentId := c.Param("docId")
 
-	collection, status := repositories.GetCollection(databaseId, id)
+	document, status := repositories.GetDocument(databaseId, collectionId, documentId)
 	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusOK, collection)
+		c.IndentedJSON(http.StatusOK, document)
 		return
 	}
 
@@ -37,11 +40,12 @@ func GetCollection(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func DeleteCollection(c *gin.Context) {
+func DeleteDocument(c *gin.Context) {
 	databaseId := c.Param("databaseId")
-	id := c.Param("collId")
+	collectionId := c.Param("collId")
+	documentId := c.Param("docId")
 
-	status := repositories.DeleteCollection(databaseId, id)
+	status := repositories.DeleteDocument(databaseId, collectionId, documentId)
 	if status == repositories.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
@@ -55,28 +59,41 @@ func DeleteCollection(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func CreateCollection(c *gin.Context) {
+func DocumentsPost(c *gin.Context) {
 	databaseId := c.Param("databaseId")
-	var newCollection repositories.Collection
+	collectionId := c.Param("collId")
 
-	if err := c.BindJSON(&newCollection); err != nil {
+	var requestBody map[string]interface{}
+	if err := c.BindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
-	if newCollection.ID == "" {
+	query := requestBody["query"]
+	if query != nil {
+		if c.GetHeader("x-ms-cosmos-is-query-plan-request") != "" {
+			c.IndentedJSON(http.StatusOK, constants.QueryPlanResponse)
+			return
+		}
+
+		// TODO: Handle these {"query":"select c.id, c._self, c._rid, c._ts, [c[\"pk\"]] as _partitionKeyValue from c"}
+		GetAllDocuments(c)
+		return
+	}
+
+	if requestBody["id"] == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
 		return
 	}
 
-	status := repositories.CreateCollection(databaseId, newCollection)
+	status := repositories.CreateDocument(databaseId, collectionId, requestBody)
 	if status == repositories.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
 	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusCreated, newCollection)
+		c.IndentedJSON(http.StatusCreated, requestBody)
 		return
 	}
 

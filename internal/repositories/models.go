@@ -10,6 +10,7 @@ const (
 	StatusOk       = 1
 	StatusNotFound = 2
 	Conflict       = 3
+	BadRequest     = 4
 )
 
 type Collection struct {
@@ -85,4 +86,21 @@ type Trigger struct {
 		databaseId   string
 		collectionId string
 	}
+}
+
+type Document map[string]interface{}
+
+type PartitionKeyRange struct {
+	Rid                string `json:"_rid"`
+	ID                 string `json:"id"`
+	Etag               string `json:"_etag"`
+	MinInclusive       string `json:"minInclusive"`
+	MaxExclusive       string `json:"maxExclusive"`
+	RidPrefix          int    `json:"ridPrefix"`
+	Self               string `json:"_self"`
+	ThroughputFraction int    `json:"throughputFraction"`
+	Status             string `json:"status"`
+	Parents            []any  `json:"parents"`
+	Ts                 int    `json:"_ts"`
+	Lsn                int    `json:"lsn"`
 }

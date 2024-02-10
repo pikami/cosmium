@@ -3,13 +3,13 @@ package repositories
 var triggers = []Trigger{}
 
 func GetAllTriggers(databaseId string, collectionId string) ([]Trigger, RepositoryStatus) {
-	sps := make([]Trigger, 0)
+	filteredTriggers := make([]Trigger, 0)
 
 	for _, coll := range triggers {
 		if coll.internals.databaseId == databaseId && coll.internals.collectionId == collectionId {
-			sps = append(sps, coll)
+			filteredTriggers = append(filteredTriggers, coll)
 		}
 	}
 
-	return sps, StatusOk
+	return filteredTriggers, StatusOk
 }

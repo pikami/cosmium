@@ -10,7 +10,7 @@ import (
 func GetAllDatabases(c *gin.Context) {
 	databases, status := repositories.GetAllDatabases()
 	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Databases": databases})
+		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Databases": databases, "_count": len(databases)})
 		return
 	}
 
