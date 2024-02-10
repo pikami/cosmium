@@ -45,6 +45,9 @@ func CreateCollection(databaseId string, newCollection Collection) RepositorySta
 		}
 	}
 
+	newCollection.internals = struct{ databaseId string }{
+		databaseId: databaseId,
+	}
 	collections = append(collections, newCollection)
 	return StatusOk
 }
