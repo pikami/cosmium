@@ -45,3 +45,44 @@ type Collection struct {
 		databaseId string
 	}
 }
+
+type UserDefinedFunction struct {
+	Body      string `json:"body"`
+	ID        string `json:"id"`
+	Rid       string `json:"_rid"`
+	Ts        int    `json:"_ts"`
+	Self      string `json:"_self"`
+	Etag      string `json:"_etag"`
+	internals struct {
+		databaseId   string
+		collectionId string
+	}
+}
+
+type StoredProcedure struct {
+	Body      string `json:"body"`
+	ID        string `json:"id"`
+	Rid       string `json:"_rid"`
+	Ts        int    `json:"_ts"`
+	Self      string `json:"_self"`
+	Etag      string `json:"_etag"`
+	internals struct {
+		databaseId   string
+		collectionId string
+	}
+}
+
+type Trigger struct {
+	Body             string `json:"body"`
+	ID               string `json:"id"`
+	TriggerOperation string `json:"triggerOperation"`
+	TriggerType      string `json:"triggerType"`
+	Rid              string `json:"_rid"`
+	Ts               int    `json:"_ts"`
+	Self             string `json:"_self"`
+	Etag             string `json:"_etag"`
+	internals        struct {
+		databaseId   string
+		collectionId string
+	}
+}

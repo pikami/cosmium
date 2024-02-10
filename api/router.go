@@ -18,6 +18,11 @@ func CreateRouter() *gin.Engine {
 	router.GET("/dbs/:databaseId", handlers.GetDatabase)
 	router.DELETE("/dbs/:databaseId", handlers.DeleteDatabase)
 
+	router.GET("/dbs/:databaseId/colls/:collId/udfs", handlers.GetAllUserDefinedFunctions)
+	router.GET("/dbs/:databaseId/colls/:collId/sprocs", handlers.GetAllStoredProcedures)
+	router.GET("/dbs/:databaseId/colls/:collId/triggers", handlers.GetAllTriggers)
+
+	router.GET("/offers", handlers.GetOffers)
 	router.GET("/", handlers.GetServerInfo)
 
 	return router

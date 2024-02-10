@@ -6,7 +6,7 @@ var collections = []Collection{
 }
 
 func GetAllCollections(databaseId string) ([]Collection, RepositoryStatus) {
-	var dbCollections []Collection
+	dbCollections := make([]Collection, 0)
 
 	for _, coll := range collections {
 		if coll.internals.databaseId == databaseId {
