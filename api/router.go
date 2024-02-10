@@ -8,10 +8,16 @@ import (
 func CreateRouter() *gin.Engine {
 	router := gin.Default()
 
-	router.GET("/dbs/:id", handlers.GetDatabase)
-	router.DELETE("/dbs/:id", handlers.DeleteDatabase)
-	router.GET("/dbs", handlers.GetAllDatabases)
+	router.POST("/dbs/:databaseId/colls", handlers.CreateCollection)
+	router.GET("/dbs/:databaseId/colls", handlers.GetAllCollections)
+	router.GET("/dbs/:databaseId/colls/:collId", handlers.GetCollection)
+	router.DELETE("/dbs/:databaseId/colls/:collId", handlers.DeleteCollection)
+
 	router.POST("/dbs", handlers.CreateDatabase)
+	router.GET("/dbs", handlers.GetAllDatabases)
+	router.GET("/dbs/:databaseId", handlers.GetDatabase)
+	router.DELETE("/dbs/:databaseId", handlers.DeleteDatabase)
+
 	router.GET("/", handlers.GetServerInfo)
 
 	return router

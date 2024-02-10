@@ -7,22 +7,25 @@ import (
 	"github.com/pikami/cosmium/internal/repositories"
 )
 
-func GetAllDatabases(c *gin.Context) {
-	databases, status := repositories.GetAllDatabases()
+func GetAllCollections(c *gin.Context) {
+	databaseId := c.Param("databaseId")
+
+	collections, status := repositories.GetAllCollections(databaseId)
 	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Databases": databases})
+		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "DocumentCollections": collections})
 		return
 	}
 
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func GetDatabase(c *gin.Context) {
-	id := c.Param("databaseId")
+func GetCollection(c *gin.Context) {
+	databaseId := c.Param("databaseId")
+	id := c.Param("collId")
 
-	database, status := repositories.GetDatabase(id)
+	collection, status := repositories.GetCollection(databaseId, id)
 	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusOK, database)
+		c.IndentedJSON(http.StatusOK, collection)
 		return
 	}
 
@@ -34,10 +37,11 @@ func GetDatabase(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func DeleteDatabase(c *gin.Context) {
-	id := c.Param("databaseId")
+func DeleteCollection(c *gin.Context) {
+	databaseId := c.Param("databaseId")
+	id := c.Param("collId")
 
-	status := repositories.DeleteDatabase(id)
+	status := repositories.DeleteCollection(databaseId, id)
 	if status == repositories.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
@@ -51,27 +55,28 @@ func DeleteDatabase(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func CreateDatabase(c *gin.Context) {
-	var newDatabase repositories.Database
+func CreateCollection(c *gin.Context) {
+	databaseId := c.Param("databaseId")
+	var newCollection repositories.Collection
 
-	if err := c.BindJSON(&newDatabase); err != nil {
+	if err := c.BindJSON(&newCollection); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
-	if newDatabase.ID == "" {
+	if newCollection.ID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
 		return
 	}
 
-	status := repositories.CreateDatabase(newDatabase)
+	status := repositories.CreateCollection(databaseId, newCollection)
 	if status == repositories.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
 	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusCreated, newDatabase)
+		c.IndentedJSON(http.StatusCreated, newCollection)
 		return
 	}
 
