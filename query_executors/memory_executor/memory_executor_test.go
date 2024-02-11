@@ -17,7 +17,7 @@ func testQueryExecute(
 	result := memoryexecutor.Execute(query, data)
 
 	if !reflect.DeepEqual(result, expectedData) {
-		t.Errorf("parsed query does not match expected structure.\nExpected: %+v\nGot: %+v", expectedData, result)
+		t.Errorf("execution result does not match expected data.\nExpected: %+v\nGot: %+v", expectedData, result)
 	}
 }
 

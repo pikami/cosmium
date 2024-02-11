@@ -77,7 +77,14 @@ func DocumentsPost(c *gin.Context) {
 		}
 
 		// TODO: Handle these {"query":"select c.id, c._self, c._rid, c._ts, [c[\"pk\"]] as _partitionKeyValue from c"}
-		GetAllDocuments(c)
+		docs, status := repositories.ExecuteQueryDocuments(databaseId, collectionId, query.(string))
+		if status != repositories.StatusOk {
+			// TODO: Currently we return everything if the query fails
+			GetAllDocuments(c)
+			return
+		}
+
+		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Documents": docs, "_count": len(docs)})
 		return
 	}
 

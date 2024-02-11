@@ -8,7 +8,7 @@ type RowType interface{}
 type ExpressionType interface{}
 
 func Execute(query parsers.SelectStmt, data []RowType) []RowType {
-	var result []RowType
+	result := make([]RowType, 0)
 
 	// Iterate over each row in the data
 	for _, row := range data {

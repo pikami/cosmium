@@ -1,6 +1,13 @@
 package repositories
 
-import "strings"
+import (
+	"log"
+	"strings"
+
+	"github.com/pikami/cosmium/parsers"
+	"github.com/pikami/cosmium/parsers/nosql"
+	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+)
 
 var documents = []Document{}
 
@@ -76,6 +83,12 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 		for _, part := range strings.Split(path, "/") {
 			val = document[part]
 		}
+
+		if val == nil {
+			val = ""
+		}
+
+		// TODO: handle non-string partition keys
 		partitionKeyValue = append(partitionKeyValue, val.(string))
 	}
 
@@ -87,4 +100,24 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 	documents = append(documents, document)
 
 	return StatusOk
+}
+
+func ExecuteQueryDocuments(databaseId string, collectionId string, query string) ([]memoryexecutor.RowType, RepositoryStatus) {
+	parsedQuery, err := nosql.Parse("", []byte(query))
+	if err != nil {
+		log.Printf("Failed to parse query: %s\nerr: %v", query, err)
+		return nil, BadRequest
+	}
+
+	collectionDocuments, status := GetAllDocuments(databaseId, collectionId)
+	if status != StatusOk {
+		return nil, status
+	}
+
+	covDocs := make([]memoryexecutor.RowType, 0)
+	for _, doc := range collectionDocuments {
+		covDocs = append(covDocs, map[string]interface{}(doc))
+	}
+
+	return memoryexecutor.Execute(parsedQuery.(parsers.SelectStmt), covDocs), StatusOk
 }

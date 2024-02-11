@@ -52,7 +52,7 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
-	t.Run("Shoul parse SELECT with single WHERE condition", func(t *testing.T) {
+	t.Run("Should parse SELECT with single WHERE condition", func(t *testing.T) {
 		testQueryParse(
 			t,
 			`select c.id
