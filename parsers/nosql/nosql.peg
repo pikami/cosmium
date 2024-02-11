@@ -1,0 +1,217 @@
+{
+package nosql
+
+type LogicalExpressionType int
+
+const (
+    LogicalExpressionTypeOr  LogicalExpressionType = iota
+    LogicalExpressionTypeAnd
+)
+
+type ConstantType int
+
+const (
+    ConstantTypeString  ConstantType = iota
+    ConstantTypeInteger
+    ConstantTypeFloat
+    ConstantTypeBoolean
+)
+
+type SelectStmt struct{
+    Columns []FieldPath
+    Table   Table
+    Filters interface{}
+}
+
+type Table struct{
+    Value string
+}
+
+type FieldPath struct {
+    Alias string
+	Path  []string
+}
+
+type LogicalExpression struct {
+    Expressions []interface{}
+    Operation   LogicalExpressionType
+}
+
+type ComparisonExpression struct {
+    Left      interface{}
+    Right     interface{}
+    Operation string
+}
+
+type Constant struct {
+    Type  ConstantType
+    Value interface{}
+}
+
+func makeSelectStmt(columns, table, whereClause interface{}) (SelectStmt, error) {
+    selectStmt := SelectStmt{
+		Columns: columns.([]FieldPath),
+		Table:   table.(Table),
+	}
+
+	if filters, ok := whereClause.(ComparisonExpression); ok {
+		selectStmt.Filters = filters
+	} else if filters, ok := whereClause.(LogicalExpression); ok {
+		selectStmt.Filters = filters
+	}
+
+	return selectStmt, nil
+}
+
+func makeFieldPath(name interface{}, path interface{}, alias interface{}) (FieldPath, error) {
+	ps := path.([]interface{})
+
+	paths := make([]string, 1)
+    paths[0] = name.(string)
+	for _, p := range ps {
+		pa := p.([]interface{})
+		px := pa[1:]
+		for _, pi := range px {
+			paths = append(paths, pi.(string))
+		}
+	}
+
+    fieldPath := FieldPath{Path: paths}
+    if aliasValue, ok := alias.(string); ok {
+        fieldPath.Alias = aliasValue
+    }
+
+	return fieldPath, nil
+}
+
+func makeColumnList(column interface{}, other_columns interface{}) ([]FieldPath, error) {
+    collsAsArray := other_columns.([]interface{})
+	columnList := make([]FieldPath, len(collsAsArray) + 1)
+	columnList[0] = column.(FieldPath)
+
+	for i, v := range collsAsArray {
+        if col, ok := v.(FieldPath); ok {
+			columnList[i+1] = col
+        }
+    }
+
+	return columnList, nil
+}
+
+func joinStrings(array []interface{}) string {
+    var stringsArray []string
+    for _, elem := range array {
+        str, ok := elem.(string)
+        if !ok {
+            continue
+        }
+        stringsArray = append(stringsArray, str)
+    }
+    
+    return strings.Join(stringsArray, "")
+}
+
+func combineExpressions(ex1 interface{}, exs interface{}, operation LogicalExpressionType) (interface{}, error) {
+    if exs == nil || len(exs.([]interface{})) < 1 {
+		return ex1, nil
+	}
+
+	return LogicalExpression{
+		Expressions: append([]interface{}{ex1}, exs.([]interface{})...),
+		Operation:   operation,
+	}, nil
+}
+
+}
+
+Input <- selectStmt:SelectStmt {
+    return selectStmt, nil
+}
+
+SelectStmt <- Select ws columns:ColumnList ws
+    From ws table:TableName ws
+    whereClause:(ws Where ws condition:Condition { return condition, nil })? {
+    return makeSelectStmt(columns, table, whereClause)
+}
+
+ColumnList <- column:FieldPath other_columns:(ws "," ws coll:FieldPath {return coll, nil })* {
+    return makeColumnList(column, other_columns)
+}
+
+TableName <- key:Identifier {
+    return Table{Value: key.(string)}, nil
+}
+
+FieldPath <- name:Identifier path:("." Identifier)*
+    asClause:(ws "AS" ws alias:Identifier { return alias, nil })? {
+    return makeFieldPath(name, path, asClause)
+}
+
+Identifier <- [a-zA-Z_][a-zA-Z0-9_]* {
+    return string(c.text), nil
+}
+
+Condition <- expression:OrExpression {
+    return expression, nil
+}
+
+OrExpression <- ex1:AndExpression ex2:(ws "OR" ws ex:AndExpression { return ex, nil })* {
+    return combineExpressions(ex1, ex2, LogicalExpressionTypeOr)
+}
+
+AndExpression <- ex1:ComparisonExpression ex2:(ws "AND" ws ex:ComparisonExpression { return ex, nil })* {
+    return combineExpressions(ex1, ex2, LogicalExpressionTypeAnd)
+}
+
+ComparisonExpression <- left:(Literal / FieldPath) ws op:ComparisonOperator ws right:(Literal / FieldPath) {
+    return ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
+}
+
+Select <- ("select" / "SELECT")
+
+From <- ("from" / "FROM")
+
+Where <- ("where" / "WHERE")
+
+ComparisonOperator <- "=" / "!=" / "<" / "<=" / ">" / ">=" {
+    return string(c.text), nil
+}
+
+Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral
+
+IntegerLiteral <- [0-9]+ {
+    intValue, _ := strconv.Atoi(string(c.text))
+    return Constant{Type: ConstantTypeInteger, Value: intValue}, nil
+}
+StringLiteral <- "\"" chars:StringCharacter* "\"" {
+    return Constant{Type: ConstantTypeString,Value: joinStrings(chars.([]interface{}))}, nil
+}
+FloatLiteral <- [0-9]+"."[0-9]+ {
+    floatValue, _ := strconv.ParseFloat(string(c.text), 64)
+    return Constant{Type: ConstantTypeFloat, Value: floatValue}, nil
+}
+BooleanLiteral <- ("true" / "false") {
+    boolValue, _ := strconv.ParseBool(string(c.text))
+    return Constant{Type: ConstantTypeBoolean, Value: boolValue}, nil
+}
+
+StringCharacter <- !('"' / "\\") . { return string(c.text), nil }
+  / "\\" seq:EscapeSequenceCharacter { return seq, nil }
+
+EscapeSequenceCharacter <- char:EscapeCharacter
+
+EscapeCharacter <- "'"
+  / '"'
+  / "\\"
+  / "b" { return "\b", nil }
+  / "f" { return "\f", nil }
+  / "n" { return "\n", nil }
+  / "r" { return "\r", nil }
+  / "t" { return "\t", nil }
+
+non_escape_character <- !(escape_character) char:.
+     { return string(c.text), nil }
+
+ws <- [ \t\n\r]*
+
+EOF <- !.
