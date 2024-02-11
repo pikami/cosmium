@@ -1,69 +1,24 @@
 {
 package nosql
 
-type LogicalExpressionType int
+import "github.com/pikami/cosmium/parsers"
 
-const (
-    LogicalExpressionTypeOr  LogicalExpressionType = iota
-    LogicalExpressionTypeAnd
-)
-
-type ConstantType int
-
-const (
-    ConstantTypeString  ConstantType = iota
-    ConstantTypeInteger
-    ConstantTypeFloat
-    ConstantTypeBoolean
-)
-
-type SelectStmt struct{
-    Columns []FieldPath
-    Table   Table
-    Filters interface{}
-}
-
-type Table struct{
-    Value string
-}
-
-type FieldPath struct {
-    Alias string
-	Path  []string
-}
-
-type LogicalExpression struct {
-    Expressions []interface{}
-    Operation   LogicalExpressionType
-}
-
-type ComparisonExpression struct {
-    Left      interface{}
-    Right     interface{}
-    Operation string
-}
-
-type Constant struct {
-    Type  ConstantType
-    Value interface{}
-}
-
-func makeSelectStmt(columns, table, whereClause interface{}) (SelectStmt, error) {
-    selectStmt := SelectStmt{
-		Columns: columns.([]FieldPath),
-		Table:   table.(Table),
+func makeSelectStmt(columns, table, whereClause interface{}) (parsers.SelectStmt, error) {
+    selectStmt := parsers.SelectStmt{
+		Columns: columns.([]parsers.FieldPath),
+		Table:   table.(parsers.Table),
 	}
 
-	if filters, ok := whereClause.(ComparisonExpression); ok {
+	if filters, ok := whereClause.(parsers.ComparisonExpression); ok {
 		selectStmt.Filters = filters
-	} else if filters, ok := whereClause.(LogicalExpression); ok {
+	} else if filters, ok := whereClause.(parsers.LogicalExpression); ok {
 		selectStmt.Filters = filters
 	}
 
 	return selectStmt, nil
 }
 
-func makeFieldPath(name interface{}, path interface{}, alias interface{}) (FieldPath, error) {
+func makeFieldPath(name interface{}, path interface{}, alias interface{}) (parsers.FieldPath, error) {
 	ps := path.([]interface{})
 
 	paths := make([]string, 1)
@@ -76,7 +31,7 @@ func makeFieldPath(name interface{}, path interface{}, alias interface{}) (Field
 		}
 	}
 
-    fieldPath := FieldPath{Path: paths}
+    fieldPath := parsers.FieldPath{Path: paths}
     if aliasValue, ok := alias.(string); ok {
         fieldPath.Alias = aliasValue
     }
@@ -84,13 +39,13 @@ func makeFieldPath(name interface{}, path interface{}, alias interface{}) (Field
 	return fieldPath, nil
 }
 
-func makeColumnList(column interface{}, other_columns interface{}) ([]FieldPath, error) {
+func makeColumnList(column interface{}, other_columns interface{}) ([]parsers.FieldPath, error) {
     collsAsArray := other_columns.([]interface{})
-	columnList := make([]FieldPath, len(collsAsArray) + 1)
-	columnList[0] = column.(FieldPath)
+	columnList := make([]parsers.FieldPath, len(collsAsArray) + 1)
+	columnList[0] = column.(parsers.FieldPath)
 
 	for i, v := range collsAsArray {
-        if col, ok := v.(FieldPath); ok {
+        if col, ok := v.(parsers.FieldPath); ok {
 			columnList[i+1] = col
         }
     }
@@ -111,12 +66,12 @@ func joinStrings(array []interface{}) string {
     return strings.Join(stringsArray, "")
 }
 
-func combineExpressions(ex1 interface{}, exs interface{}, operation LogicalExpressionType) (interface{}, error) {
+func combineExpressions(ex1 interface{}, exs interface{}, operation parsers.LogicalExpressionType) (interface{}, error) {
     if exs == nil || len(exs.([]interface{})) < 1 {
 		return ex1, nil
 	}
 
-	return LogicalExpression{
+	return parsers.LogicalExpression{
 		Expressions: append([]interface{}{ex1}, exs.([]interface{})...),
 		Operation:   operation,
 	}, nil
@@ -139,7 +94,7 @@ ColumnList <- column:FieldPath other_columns:(ws "," ws coll:FieldPath {return c
 }
 
 TableName <- key:Identifier {
-    return Table{Value: key.(string)}, nil
+    return parsers.Table{Value: key.(string)}, nil
 }
 
 FieldPath <- name:Identifier path:("." Identifier)*
@@ -156,15 +111,15 @@ Condition <- expression:OrExpression {
 }
 
 OrExpression <- ex1:AndExpression ex2:(ws "OR" ws ex:AndExpression { return ex, nil })* {
-    return combineExpressions(ex1, ex2, LogicalExpressionTypeOr)
+    return combineExpressions(ex1, ex2, parsers.LogicalExpressionTypeOr)
 }
 
 AndExpression <- ex1:ComparisonExpression ex2:(ws "AND" ws ex:ComparisonExpression { return ex, nil })* {
-    return combineExpressions(ex1, ex2, LogicalExpressionTypeAnd)
+    return combineExpressions(ex1, ex2, parsers.LogicalExpressionTypeAnd)
 }
 
 ComparisonExpression <- left:(Literal / FieldPath) ws op:ComparisonOperator ws right:(Literal / FieldPath) {
-    return ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
+    return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
 }
 
 Select <- ("select" / "SELECT")
@@ -181,18 +136,18 @@ Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral
 
 IntegerLiteral <- [0-9]+ {
     intValue, _ := strconv.Atoi(string(c.text))
-    return Constant{Type: ConstantTypeInteger, Value: intValue}, nil
+    return parsers.Constant{Type: parsers.ConstantTypeInteger, Value: intValue}, nil
 }
 StringLiteral <- "\"" chars:StringCharacter* "\"" {
-    return Constant{Type: ConstantTypeString,Value: joinStrings(chars.([]interface{}))}, nil
+    return parsers.Constant{Type: parsers.ConstantTypeString,Value: joinStrings(chars.([]interface{}))}, nil
 }
 FloatLiteral <- [0-9]+"."[0-9]+ {
     floatValue, _ := strconv.ParseFloat(string(c.text), 64)
-    return Constant{Type: ConstantTypeFloat, Value: floatValue}, nil
+    return parsers.Constant{Type: parsers.ConstantTypeFloat, Value: floatValue}, nil
 }
 BooleanLiteral <- ("true" / "false") {
     boolValue, _ := strconv.ParseBool(string(c.text))
-    return Constant{Type: ConstantTypeBoolean, Value: boolValue}, nil
+    return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
 }
 
 StringCharacter <- !('"' / "\\") . { return string(c.text), nil }

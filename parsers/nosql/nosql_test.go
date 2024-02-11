@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pikami/cosmium/parsers"
 	"github.com/pikami/cosmium/parsers/nosql"
 )
 
@@ -25,7 +26,7 @@ import (
 // 	fmt.Printf("output:\n%v\n", string(result))
 // }
 
-func testQueryParse(t *testing.T, query string, expectedQuery nosql.SelectStmt) {
+func testQueryParse(t *testing.T, query string, expectedQuery parsers.SelectStmt) {
 	parsedQuery, err := nosql.Parse("", []byte(query))
 	if err != nil {
 		log.Fatal(err)
@@ -41,12 +42,12 @@ func Test_Parse(t *testing.T) {
 		testQueryParse(
 			t,
 			`SELECT c.id, c.pk FROM c`,
-			nosql.SelectStmt{
-				Columns: []nosql.FieldPath{
+			parsers.SelectStmt{
+				Columns: []parsers.FieldPath{
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "pk"}},
 				},
-				Table: nosql.Table{Value: "c"},
+				Table: parsers.Table{Value: "c"},
 			},
 		)
 	})
@@ -57,15 +58,15 @@ func Test_Parse(t *testing.T) {
 			`select c.id
 			FROM c
 			WHERE c.pk=true`,
-			nosql.SelectStmt{
-				Columns: []nosql.FieldPath{
+			parsers.SelectStmt{
+				Columns: []parsers.FieldPath{
 					{Path: []string{"c", "id"}},
 				},
-				Table: nosql.Table{Value: "c"},
-				Filters: nosql.ComparisonExpression{
+				Table: parsers.Table{Value: "c"},
+				Filters: parsers.ComparisonExpression{
 					Operation: "=",
-					Left:      nosql.FieldPath{Path: []string{"c", "pk"}},
-					Right:     nosql.Constant{Type: nosql.ConstantTypeBoolean, Value: true},
+					Left:      parsers.FieldPath{Path: []string{"c", "pk"}},
+					Right:     parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
 				},
 			},
 		)
@@ -77,26 +78,26 @@ func Test_Parse(t *testing.T) {
 			`select c.id, c._self AS self, c._rid, c._ts
 			FROM c
 			WHERE c.id="12345" OR c.pk=123`,
-			nosql.SelectStmt{
-				Columns: []nosql.FieldPath{
+			parsers.SelectStmt{
+				Columns: []parsers.FieldPath{
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "_self"}, Alias: "self"},
 					{Path: []string{"c", "_rid"}},
 					{Path: []string{"c", "_ts"}},
 				},
-				Table: nosql.Table{Value: "c"},
-				Filters: nosql.LogicalExpression{
-					Operation: nosql.LogicalExpressionTypeOr,
+				Table: parsers.Table{Value: "c"},
+				Filters: parsers.LogicalExpression{
+					Operation: parsers.LogicalExpressionTypeOr,
 					Expressions: []interface{}{
-						nosql.ComparisonExpression{
+						parsers.ComparisonExpression{
 							Operation: "=",
-							Left:      nosql.FieldPath{Path: []string{"c", "id"}},
-							Right:     nosql.Constant{Type: nosql.ConstantTypeString, Value: "12345"},
+							Left:      parsers.FieldPath{Path: []string{"c", "id"}},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "12345"},
 						},
-						nosql.ComparisonExpression{
+						parsers.ComparisonExpression{
 							Operation: "=",
-							Left:      nosql.FieldPath{Path: []string{"c", "pk"}},
-							Right:     nosql.Constant{Type: nosql.ConstantTypeInteger, Value: 123},
+							Left:      parsers.FieldPath{Path: []string{"c", "pk"}},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeInteger, Value: 123},
 						},
 					},
 				},
@@ -113,33 +114,33 @@ func Test_Parse(t *testing.T) {
 				AND c.integer=1
 				AND c.float=6.9
 				AND c.string="hello"`,
-			nosql.SelectStmt{
-				Columns: []nosql.FieldPath{{Path: []string{"c", "id"}, Alias: ""}},
-				Table:   nosql.Table{Value: "c"},
-				Filters: nosql.LogicalExpression{
+			parsers.SelectStmt{
+				Columns: []parsers.FieldPath{{Path: []string{"c", "id"}, Alias: ""}},
+				Table:   parsers.Table{Value: "c"},
+				Filters: parsers.LogicalExpression{
 					Expressions: []interface{}{
-						nosql.ComparisonExpression{
-							Left:      nosql.FieldPath{Path: []string{"c", "boolean"}},
-							Right:     nosql.Constant{Type: 3, Value: true},
+						parsers.ComparisonExpression{
+							Left:      parsers.FieldPath{Path: []string{"c", "boolean"}},
+							Right:     parsers.Constant{Type: 3, Value: true},
 							Operation: "=",
 						},
-						nosql.ComparisonExpression{
-							Left:      nosql.FieldPath{Path: []string{"c", "integer"}},
-							Right:     nosql.Constant{Type: 1, Value: 1},
+						parsers.ComparisonExpression{
+							Left:      parsers.FieldPath{Path: []string{"c", "integer"}},
+							Right:     parsers.Constant{Type: 1, Value: 1},
 							Operation: "=",
 						},
-						nosql.ComparisonExpression{
-							Left:      nosql.FieldPath{Path: []string{"c", "float"}},
-							Right:     nosql.Constant{Type: 2, Value: 6.9},
+						parsers.ComparisonExpression{
+							Left:      parsers.FieldPath{Path: []string{"c", "float"}},
+							Right:     parsers.Constant{Type: 2, Value: 6.9},
 							Operation: "=",
 						},
-						nosql.ComparisonExpression{
-							Left:      nosql.FieldPath{Path: []string{"c", "string"}},
-							Right:     nosql.Constant{Type: 0, Value: "hello"},
+						parsers.ComparisonExpression{
+							Left:      parsers.FieldPath{Path: []string{"c", "string"}},
+							Right:     parsers.Constant{Type: 0, Value: "hello"},
 							Operation: "=",
 						},
 					},
-					Operation: nosql.LogicalExpressionTypeAnd,
+					Operation: parsers.LogicalExpressionTypeAnd,
 				},
 			},
 		)
