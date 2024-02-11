@@ -57,7 +57,7 @@ func Test_Parse(t *testing.T) {
 			t,
 			`select c.id
 			FROM c
-			WHERE c.pk=true`,
+			WHERE c.isCool=true`,
 			parsers.SelectStmt{
 				Columns: []parsers.FieldPath{
 					{Path: []string{"c", "id"}},
@@ -65,7 +65,7 @@ func Test_Parse(t *testing.T) {
 				Table: parsers.Table{Value: "c"},
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
-					Left:      parsers.FieldPath{Path: []string{"c", "pk"}},
+					Left:      parsers.FieldPath{Path: []string{"c", "isCool"}},
 					Right:     parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
 				},
 			},
