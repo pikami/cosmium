@@ -41,7 +41,7 @@ func Test_Parse(t *testing.T) {
 	t.Run("Shoul parse simple SELECT", func(t *testing.T) {
 		testQueryParse(
 			t,
-			`SELECT c.id, c.pk FROM c`,
+			`SELECT c.id, c["pk"] FROM c`,
 			parsers.SelectStmt{
 				Columns: []parsers.FieldPath{
 					{Path: []string{"c", "id"}},

@@ -24,11 +24,7 @@ func makeFieldPath(name interface{}, path interface{}, alias interface{}) (parse
 	paths := make([]string, 1)
     paths[0] = name.(string)
 	for _, p := range ps {
-		pa := p.([]interface{})
-		px := pa[1:]
-		for _, pi := range px {
-			paths = append(paths, pi.(string))
-		}
+        paths = append(paths, p.(string))
 	}
 
     fieldPath := parsers.FieldPath{Path: paths}
@@ -97,9 +93,17 @@ TableName <- key:Identifier {
     return parsers.Table{Value: key.(string)}, nil
 }
 
-FieldPath <- name:Identifier path:("." Identifier)*
+FieldPath <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)*
     asClause:(ws "AS" ws alias:Identifier { return alias, nil })? {
     return makeFieldPath(name, path, asClause)
+}
+
+DotFieldAccess <- "." id:Identifier {
+    return id, nil
+}
+
+ArrayFieldAccess <- "[\"" id:Identifier "\"]" {
+    return id, nil
 }
 
 Identifier <- [a-zA-Z_][a-zA-Z0-9_]* {
