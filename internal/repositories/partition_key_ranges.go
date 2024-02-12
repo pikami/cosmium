@@ -1,8 +1,10 @@
 package repositories
 
-func GetPartitionKeyRanges(databaseId string, collectionId string) ([]PartitionKeyRange, RepositoryStatus) {
+import repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+
+func GetPartitionKeyRanges(databaseId string, collectionId string) ([]repositorymodels.PartitionKeyRange, repositorymodels.RepositoryStatus) {
 	// I have no idea what this is tbh
-	return []PartitionKeyRange{
+	return []repositorymodels.PartitionKeyRange{
 		{
 			Rid:                "ZxlyAP7rKwACAAAAAAAAUA==",
 			ID:                 "0",
@@ -17,5 +19,5 @@ func GetPartitionKeyRanges(databaseId string, collectionId string) ([]PartitionK
 			Ts:                 1707431241,
 			Lsn:                17,
 		},
-	}, StatusOk
+	}, repositorymodels.StatusOk
 }

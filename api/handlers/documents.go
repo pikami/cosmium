@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
 func GetAllDocuments(c *gin.Context) {
@@ -13,7 +14,7 @@ func GetAllDocuments(c *gin.Context) {
 	collectionId := c.Param("collId")
 
 	documents, status := repositories.GetAllDocuments(databaseId, collectionId)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Documents": documents, "_count": len(documents)})
 		return
 	}
@@ -27,12 +28,12 @@ func GetDocument(c *gin.Context) {
 	documentId := c.Param("docId")
 
 	document, status := repositories.GetDocument(databaseId, collectionId, documentId)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, document)
 		return
 	}
 
-	if status == repositories.StatusNotFound {
+	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -46,12 +47,12 @@ func DeleteDocument(c *gin.Context) {
 	documentId := c.Param("docId")
 
 	status := repositories.DeleteDocument(databaseId, collectionId, documentId)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
 	}
 
-	if status == repositories.StatusNotFound {
+	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -78,7 +79,7 @@ func DocumentsPost(c *gin.Context) {
 
 		// TODO: Handle these {"query":"select c.id, c._self, c._rid, c._ts, [c[\"pk\"]] as _partitionKeyValue from c"}
 		docs, status := repositories.ExecuteQueryDocuments(databaseId, collectionId, query.(string))
-		if status != repositories.StatusOk {
+		if status != repositorymodels.StatusOk {
 			// TODO: Currently we return everything if the query fails
 			GetAllDocuments(c)
 			return
@@ -94,12 +95,12 @@ func DocumentsPost(c *gin.Context) {
 	}
 
 	status := repositories.CreateDocument(databaseId, collectionId, requestBody)
-	if status == repositories.Conflict {
+	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusCreated, requestBody)
 		return
 	}

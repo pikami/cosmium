@@ -4,15 +4,16 @@ import (
 	"log"
 	"strings"
 
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/pikami/cosmium/parsers"
 	"github.com/pikami/cosmium/parsers/nosql"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
 )
 
-var documents = []Document{}
+var documents = []repositorymodels.Document{}
 
-func GetAllDocuments(databaseId string, collectionId string) ([]Document, RepositoryStatus) {
-	filteredDocuments := make([]Document, 0)
+func GetAllDocuments(databaseId string, collectionId string) ([]repositorymodels.Document, repositorymodels.RepositoryStatus) {
+	filteredDocuments := make([]repositorymodels.Document, 0)
 
 	for _, doc := range documents {
 		docDbId := doc["_internal"].(map[string]interface{})["databaseId"]
@@ -24,10 +25,10 @@ func GetAllDocuments(databaseId string, collectionId string) ([]Document, Reposi
 		}
 	}
 
-	return filteredDocuments, StatusOk
+	return filteredDocuments, repositorymodels.StatusOk
 }
 
-func GetDocument(databaseId string, collectionId string, documentId string) (Document, RepositoryStatus) {
+func GetDocument(databaseId string, collectionId string, documentId string) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
 	for _, doc := range documents {
 		docDbId := doc["_internal"].(map[string]interface{})["databaseId"]
 		docCollId := doc["_internal"].(map[string]interface{})["collectionId"]
@@ -35,14 +36,14 @@ func GetDocument(databaseId string, collectionId string, documentId string) (Doc
 
 		if docDbId == databaseId && docCollId == collectionId && docId == documentId {
 			doc["_partitionKeyValue"] = doc["_internal"].(map[string]interface{})["partitionKeyValue"]
-			return doc, StatusOk
+			return doc, repositorymodels.StatusOk
 		}
 	}
 
-	return Document{}, StatusNotFound
+	return repositorymodels.Document{}, repositorymodels.StatusNotFound
 }
 
-func DeleteDocument(databaseId string, collectionId string, documentId string) RepositoryStatus {
+func DeleteDocument(databaseId string, collectionId string, documentId string) repositorymodels.RepositoryStatus {
 	for index, doc := range documents {
 		docDbId := doc["_internal"].(map[string]interface{})["databaseId"]
 		docCollId := doc["_internal"].(map[string]interface{})["collectionId"]
@@ -50,21 +51,21 @@ func DeleteDocument(databaseId string, collectionId string, documentId string) R
 
 		if docDbId == databaseId && docCollId == collectionId && docId == documentId {
 			documents = append(documents[:index], documents[index+1:]...)
-			return StatusOk
+			return repositorymodels.StatusOk
 		}
 	}
 
-	return StatusNotFound
+	return repositorymodels.StatusNotFound
 }
 
-func CreateDocument(databaseId string, collectionId string, document map[string]interface{}) RepositoryStatus {
+func CreateDocument(databaseId string, collectionId string, document map[string]interface{}) repositorymodels.RepositoryStatus {
 	if document["id"] == "" {
-		return BadRequest
+		return repositorymodels.BadRequest
 	}
 
 	collection, status := GetCollection(databaseId, collectionId)
-	if status != StatusOk {
-		return StatusNotFound
+	if status != repositorymodels.StatusOk {
+		return repositorymodels.StatusNotFound
 	}
 
 	for _, doc := range documents {
@@ -73,7 +74,7 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 		docId := doc["id"]
 
 		if docDbId == databaseId && docCollId == collectionId && docId == document["id"] {
-			return Conflict
+			return repositorymodels.Conflict
 		}
 	}
 
@@ -99,18 +100,18 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 	}
 	documents = append(documents, document)
 
-	return StatusOk
+	return repositorymodels.StatusOk
 }
 
-func ExecuteQueryDocuments(databaseId string, collectionId string, query string) ([]memoryexecutor.RowType, RepositoryStatus) {
+func ExecuteQueryDocuments(databaseId string, collectionId string, query string) ([]memoryexecutor.RowType, repositorymodels.RepositoryStatus) {
 	parsedQuery, err := nosql.Parse("", []byte(query))
 	if err != nil {
 		log.Printf("Failed to parse query: %s\nerr: %v", query, err)
-		return nil, BadRequest
+		return nil, repositorymodels.BadRequest
 	}
 
 	collectionDocuments, status := GetAllDocuments(databaseId, collectionId)
-	if status != StatusOk {
+	if status != repositorymodels.StatusOk {
 		return nil, status
 	}
 
@@ -119,5 +120,5 @@ func ExecuteQueryDocuments(databaseId string, collectionId string, query string)
 		covDocs = append(covDocs, map[string]interface{}(doc))
 	}
 
-	return memoryexecutor.Execute(parsedQuery.(parsers.SelectStmt), covDocs), StatusOk
+	return memoryexecutor.Execute(parsedQuery.(parsers.SelectStmt), covDocs), repositorymodels.StatusOk
 }

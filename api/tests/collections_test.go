@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +38,7 @@ func Test_Collections(t *testing.T) {
 		})
 
 		t.Run("Should return conflict when collection exists", func(t *testing.T) {
-			repositories.CreateCollection(testDatabaseName, repositories.Collection{
+			repositories.CreateCollection(testDatabaseName, repositorymodels.Collection{
 				ID: testCollectionName,
 			})
 
@@ -57,7 +58,7 @@ func Test_Collections(t *testing.T) {
 
 	t.Run("Collection Read", func(t *testing.T) {
 		t.Run("Should read collection", func(t *testing.T) {
-			repositories.CreateCollection(testDatabaseName, repositories.Collection{
+			repositories.CreateCollection(testDatabaseName, repositorymodels.Collection{
 				ID: testCollectionName,
 			})
 
@@ -90,7 +91,7 @@ func Test_Collections(t *testing.T) {
 
 	t.Run("Collection Delete", func(t *testing.T) {
 		t.Run("Should delete collection", func(t *testing.T) {
-			repositories.CreateCollection(testDatabaseName, repositories.Collection{
+			repositories.CreateCollection(testDatabaseName, repositorymodels.Collection{
 				ID: testCollectionName,
 			})
 

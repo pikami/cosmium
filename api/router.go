@@ -3,10 +3,13 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/api/handlers"
+	"github.com/pikami/cosmium/api/handlers/middleware"
 )
 
 func CreateRouter() *gin.Engine {
 	router := gin.Default()
+
+	router.Use(middleware.RequestLogger())
 
 	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
 

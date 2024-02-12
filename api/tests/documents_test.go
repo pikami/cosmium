@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +42,7 @@ func testCosmosQuery(t *testing.T, collectionClient *azcosmos.ContainerClient, q
 }
 
 func Test_Documents(t *testing.T) {
-	repositories.CreateCollection(testDatabaseName, repositories.Collection{
+	repositories.CreateCollection(testDatabaseName, repositorymodels.Collection{
 		ID: testCollectionName,
 		PartitionKey: struct {
 			Paths   []string "json:\"paths\""

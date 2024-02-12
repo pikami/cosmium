@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
 func GetPartitionKeyRanges(c *gin.Context) {
@@ -12,7 +13,7 @@ func GetPartitionKeyRanges(c *gin.Context) {
 	collectionId := c.Param("collId")
 
 	partitionKeyRanges, status := repositories.GetPartitionKeyRanges(databaseId, collectionId)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":               "",
 			"_count":             len(partitionKeyRanges),
@@ -21,7 +22,7 @@ func GetPartitionKeyRanges(c *gin.Context) {
 		return
 	}
 
-	if status == repositories.StatusNotFound {
+	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}

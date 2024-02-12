@@ -1,15 +1,17 @@
 package repositories
 
-var triggers = []Trigger{}
+import repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 
-func GetAllTriggers(databaseId string, collectionId string) ([]Trigger, RepositoryStatus) {
-	filteredTriggers := make([]Trigger, 0)
+var triggers = []repositorymodels.Trigger{}
+
+func GetAllTriggers(databaseId string, collectionId string) ([]repositorymodels.Trigger, repositorymodels.RepositoryStatus) {
+	filteredTriggers := make([]repositorymodels.Trigger, 0)
 
 	for _, coll := range triggers {
-		if coll.internals.databaseId == databaseId && coll.internals.collectionId == collectionId {
+		if coll.Internals.DatabaseId == databaseId && coll.Internals.CollectionId == collectionId {
 			filteredTriggers = append(filteredTriggers, coll)
 		}
 	}
 
-	return filteredTriggers, StatusOk
+	return filteredTriggers, repositorymodels.StatusOk
 }

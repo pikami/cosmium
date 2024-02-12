@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
 func GetAllTriggers(c *gin.Context) {
@@ -13,7 +14,7 @@ func GetAllTriggers(c *gin.Context) {
 
 	triggers, status := repositories.GetAllTriggers(databaseId, collectionId)
 
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Triggers": triggers, "_count": len(triggers)})
 		return
 	}

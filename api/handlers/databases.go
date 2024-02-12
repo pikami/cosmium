@@ -5,11 +5,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
 func GetAllDatabases(c *gin.Context) {
 	databases, status := repositories.GetAllDatabases()
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Databases": databases, "_count": len(databases)})
 		return
 	}
@@ -21,12 +22,12 @@ func GetDatabase(c *gin.Context) {
 	id := c.Param("databaseId")
 
 	database, status := repositories.GetDatabase(id)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, database)
 		return
 	}
 
-	if status == repositories.StatusNotFound {
+	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -38,12 +39,12 @@ func DeleteDatabase(c *gin.Context) {
 	id := c.Param("databaseId")
 
 	status := repositories.DeleteDatabase(id)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
 	}
 
-	if status == repositories.StatusNotFound {
+	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -52,7 +53,7 @@ func DeleteDatabase(c *gin.Context) {
 }
 
 func CreateDatabase(c *gin.Context) {
-	var newDatabase repositories.Database
+	var newDatabase repositorymodels.Database
 
 	if err := c.BindJSON(&newDatabase); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -65,12 +66,12 @@ func CreateDatabase(c *gin.Context) {
 	}
 
 	status := repositories.CreateDatabase(newDatabase)
-	if status == repositories.Conflict {
+	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusCreated, newDatabase)
 		return
 	}

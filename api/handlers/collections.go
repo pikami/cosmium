@@ -5,13 +5,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
 func GetAllCollections(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 
 	collections, status := repositories.GetAllCollections(databaseId)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "DocumentCollections": collections, "_count": len(collections)})
 		return
 	}
@@ -24,12 +25,12 @@ func GetCollection(c *gin.Context) {
 	id := c.Param("collId")
 
 	collection, status := repositories.GetCollection(databaseId, id)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, collection)
 		return
 	}
 
-	if status == repositories.StatusNotFound {
+	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -42,12 +43,12 @@ func DeleteCollection(c *gin.Context) {
 	id := c.Param("collId")
 
 	status := repositories.DeleteCollection(databaseId, id)
-	if status == repositories.StatusOk {
+	if status == repositorymodels.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
 	}
 
-	if status == repositories.StatusNotFound {
+	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -57,7 +58,7 @@ func DeleteCollection(c *gin.Context) {
 
 func CreateCollection(c *gin.Context) {
 	databaseId := c.Param("databaseId")
-	var newCollection repositories.Collection
+	var newCollection repositorymodels.Collection
 
 	if err := c.BindJSON(&newCollection); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -69,14 +70,14 @@ func CreateCollection(c *gin.Context) {
 		return
 	}
 
-	status := repositories.CreateCollection(databaseId, newCollection)
-	if status == repositories.Conflict {
+	createdCollection, status := repositories.CreateCollection(databaseId, newCollection)
+	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositories.StatusOk {
-		c.IndentedJSON(http.StatusCreated, newCollection)
+	if status == repositorymodels.StatusOk {
+		c.IndentedJSON(http.StatusCreated, createdCollection)
 		return
 	}
 

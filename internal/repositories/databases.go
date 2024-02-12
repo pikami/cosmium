@@ -1,42 +1,44 @@
 package repositories
 
-var databases = []Database{
+import repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+
+var databases = []repositorymodels.Database{
 	{ID: "db1"},
 	{ID: "db2"},
 }
 
-func GetAllDatabases() ([]Database, RepositoryStatus) {
-	return databases, StatusOk
+func GetAllDatabases() ([]repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	return databases, repositorymodels.StatusOk
 }
 
-func GetDatabase(id string) (Database, RepositoryStatus) {
+func GetDatabase(id string) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
 	for _, db := range databases {
 		if db.ID == id {
-			return db, StatusOk
+			return db, repositorymodels.StatusOk
 		}
 	}
 
-	return Database{}, StatusNotFound
+	return repositorymodels.Database{}, repositorymodels.StatusNotFound
 }
 
-func DeleteDatabase(id string) RepositoryStatus {
+func DeleteDatabase(id string) repositorymodels.RepositoryStatus {
 	for index, db := range databases {
 		if db.ID == id {
 			databases = append(databases[:index], databases[index+1:]...)
-			return StatusOk
+			return repositorymodels.StatusOk
 		}
 	}
 
-	return StatusNotFound
+	return repositorymodels.StatusNotFound
 }
 
-func CreateDatabase(newDatabase Database) RepositoryStatus {
+func CreateDatabase(newDatabase repositorymodels.Database) repositorymodels.RepositoryStatus {
 	for _, db := range databases {
 		if db.ID == newDatabase.ID {
-			return Conflict
+			return repositorymodels.Conflict
 		}
 	}
 
 	databases = append(databases, newDatabase)
-	return StatusOk
+	return repositorymodels.StatusOk
 }

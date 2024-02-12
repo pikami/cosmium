@@ -1,15 +1,17 @@
 package repositories
 
-var userDefinedFunctions = []UserDefinedFunction{}
+import repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 
-func GetAllUserDefinedFunctions(databaseId string, collectionId string) ([]UserDefinedFunction, RepositoryStatus) {
-	udfs := make([]UserDefinedFunction, 0)
+var userDefinedFunctions = []repositorymodels.UserDefinedFunction{}
+
+func GetAllUserDefinedFunctions(databaseId string, collectionId string) ([]repositorymodels.UserDefinedFunction, repositorymodels.RepositoryStatus) {
+	udfs := make([]repositorymodels.UserDefinedFunction, 0)
 
 	for _, coll := range userDefinedFunctions {
-		if coll.internals.databaseId == databaseId && coll.internals.collectionId == collectionId {
+		if coll.Internals.DatabaseId == databaseId && coll.Internals.CollectionId == collectionId {
 			udfs = append(udfs, coll)
 		}
 	}
 
-	return udfs, StatusOk
+	return udfs, repositorymodels.StatusOk
 }

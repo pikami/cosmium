@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/internal/repositories"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,7 +35,7 @@ func Test_Databases(t *testing.T) {
 		})
 
 		t.Run("Should return conflict when database exists", func(t *testing.T) {
-			repositories.CreateDatabase(repositories.Database{
+			repositories.CreateDatabase(repositorymodels.Database{
 				ID: testDatabaseName,
 			})
 
@@ -54,7 +55,7 @@ func Test_Databases(t *testing.T) {
 
 	t.Run("Database Read", func(t *testing.T) {
 		t.Run("Should read database", func(t *testing.T) {
-			repositories.CreateDatabase(repositories.Database{
+			repositories.CreateDatabase(repositorymodels.Database{
 				ID: testDatabaseName,
 			})
 
@@ -87,7 +88,7 @@ func Test_Databases(t *testing.T) {
 
 	t.Run("Database Delete", func(t *testing.T) {
 		t.Run("Should delete database", func(t *testing.T) {
-			repositories.CreateDatabase(repositories.Database{
+			repositories.CreateDatabase(repositorymodels.Database{
 				ID: testDatabaseName,
 			})
 
