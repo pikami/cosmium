@@ -87,6 +87,16 @@ func Test_Documents(t *testing.T) {
 		)
 	})
 
+	t.Run("Should query VALUE object", func(t *testing.T) {
+		testCosmosQuery(t, collectionClient,
+			"SELECT VALUE { id: c.id, _pk: c.pk } FROM c",
+			[]interface{}{
+				map[string]interface{}{"id": "12345", "_pk": "123"},
+				map[string]interface{}{"id": "67890", "_pk": "456"},
+			},
+		)
+	})
+
 	t.Run("Should query document with single WHERE condition", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			`select c.id

@@ -85,6 +85,26 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT object", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT { id: c.id, _pk: c.pk } AS obj FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias: "obj",
+						Type:  parsers.SelectItemTypeObject,
+						SelectItems: []parsers.SelectItem{
+							{Alias: "id", Path: []string{"c", "id"}},
+							{Alias: "_pk", Path: []string{"c", "pk"}},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT with single WHERE condition", func(t *testing.T) {
 		testQueryParse(
 			t,

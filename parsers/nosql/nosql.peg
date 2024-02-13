@@ -18,7 +18,7 @@ func makeSelectStmt(columns, table, whereClause interface{}) (parsers.SelectStmt
 	return selectStmt, nil
 }
 
-func makeSelectItem(name interface{}, path interface{}, alias interface{}, selectItemType parsers.SelectItemType) (parsers.SelectItem, error) {
+func makeSelectItem(name interface{}, path interface{}, selectItemType parsers.SelectItemType) (parsers.SelectItem, error) {
 	ps := path.([]interface{})
 
 	paths := make([]string, 1)
@@ -27,12 +27,7 @@ func makeSelectItem(name interface{}, path interface{}, alias interface{}, selec
         paths = append(paths, p.(string))
 	}
 
-    selectItem := parsers.SelectItem{Path: paths, Type: selectItemType}
-    if aliasValue, ok := alias.(string); ok {
-        selectItem.Alias = aliasValue
-    }
-
-	return selectItem, nil
+	return parsers.SelectItem{Path: paths, Type: selectItemType}, nil
 }
 
 func makeColumnList(column interface{}, other_columns interface{}) ([]parsers.SelectItem, error) {
@@ -49,17 +44,28 @@ func makeColumnList(column interface{}, other_columns interface{}) ([]parsers.Se
 	return columnList, nil
 }
 
-func makeSelectArray(columns interface{}, asClause interface{}) (parsers.SelectItem, error) {
-    selectItem := parsers.SelectItem{
+func makeSelectArray(columns interface{}) (parsers.SelectItem, error) {
+	return parsers.SelectItem{
 		SelectItems: columns.([]parsers.SelectItem),
 		Type:        parsers.SelectItemTypeArray,
+	}, nil
+}
+
+func makeSelectObject(field interface{}, other_fields interface{}) (parsers.SelectItem, error) {
+    fieldsAsArray := other_fields.([]interface{})
+	fieldsList := make([]parsers.SelectItem, len(fieldsAsArray)+1)
+	fieldsList[0] = field.(parsers.SelectItem)
+
+	for i, v := range fieldsAsArray {
+		if col, ok := v.(parsers.SelectItem); ok {
+			fieldsList[i+1] = col
+		}
 	}
 
-	if aliasValue, ok := asClause.(string); ok {
-		selectItem.Alias = aliasValue
-	}
-
-	return selectItem, nil
+	return parsers.SelectItem{
+		SelectItems: fieldsList,
+		Type:        parsers.SelectItemTypeObject,
+	}, nil
 }
 
 func joinStrings(array []interface{}) string {
@@ -114,13 +120,30 @@ TableName <- key:Identifier {
     return parsers.Table{Value: key.(string)}, nil
 }
 
-SelectArray <- "[" ws columns:ColumnList ws "]" asClause:AsClause? {
-    return makeSelectArray(columns, asClause)
+SelectArray <- "[" ws columns:ColumnList ws "]" {
+    return makeSelectArray(columns)
 }
 
-SelectItem <- SelectArray / name:Identifier path:(DotFieldAccess / ArrayFieldAccess)*
-    asClause:AsClause? {
-    return makeSelectItem(name, path, asClause, parsers.SelectItemTypeField)
+SelectObject <- "{" ws field:SelectObjectField ws other_fields:(ws "," ws coll:SelectObjectField {return coll, nil })* ws "}" {
+    return makeSelectObject(field, other_fields)
+}
+
+SelectObjectField <- name:Identifier ws ":" ws selectItem:SelectItem {
+    item := selectItem.(parsers.SelectItem)
+	item.Alias = name.(string)
+	return item, nil
+}
+
+SelectProperty <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)* {
+    return makeSelectItem(name, path, parsers.SelectItemTypeField)
+}
+
+SelectItem <- selectItem:(SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
+    item := selectItem.(parsers.SelectItem)
+	if aliasValue, ok := asClause.(string); ok {
+		item.Alias = aliasValue
+	}
+	return item, nil
 }
 
 AsClause <- ws As ws alias:Identifier { return alias, nil }

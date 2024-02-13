@@ -92,6 +92,14 @@ func getFieldValue(field parsers.SelectItem, row RowType) interface{} {
 		return arrayValue
 	}
 
+	if field.Type == parsers.SelectItemTypeObject {
+		objectValue := make(map[string]interface{})
+		for _, selectItem := range field.SelectItems {
+			objectValue[selectItem.Alias] = getFieldValue(selectItem, row)
+		}
+		return objectValue
+	}
+
 	value := row
 	for _, pathSegment := range field.Path[1:] {
 		if nestedValue, ok := value.(map[string]interface{}); ok {

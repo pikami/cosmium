@@ -86,6 +86,30 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT object", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias: "obj",
+						Type:  parsers.SelectItemTypeObject,
+						SelectItems: []parsers.SelectItem{
+							{Alias: "id", Path: []string{"c", "id"}},
+							{Alias: "_pk", Path: []string{"c", "pk"}},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"obj": map[string]interface{}{"id": "12345", "_pk": 123}},
+				map[string]interface{}{"obj": map[string]interface{}{"id": "67890", "_pk": 456}},
+			},
+		)
+	})
+
 	t.Run("Should execute SELECT with single WHERE condition", func(t *testing.T) {
 		testQueryExecute(
 			t,
