@@ -1,7 +1,28 @@
 package config
 
-var Config = ServerConfig{
-	DatabaseAccount:  "localhost",
-	DatabaseDomain:   "localhost",
-	DatabaseEndpoint: "https://localhost:8081/",
+import (
+	"flag"
+	"fmt"
+)
+
+var Config = ServerConfig{}
+
+func ParseFlags() {
+	host := flag.String("Host", "localhost", "Hostname")
+	port := flag.Int("Port", 8081, "Listen port")
+	explorerPath := flag.String("ExplorerDir", "/home/pk/pro/cosmos-explorer/dist", "Path to cosmos-explorer files")
+	tlsCertificatePath := flag.String("Cert", "../example.crt", "Hostname")
+	tlsCertificateKey := flag.String("CertKey", "../example.key", "Hostname")
+
+	flag.Parse()
+
+	Config.Host = *host
+	Config.Port = *port
+	Config.ExplorerPath = *explorerPath
+	Config.TLS_CertificatePath = *tlsCertificatePath
+	Config.TLS_CertificateKey = *tlsCertificateKey
+
+	Config.DatabaseAccount = Config.Host
+	Config.DatabaseDomain = Config.Host
+	Config.DatabaseEndpoint = fmt.Sprintf("https://%s:%d/", Config.Host, Config.Port)
 }

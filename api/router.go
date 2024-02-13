@@ -35,5 +35,7 @@ func CreateRouter() *gin.Engine {
 	router.GET("/offers", handlers.GetOffers)
 	router.GET("/", handlers.GetServerInfo)
 
+	handlers.RegisterExplorerHandlers(router)
+
 	return router
 }

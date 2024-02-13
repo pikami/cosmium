@@ -4,11 +4,15 @@ import (
 	"fmt"
 
 	"github.com/pikami/cosmium/api"
+	"github.com/pikami/cosmium/api/config"
 )
 
 func main() {
-	fmt.Println("Hello world")
+	config.ParseFlags()
 
 	router := api.CreateRouter()
-	router.RunTLS(":8081", "../example.crt", "../example.key")
+	router.RunTLS(
+		fmt.Sprintf(":%d", config.Config.Port),
+		config.Config.TLS_CertificatePath,
+		config.Config.TLS_CertificateKey)
 }
