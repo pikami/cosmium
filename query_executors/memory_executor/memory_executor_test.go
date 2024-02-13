@@ -62,6 +62,30 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT array", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias: "arr",
+						Type:  parsers.SelectItemTypeArray,
+						SelectItems: []parsers.SelectItem{
+							{Path: []string{"c", "id"}},
+							{Path: []string{"c", "pk"}},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"arr": []interface{}{"12345", 123}},
+				map[string]interface{}{"arr": []interface{}{"67890", 456}},
+			},
+		)
+	})
+
 	t.Run("Should execute SELECT with single WHERE condition", func(t *testing.T) {
 		testQueryExecute(
 			t,

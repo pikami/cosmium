@@ -84,6 +84,14 @@ func evaluateFilters(expr ExpressionType, row RowType) bool {
 }
 
 func getFieldValue(field parsers.SelectItem, row RowType) interface{} {
+	if field.Type == parsers.SelectItemTypeArray {
+		arrayValue := make([]interface{}, 0)
+		for _, selectItem := range field.SelectItems {
+			arrayValue = append(arrayValue, getFieldValue(selectItem, row))
+		}
+		return arrayValue
+	}
+
 	value := row
 	for _, pathSegment := range field.Path[1:] {
 		if nestedValue, ok := value.(map[string]interface{}); ok {

@@ -13,21 +13,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testCosmosQuery(t *testing.T, collectionClient *azcosmos.ContainerClient, query string, expectedData []map[string]interface{}) {
+func testCosmosQuery(t *testing.T, collectionClient *azcosmos.ContainerClient, query string, expectedData []interface{}) {
 	pager := collectionClient.NewQueryItemsPager(
 		query,
 		azcosmos.PartitionKey{},
 		&azcosmos.QueryOptions{})
 
 	context := context.TODO()
-	items := make([]map[string]interface{}, 0)
+	items := make([]interface{}, 0)
 
 	for pager.More() {
 		response, err := pager.NextPage(context)
 		assert.Nil(t, err)
 
 		for _, bytes := range response.Items {
-			var item map[string]interface{}
+			var item interface{}
 			err := json.Unmarshal(bytes, &item)
 			assert.Nil(t, err)
 
@@ -70,9 +70,19 @@ func Test_Documents(t *testing.T) {
 	t.Run("Should query document", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			"SELECT c.id, c[\"pk\"] FROM c",
-			[]map[string]interface{}{
-				{"id": "12345", "pk": "123"},
-				{"id": "67890", "pk": "456"},
+			[]interface{}{
+				map[string]interface{}{"id": "12345", "pk": "123"},
+				map[string]interface{}{"id": "67890", "pk": "456"},
+			},
+		)
+	})
+
+	t.Run("Should query VALUE array", func(t *testing.T) {
+		testCosmosQuery(t, collectionClient,
+			"SELECT VALUE [c.id, c[\"pk\"]] FROM c",
+			[]interface{}{
+				[]interface{}{"12345", "123"},
+				[]interface{}{"67890", "456"},
 			},
 		)
 	})
@@ -82,8 +92,8 @@ func Test_Documents(t *testing.T) {
 			`select c.id
 			FROM c
 			WHERE c.isCool=true`,
-			[]map[string]interface{}{
-				{"id": "67890"},
+			[]interface{}{
+				map[string]interface{}{"id": "67890"},
 			},
 		)
 	})

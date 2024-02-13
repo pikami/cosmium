@@ -1,0 +1,24 @@
+### Create collection
+
+POST https://localhost:8081/dbs/db1/colls
+Content-Type: application/json
+
+{"id":"test1", "partitionKey":{"paths":["/pk"],"kind":"Hash","version":2}}
+
+### Insert document
+
+POST https://localhost:8081/dbs/db1/colls/test/docs
+Content-Type: application/json
+
+{"id":"1","_pk":"123","isCool":true}
+
+### Get all documents
+
+GET https://localhost:8081/dbs/db1/colls/test/docs
+
+### Query documents
+
+POST https://localhost:8081/dbs/db1/colls/test/docs
+Content-Type: application/json
+
+{"query":"SELECT c.id, c.isCool AS cool FROM c WHERE c.isCool = false"}

@@ -49,6 +49,19 @@ func makeColumnList(column interface{}, other_columns interface{}) ([]parsers.Se
 	return columnList, nil
 }
 
+func makeSelectArray(columns interface{}, asClause interface{}) (parsers.SelectItem, error) {
+    selectItem := parsers.SelectItem{
+		SelectItems: columns.([]parsers.SelectItem),
+		Type:        parsers.SelectItemTypeArray,
+	}
+
+	if aliasValue, ok := asClause.(string); ok {
+		selectItem.Alias = aliasValue
+	}
+
+	return selectItem, nil
+}
+
 func joinStrings(array []interface{}) string {
     var stringsArray []string
     for _, elem := range array {
@@ -101,10 +114,16 @@ TableName <- key:Identifier {
     return parsers.Table{Value: key.(string)}, nil
 }
 
-SelectItem <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)*
-    asClause:(ws "AS" ws alias:Identifier { return alias, nil })? {
+SelectArray <- "[" ws columns:ColumnList ws "]" asClause:AsClause? {
+    return makeSelectArray(columns, asClause)
+}
+
+SelectItem <- SelectArray / name:Identifier path:(DotFieldAccess / ArrayFieldAccess)*
+    asClause:AsClause? {
     return makeSelectItem(name, path, asClause, parsers.SelectItemTypeField)
 }
+
+AsClause <- ws As ws alias:Identifier { return alias, nil }
 
 DotFieldAccess <- "." id:Identifier {
     return id, nil
@@ -135,6 +154,8 @@ ComparisonExpression <- left:(Literal / SelectItem) ws op:ComparisonOperator ws 
 }
 
 Select <- ("select" / "SELECT")
+
+As <- ("as" / "AS")
 
 From <- ("from" / "FROM")
 
