@@ -27,11 +27,11 @@ func Test_Execute(t *testing.T) {
 		map[string]interface{}{"id": "67890", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
 	}
 
-	t.Run("Shoul execute simple SELECT", func(t *testing.T) {
+	t.Run("Should execute simple SELECT", func(t *testing.T) {
 		testQueryExecute(
 			t,
 			parsers.SelectStmt{
-				Columns: []parsers.FieldPath{
+				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "pk"}},
 				},
@@ -45,17 +45,34 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
-	t.Run("Shoul execute SELECT with single WHERE condition", func(t *testing.T) {
+	t.Run("Should execute SELECT VALUE", func(t *testing.T) {
 		testQueryExecute(
 			t,
 			parsers.SelectStmt{
-				Columns: []parsers.FieldPath{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}, IsTopLevel: true},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				"12345",
+				"67890",
+			},
+		)
+	})
+
+	t.Run("Should execute SELECT with single WHERE condition", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
 				Table: parsers.Table{Value: "c"},
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
-					Left:      parsers.FieldPath{Path: []string{"c", "isCool"}},
+					Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
 					Right:     parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
 				},
 			},
@@ -70,7 +87,7 @@ func Test_Execute(t *testing.T) {
 		testQueryExecute(
 			t,
 			parsers.SelectStmt{
-				Columns: []parsers.FieldPath{
+				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "_self"}, Alias: "self"},
 				},
@@ -80,12 +97,12 @@ func Test_Execute(t *testing.T) {
 					Expressions: []interface{}{
 						parsers.ComparisonExpression{
 							Operation: "=",
-							Left:      parsers.FieldPath{Path: []string{"c", "id"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "id"}},
 							Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "67890"},
 						},
 						parsers.ComparisonExpression{
 							Operation: "=",
-							Left:      parsers.FieldPath{Path: []string{"c", "pk"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "pk"}},
 							Right:     parsers.Constant{Type: parsers.ConstantTypeInteger, Value: 456},
 						},
 					},

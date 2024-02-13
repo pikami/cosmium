@@ -14,22 +14,31 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 	for _, row := range data {
 		// Check if the row satisfies the filter conditions
 		if evaluateFilters(query.Filters, row) {
-			// Construct a new row based on the selected columns
-			newRow := make(map[string]interface{})
-			for _, column := range query.Columns {
-				destinationName := column.Alias
-				if destinationName == "" {
-					destinationName = column.Path[len(column.Path)-1]
-				}
-
-				newRow[destinationName] = getFieldValue(column, row)
-			}
-			// Add the new row to the result
-			result = append(result, newRow)
+			result = append(result, selectRow(query.SelectItems, row))
 		}
 	}
 
 	return result
+}
+
+func selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
+	// When the first value is top level, select it instead
+	if len(selectItems) > 0 && selectItems[0].IsTopLevel {
+		return getFieldValue(selectItems[0], row)
+	}
+
+	// Construct a new row based on the selected columns
+	newRow := make(map[string]interface{})
+	for _, column := range selectItems {
+		destinationName := column.Alias
+		if destinationName == "" {
+			destinationName = column.Path[len(column.Path)-1]
+		}
+
+		newRow[destinationName] = getFieldValue(column, row)
+	}
+
+	return newRow
 }
 
 // Helper function to evaluate filter conditions recursively
@@ -74,7 +83,7 @@ func evaluateFilters(expr ExpressionType, row RowType) bool {
 	return false
 }
 
-func getFieldValue(field parsers.FieldPath, row RowType) interface{} {
+func getFieldValue(field parsers.SelectItem, row RowType) interface{} {
 	value := row
 	for _, pathSegment := range field.Path[1:] {
 		if nestedValue, ok := value.(map[string]interface{}); ok {
@@ -88,7 +97,7 @@ func getFieldValue(field parsers.FieldPath, row RowType) interface{} {
 
 func getExpressionParameterValue(parameter interface{}, row RowType) interface{} {
 	switch typedParameter := parameter.(type) {
-	case parsers.FieldPath:
+	case parsers.SelectItem:
 		return getFieldValue(typedParameter, row)
 	case parsers.Constant:
 		return typedParameter.Value

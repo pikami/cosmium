@@ -16,19 +16,30 @@ const (
 	ConstantTypeBoolean
 )
 
+type SelectItemType int
+
+const (
+	SelectItemTypeField SelectItemType = iota
+	SelectItemTypeObject
+	SelectItemTypeArray
+)
+
 type SelectStmt struct {
-	Columns []FieldPath
-	Table   Table
-	Filters interface{}
+	SelectItems []SelectItem
+	Table       Table
+	Filters     interface{}
 }
 
 type Table struct {
 	Value string
 }
 
-type FieldPath struct {
-	Alias string
-	Path  []string
+type SelectItem struct {
+	Alias       string
+	Path        []string
+	SelectItems []SelectItem
+	Type        SelectItemType
+	IsTopLevel  bool
 }
 
 type LogicalExpression struct {

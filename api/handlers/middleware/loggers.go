@@ -14,7 +14,10 @@ func RequestLogger() gin.HandlerFunc {
 		rdr1 := io.NopCloser(bytes.NewBuffer(buf))
 		rdr2 := io.NopCloser(bytes.NewBuffer(buf))
 
-		fmt.Println(readBody(rdr1))
+		bodyStr := readBody(rdr1)
+		if bodyStr != "" {
+			fmt.Println(bodyStr)
+		}
 
 		c.Request.Body = rdr2
 		c.Next()

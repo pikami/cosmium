@@ -5,7 +5,7 @@ import "github.com/pikami/cosmium/parsers"
 
 func makeSelectStmt(columns, table, whereClause interface{}) (parsers.SelectStmt, error) {
     selectStmt := parsers.SelectStmt{
-		Columns: columns.([]parsers.FieldPath),
+		SelectItems: columns.([]parsers.SelectItem),
 		Table:   table.(parsers.Table),
 	}
 
@@ -18,7 +18,7 @@ func makeSelectStmt(columns, table, whereClause interface{}) (parsers.SelectStmt
 	return selectStmt, nil
 }
 
-func makeFieldPath(name interface{}, path interface{}, alias interface{}) (parsers.FieldPath, error) {
+func makeSelectItem(name interface{}, path interface{}, alias interface{}, selectItemType parsers.SelectItemType) (parsers.SelectItem, error) {
 	ps := path.([]interface{})
 
 	paths := make([]string, 1)
@@ -27,21 +27,21 @@ func makeFieldPath(name interface{}, path interface{}, alias interface{}) (parse
         paths = append(paths, p.(string))
 	}
 
-    fieldPath := parsers.FieldPath{Path: paths}
+    selectItem := parsers.SelectItem{Path: paths, Type: selectItemType}
     if aliasValue, ok := alias.(string); ok {
-        fieldPath.Alias = aliasValue
+        selectItem.Alias = aliasValue
     }
 
-	return fieldPath, nil
+	return selectItem, nil
 }
 
-func makeColumnList(column interface{}, other_columns interface{}) ([]parsers.FieldPath, error) {
+func makeColumnList(column interface{}, other_columns interface{}) ([]parsers.SelectItem, error) {
     collsAsArray := other_columns.([]interface{})
-	columnList := make([]parsers.FieldPath, len(collsAsArray) + 1)
-	columnList[0] = column.(parsers.FieldPath)
+	columnList := make([]parsers.SelectItem, len(collsAsArray) + 1)
+	columnList[0] = column.(parsers.SelectItem)
 
 	for i, v := range collsAsArray {
-        if col, ok := v.(parsers.FieldPath); ok {
+        if col, ok := v.(parsers.SelectItem); ok {
 			columnList[i+1] = col
         }
     }
@@ -79,23 +79,31 @@ Input <- selectStmt:SelectStmt {
     return selectStmt, nil
 }
 
-SelectStmt <- Select ws columns:ColumnList ws
+SelectStmt <- Select ws columns:Selection ws
     From ws table:TableName ws
     whereClause:(ws Where ws condition:Condition { return condition, nil })? {
     return makeSelectStmt(columns, table, whereClause)
 }
 
-ColumnList <- column:FieldPath other_columns:(ws "," ws coll:FieldPath {return coll, nil })* {
+Selection <- SelectValueSpec / ColumnList
+
+ColumnList <- column:SelectItem other_columns:(ws "," ws coll:SelectItem {return coll, nil })* {
     return makeColumnList(column, other_columns)
+}
+
+SelectValueSpec <- "VALUE" ws column:SelectItem {
+    selectItem := column.(parsers.SelectItem)
+	selectItem.IsTopLevel = true
+    return makeColumnList(selectItem, make([]interface{}, 0))
 }
 
 TableName <- key:Identifier {
     return parsers.Table{Value: key.(string)}, nil
 }
 
-FieldPath <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)*
+SelectItem <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)*
     asClause:(ws "AS" ws alias:Identifier { return alias, nil })? {
-    return makeFieldPath(name, path, asClause)
+    return makeSelectItem(name, path, asClause, parsers.SelectItemTypeField)
 }
 
 DotFieldAccess <- "." id:Identifier {
@@ -122,7 +130,7 @@ AndExpression <- ex1:ComparisonExpression ex2:(ws "AND" ws ex:ComparisonExpressi
     return combineExpressions(ex1, ex2, parsers.LogicalExpressionTypeAnd)
 }
 
-ComparisonExpression <- left:(Literal / FieldPath) ws op:ComparisonOperator ws right:(Literal / FieldPath) {
+ComparisonExpression <- left:(Literal / SelectItem) ws op:ComparisonOperator ws right:(Literal / SelectItem) {
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
 }
 

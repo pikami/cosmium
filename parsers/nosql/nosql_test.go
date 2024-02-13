@@ -12,7 +12,7 @@ import (
 // For Parser Debugging
 // func Test_ParseTest(t *testing.T) {
 // 	// select c.id, c._self, c._rid, c._ts, [c[\"pk\"]] as _partitionKeyValue from c
-// 	res, err := nosql.Parse("", []byte("select c.id, c._self AS self, c._rid, c._ts FROM c where c.id=\"12345\" AND c.pk=123"))
+// 	res, err := nosql.Parse("", []byte("SELECT VALUE c.id FROM c"))
 // 	if err != nil {
 // 		log.Fatal(err)
 // 	}
@@ -38,14 +38,27 @@ func testQueryParse(t *testing.T, query string, expectedQuery parsers.SelectStmt
 }
 
 func Test_Parse(t *testing.T) {
-	t.Run("Shoul parse simple SELECT", func(t *testing.T) {
+	t.Run("Should parse simple SELECT", func(t *testing.T) {
 		testQueryParse(
 			t,
 			`SELECT c.id, c["pk"] FROM c`,
 			parsers.SelectStmt{
-				Columns: []parsers.FieldPath{
+				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
+	t.Run("Should parse SELECT VALUE", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT VALUE c.id FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}, IsTopLevel: true},
 				},
 				Table: parsers.Table{Value: "c"},
 			},
@@ -59,13 +72,13 @@ func Test_Parse(t *testing.T) {
 			FROM c
 			WHERE c.isCool=true`,
 			parsers.SelectStmt{
-				Columns: []parsers.FieldPath{
+				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
 				Table: parsers.Table{Value: "c"},
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
-					Left:      parsers.FieldPath{Path: []string{"c", "isCool"}},
+					Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
 					Right:     parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
 				},
 			},
@@ -79,7 +92,7 @@ func Test_Parse(t *testing.T) {
 			FROM c
 			WHERE c.id="12345" OR c.pk=123`,
 			parsers.SelectStmt{
-				Columns: []parsers.FieldPath{
+				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "_self"}, Alias: "self"},
 					{Path: []string{"c", "_rid"}},
@@ -91,12 +104,12 @@ func Test_Parse(t *testing.T) {
 					Expressions: []interface{}{
 						parsers.ComparisonExpression{
 							Operation: "=",
-							Left:      parsers.FieldPath{Path: []string{"c", "id"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "id"}},
 							Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "12345"},
 						},
 						parsers.ComparisonExpression{
 							Operation: "=",
-							Left:      parsers.FieldPath{Path: []string{"c", "pk"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "pk"}},
 							Right:     parsers.Constant{Type: parsers.ConstantTypeInteger, Value: 123},
 						},
 					},
@@ -105,7 +118,7 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
-	t.Run("Shoul correctly parse literals in conditions", func(t *testing.T) {
+	t.Run("Should correctly parse literals in conditions", func(t *testing.T) {
 		testQueryParse(
 			t,
 			`select c.id
@@ -115,27 +128,27 @@ func Test_Parse(t *testing.T) {
 				AND c.float=6.9
 				AND c.string="hello"`,
 			parsers.SelectStmt{
-				Columns: []parsers.FieldPath{{Path: []string{"c", "id"}, Alias: ""}},
-				Table:   parsers.Table{Value: "c"},
+				SelectItems: []parsers.SelectItem{{Path: []string{"c", "id"}, Alias: ""}},
+				Table:       parsers.Table{Value: "c"},
 				Filters: parsers.LogicalExpression{
 					Expressions: []interface{}{
 						parsers.ComparisonExpression{
-							Left:      parsers.FieldPath{Path: []string{"c", "boolean"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "boolean"}},
 							Right:     parsers.Constant{Type: 3, Value: true},
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
-							Left:      parsers.FieldPath{Path: []string{"c", "integer"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "integer"}},
 							Right:     parsers.Constant{Type: 1, Value: 1},
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
-							Left:      parsers.FieldPath{Path: []string{"c", "float"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "float"}},
 							Right:     parsers.Constant{Type: 2, Value: 6.9},
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
-							Left:      parsers.FieldPath{Path: []string{"c", "string"}},
+							Left:      parsers.SelectItem{Path: []string{"c", "string"}},
 							Right:     parsers.Constant{Type: 0, Value: "hello"},
 							Operation: "=",
 						},
