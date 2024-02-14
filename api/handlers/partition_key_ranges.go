@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,8 +13,19 @@ func GetPartitionKeyRanges(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
+	if c.Request.Header.Get("if-none-match") != "" {
+		c.AbortWithStatus(http.StatusNotModified)
+		return
+	}
+
 	partitionKeyRanges, status := repositories.GetPartitionKeyRanges(databaseId, collectionId)
 	if status == repositorymodels.StatusOk {
+		c.Header("etag", "\"420\"")
+		c.Header("lsn", "420")
+		c.Header("x-ms-cosmos-llsn", "420")
+		c.Header("x-ms-global-committed-lsn", "420")
+		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(partitionKeyRanges)))
+
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":               "",
 			"_count":             len(partitionKeyRanges),
