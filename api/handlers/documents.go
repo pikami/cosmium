@@ -60,6 +60,38 @@ func DeleteDocument(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
+// TODO: Maybe move "replace" logic to repository
+func ReplaceDocument(c *gin.Context) {
+	databaseId := c.Param("databaseId")
+	collectionId := c.Param("collId")
+	documentId := c.Param("docId")
+
+	var requestBody map[string]interface{}
+	if err := c.BindJSON(&requestBody); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	status := repositories.DeleteDocument(databaseId, collectionId, documentId)
+	if status == repositorymodels.StatusNotFound {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		return
+	}
+
+	status = repositories.CreateDocument(databaseId, collectionId, requestBody)
+	if status == repositorymodels.Conflict {
+		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		return
+	}
+
+	if status == repositorymodels.StatusOk {
+		c.IndentedJSON(http.StatusCreated, requestBody)
+		return
+	}
+
+	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+}
+
 func DocumentsPost(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
