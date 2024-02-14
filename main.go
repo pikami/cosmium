@@ -5,10 +5,15 @@ import (
 
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
+	"github.com/pikami/cosmium/internal/repositories"
 )
 
 func main() {
 	config.ParseFlags()
+
+	if config.Config.DataFilePath != "" {
+		repositories.LoadStateFS(config.Config.DataFilePath)
+	}
 
 	router := api.CreateRouter()
 	router.RunTLS(

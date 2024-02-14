@@ -13,6 +13,7 @@ func ParseFlags() {
 	explorerPath := flag.String("ExplorerDir", "/home/pk/pro/cosmos-explorer/dist", "Path to cosmos-explorer files")
 	tlsCertificatePath := flag.String("Cert", "../example.crt", "Hostname")
 	tlsCertificateKey := flag.String("CertKey", "../example.key", "Hostname")
+	initialDataPath := flag.String("InitialData", "", "Path to JSON containing initial state")
 
 	flag.Parse()
 
@@ -21,6 +22,7 @@ func ParseFlags() {
 	Config.ExplorerPath = *explorerPath
 	Config.TLS_CertificatePath = *tlsCertificatePath
 	Config.TLS_CertificateKey = *tlsCertificateKey
+	Config.DataFilePath = *initialDataPath
 
 	Config.DatabaseAccount = Config.Host
 	Config.DatabaseDomain = Config.Host

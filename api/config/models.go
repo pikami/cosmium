@@ -10,4 +10,5 @@ type ServerConfig struct {
 	Host                string
 	TLS_CertificatePath string
 	TLS_CertificateKey  string
+	DataFilePath        string
 }

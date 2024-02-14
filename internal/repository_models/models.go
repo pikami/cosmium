@@ -110,3 +110,9 @@ type PartitionKeyRange struct {
 	Ts                 int    `json:"_ts"`
 	Lsn                int    `json:"lsn"`
 }
+
+type State struct {
+	Databases   []Database   `json:"databases"`
+	Collections []Collection `json:"collections"`
+	Documents   []Document   `json:"documents"`
+}
