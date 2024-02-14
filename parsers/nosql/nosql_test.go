@@ -52,6 +52,20 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT TOP", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT TOP 1 c.id FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				Count: 1,
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT VALUE", func(t *testing.T) {
 		testQueryParse(
 			t,

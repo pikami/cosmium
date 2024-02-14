@@ -18,6 +18,17 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 		}
 	}
 
+	// Apply result limit
+	if query.Count > 0 {
+		count := func() int {
+			if len(result) < query.Count {
+				return len(result)
+			}
+			return query.Count
+		}()
+		result = result[:count]
+	}
+
 	return result
 }
 

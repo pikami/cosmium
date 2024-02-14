@@ -45,6 +45,24 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT TOP", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				Count: 1,
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "12345", "pk": 123},
+			},
+		)
+	})
+
 	t.Run("Should execute SELECT VALUE", func(t *testing.T) {
 		testQueryExecute(
 			t,

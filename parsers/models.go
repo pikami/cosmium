@@ -28,6 +28,7 @@ type SelectStmt struct {
 	SelectItems []SelectItem
 	Table       Table
 	Filters     interface{}
+	Count       int
 }
 
 type Table struct {
