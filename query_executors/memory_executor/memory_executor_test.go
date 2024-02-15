@@ -86,6 +86,20 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT *", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c"}, IsTopLevel: true},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			mockData,
+		)
+	})
+
 	t.Run("Should execute SELECT array", func(t *testing.T) {
 		testQueryExecute(
 			t,

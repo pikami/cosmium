@@ -112,7 +112,13 @@ TopClause <- Top ws count:Integer {
     return count, nil
 }
 
-Selection <- SelectValueSpec / ColumnList
+Selection <- SelectValueSpec / ColumnList /SelectAsterisk
+
+SelectAsterisk <- "*" {
+    selectItem, _ := makeSelectItem("c", make([]interface{}, 0), parsers.SelectItemTypeField)
+	selectItem.IsTopLevel = true
+    return makeColumnList(selectItem, make([]interface{}, 0))
+}
 
 ColumnList <- column:SelectItem other_columns:(ws "," ws coll:SelectItem {return coll, nil })* {
     return makeColumnList(column, other_columns)

@@ -112,11 +112,13 @@ func getFieldValue(field parsers.SelectItem, row RowType) interface{} {
 	}
 
 	value := row
-	for _, pathSegment := range field.Path[1:] {
-		if nestedValue, ok := value.(map[string]interface{}); ok {
-			value = nestedValue[pathSegment]
-		} else {
-			return nil
+	if len(field.Path) > 1 {
+		for _, pathSegment := range field.Path[1:] {
+			if nestedValue, ok := value.(map[string]interface{}); ok {
+				value = nestedValue[pathSegment]
+			} else {
+				return nil
+			}
 		}
 	}
 	return value

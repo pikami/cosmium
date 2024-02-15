@@ -79,6 +79,19 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT *", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT * FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c"}, IsTopLevel: true},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT array", func(t *testing.T) {
 		testQueryParse(
 			t,
