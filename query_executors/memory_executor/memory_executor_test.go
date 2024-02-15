@@ -25,6 +25,8 @@ func Test_Execute(t *testing.T) {
 	mockData := []memoryexecutor.RowType{
 		map[string]interface{}{"id": "12345", "pk": 123, "_self": "self1", "_rid": "rid1", "_ts": 123456, "isCool": false},
 		map[string]interface{}{"id": "67890", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
+		map[string]interface{}{"id": "456", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
+		map[string]interface{}{"id": "123", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
 	}
 
 	t.Run("Should execute simple SELECT", func(t *testing.T) {
@@ -41,6 +43,8 @@ func Test_Execute(t *testing.T) {
 			[]memoryexecutor.RowType{
 				map[string]interface{}{"id": "12345", "pk": 123},
 				map[string]interface{}{"id": "67890", "pk": 456},
+				map[string]interface{}{"id": "456", "pk": 456},
+				map[string]interface{}{"id": "123", "pk": 456},
 			},
 		)
 	})
@@ -76,6 +80,8 @@ func Test_Execute(t *testing.T) {
 			[]memoryexecutor.RowType{
 				"12345",
 				"67890",
+				"456",
+				"123",
 			},
 		)
 	})
@@ -100,6 +106,8 @@ func Test_Execute(t *testing.T) {
 			[]memoryexecutor.RowType{
 				map[string]interface{}{"arr": []interface{}{"12345", 123}},
 				map[string]interface{}{"arr": []interface{}{"67890", 456}},
+				map[string]interface{}{"arr": []interface{}{"456", 456}},
+				map[string]interface{}{"arr": []interface{}{"123", 456}},
 			},
 		)
 	})
@@ -124,6 +132,8 @@ func Test_Execute(t *testing.T) {
 			[]memoryexecutor.RowType{
 				map[string]interface{}{"obj": map[string]interface{}{"id": "12345", "_pk": 123}},
 				map[string]interface{}{"obj": map[string]interface{}{"id": "67890", "_pk": 456}},
+				map[string]interface{}{"obj": map[string]interface{}{"id": "456", "_pk": 456}},
+				map[string]interface{}{"obj": map[string]interface{}{"id": "123", "_pk": 456}},
 			},
 		)
 	})
@@ -145,6 +155,8 @@ func Test_Execute(t *testing.T) {
 			mockData,
 			[]memoryexecutor.RowType{
 				map[string]interface{}{"id": "67890"},
+				map[string]interface{}{"id": "456"},
+				map[string]interface{}{"id": "123"},
 			},
 		)
 	})
@@ -177,6 +189,48 @@ func Test_Execute(t *testing.T) {
 			mockData,
 			[]memoryexecutor.RowType{
 				map[string]interface{}{"id": "67890", "self": "self2"},
+			},
+		)
+	})
+
+	t.Run("Should execute SELECT with grouped WHERE conditions", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				Filters: parsers.LogicalExpression{
+					Operation: parsers.LogicalExpressionTypeAnd,
+					Expressions: []interface{}{
+						parsers.ComparisonExpression{
+							Operation: "=",
+							Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
+						},
+						parsers.LogicalExpression{
+							Operation: parsers.LogicalExpressionTypeOr,
+							Expressions: []interface{}{
+								parsers.ComparisonExpression{
+									Operation: "=",
+									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
+									Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "123"},
+								},
+								parsers.ComparisonExpression{
+									Operation: "=",
+									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
+									Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "456"},
+								},
+							},
+						},
+					},
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "456"},
+				map[string]interface{}{"id": "123"},
 			},
 		)
 	})

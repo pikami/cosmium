@@ -180,7 +180,8 @@ AndExpression <- ex1:ComparisonExpression ex2:(ws "AND" ws ex:ComparisonExpressi
     return combineExpressions(ex1, ex2, parsers.LogicalExpressionTypeAnd)
 }
 
-ComparisonExpression <- left:(Literal / SelectItem) ws op:ComparisonOperator ws right:(Literal / SelectItem) {
+ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
+    / left:(Literal / SelectItem) ws op:ComparisonOperator ws right:(Literal / SelectItem) {
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
 }
 

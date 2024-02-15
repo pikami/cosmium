@@ -172,6 +172,46 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT with grouped WHERE conditions", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`select c.id
+			FROM c
+			WHERE c.isCool=true AND (c.id = "123" OR c.id = "456")`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				Filters: parsers.LogicalExpression{
+					Operation: parsers.LogicalExpressionTypeAnd,
+					Expressions: []interface{}{
+						parsers.ComparisonExpression{
+							Operation: "=",
+							Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
+						},
+						parsers.LogicalExpression{
+							Operation: parsers.LogicalExpressionTypeOr,
+							Expressions: []interface{}{
+								parsers.ComparisonExpression{
+									Operation: "=",
+									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
+									Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "123"},
+								},
+								parsers.ComparisonExpression{
+									Operation: "=",
+									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
+									Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "456"},
+								},
+							},
+						},
+					},
+				},
+			},
+		)
+	})
+
 	t.Run("Should correctly parse literals in conditions", func(t *testing.T) {
 		testQueryParse(
 			t,
