@@ -205,7 +205,11 @@ ComparisonOperator <- "=" / "!=" / "<" / "<=" / ">" / ">=" {
     return string(c.text), nil
 }
 
-Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral
+Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral / ParameterConstant
+
+ParameterConstant <- "@" Identifier {
+    return parsers.Constant{Type: parsers.ConstantTypeParameterConstant, Value: string(c.text)}, nil
+}
 
 IntegerLiteral <- number:Integer {
     return parsers.Constant{Type: parsers.ConstantTypeInteger, Value: number.(int)}, nil

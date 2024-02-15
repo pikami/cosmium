@@ -175,6 +175,30 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT with WHERE condition with defined parameter constant", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				Filters: parsers.ComparisonExpression{
+					Operation: "=",
+					Left:      parsers.SelectItem{Path: []string{"c", "id"}},
+					Right:     parsers.Constant{Type: parsers.ConstantTypeParameterConstant, Value: "@param_id"},
+				},
+				Parameters: map[string]interface{}{
+					"@param_id": "456",
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "456"},
+			},
+		)
+	})
+
 	t.Run("Should execute SELECT with multiple WHERE conditions", func(t *testing.T) {
 		testQueryExecute(
 			t,

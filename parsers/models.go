@@ -14,6 +14,7 @@ const (
 	ConstantTypeInteger
 	ConstantTypeFloat
 	ConstantTypeBoolean
+	ConstantTypeParameterConstant
 )
 
 type SelectItemType int
@@ -29,6 +30,7 @@ type SelectStmt struct {
 	Table       Table
 	Filters     interface{}
 	Count       int
+	Parameters  map[string]interface{}
 }
 
 type Table struct {

@@ -103,7 +103,7 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 	return repositorymodels.StatusOk
 }
 
-func ExecuteQueryDocuments(databaseId string, collectionId string, query string) ([]memoryexecutor.RowType, repositorymodels.RepositoryStatus) {
+func ExecuteQueryDocuments(databaseId string, collectionId string, query string, queryParameters map[string]interface{}) ([]memoryexecutor.RowType, repositorymodels.RepositoryStatus) {
 	parsedQuery, err := nosql.Parse("", []byte(query))
 	if err != nil {
 		log.Printf("Failed to parse query: %s\nerr: %v", query, err)
@@ -120,5 +120,10 @@ func ExecuteQueryDocuments(databaseId string, collectionId string, query string)
 		covDocs = append(covDocs, map[string]interface{}(doc))
 	}
 
-	return memoryexecutor.Execute(parsedQuery.(parsers.SelectStmt), covDocs), repositorymodels.StatusOk
+	if typedQuery, ok := parsedQuery.(parsers.SelectStmt); ok {
+		typedQuery.Parameters = queryParameters
+		return memoryexecutor.Execute(typedQuery, covDocs), repositorymodels.StatusOk
+	}
+
+	return nil, repositorymodels.BadRequest
 }

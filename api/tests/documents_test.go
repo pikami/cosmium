@@ -13,11 +13,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func testCosmosQuery(t *testing.T, collectionClient *azcosmos.ContainerClient, query string, expectedData []interface{}) {
+func testCosmosQuery(t *testing.T,
+	collectionClient *azcosmos.ContainerClient,
+	query string,
+	queryParameters []azcosmos.QueryParameter,
+	expectedData []interface{},
+) {
 	pager := collectionClient.NewQueryItemsPager(
 		query,
 		azcosmos.PartitionKey{},
-		&azcosmos.QueryOptions{})
+		&azcosmos.QueryOptions{
+			QueryParameters: queryParameters,
+		})
 
 	context := context.TODO()
 	items := make([]interface{}, 0)
@@ -70,6 +77,7 @@ func Test_Documents(t *testing.T) {
 	t.Run("Should query document", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			"SELECT c.id, c[\"pk\"] FROM c",
+			nil,
 			[]interface{}{
 				map[string]interface{}{"id": "12345", "pk": "123"},
 				map[string]interface{}{"id": "67890", "pk": "456"},
@@ -80,6 +88,7 @@ func Test_Documents(t *testing.T) {
 	t.Run("Should query VALUE array", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			"SELECT VALUE [c.id, c[\"pk\"]] FROM c",
+			nil,
 			[]interface{}{
 				[]interface{}{"12345", "123"},
 				[]interface{}{"67890", "456"},
@@ -90,6 +99,7 @@ func Test_Documents(t *testing.T) {
 	t.Run("Should query VALUE object", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			"SELECT VALUE { id: c.id, _pk: c.pk } FROM c",
+			nil,
 			[]interface{}{
 				map[string]interface{}{"id": "12345", "_pk": "123"},
 				map[string]interface{}{"id": "67890", "_pk": "456"},
@@ -102,6 +112,21 @@ func Test_Documents(t *testing.T) {
 			`select c.id
 			FROM c
 			WHERE c.isCool=true`,
+			nil,
+			[]interface{}{
+				map[string]interface{}{"id": "67890"},
+			},
+		)
+	})
+
+	t.Run("Should query document with query parameters", func(t *testing.T) {
+		testCosmosQuery(t, collectionClient,
+			`select c.id
+			FROM c
+			WHERE c.id=@param_id`,
+			[]azcosmos.QueryParameter{
+				{Name: "@param_id", Value: "67890"},
+			},
 			[]interface{}{
 				map[string]interface{}{"id": "67890"},
 			},

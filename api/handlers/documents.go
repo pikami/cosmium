@@ -109,8 +109,13 @@ func DocumentsPost(c *gin.Context) {
 			return
 		}
 
+		var queryParameters map[string]interface{}
+		if paramsArray, ok := requestBody["parameters"].([]interface{}); ok {
+			queryParameters = parametersToMap(paramsArray)
+		}
+
 		// TODO: Handle these {"query":"select c.id, c._self, c._rid, c._ts, [c[\"pk\"]] as _partitionKeyValue from c"}
-		docs, status := repositories.ExecuteQueryDocuments(databaseId, collectionId, query.(string))
+		docs, status := repositories.ExecuteQueryDocuments(databaseId, collectionId, query.(string), queryParameters)
 		if status != repositorymodels.StatusOk {
 			// TODO: Currently we return everything if the query fails
 			GetAllDocuments(c)
@@ -138,4 +143,16 @@ func DocumentsPost(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+}
+
+func parametersToMap(pairs []interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+
+	for _, pair := range pairs {
+		if pairMap, ok := pair.(map[string]interface{}); ok {
+			result[pairMap["name"].(string)] = pairMap["value"]
+		}
+	}
+
+	return result
 }

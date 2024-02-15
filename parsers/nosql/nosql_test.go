@@ -233,7 +233,8 @@ func Test_Parse(t *testing.T) {
 			WHERE c.boolean=true
 				AND c.integer=1
 				AND c.float=6.9
-				AND c.string="hello"`,
+				AND c.string="hello"
+				AND c.param=@param_id1`,
 			parsers.SelectStmt{
 				SelectItems: []parsers.SelectItem{{Path: []string{"c", "id"}, Alias: ""}},
 				Table:       parsers.Table{Value: "c"},
@@ -241,22 +242,27 @@ func Test_Parse(t *testing.T) {
 					Expressions: []interface{}{
 						parsers.ComparisonExpression{
 							Left:      parsers.SelectItem{Path: []string{"c", "boolean"}},
-							Right:     parsers.Constant{Type: 3, Value: true},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
 							Left:      parsers.SelectItem{Path: []string{"c", "integer"}},
-							Right:     parsers.Constant{Type: 1, Value: 1},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeInteger, Value: 1},
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
 							Left:      parsers.SelectItem{Path: []string{"c", "float"}},
-							Right:     parsers.Constant{Type: 2, Value: 6.9},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeFloat, Value: 6.9},
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
 							Left:      parsers.SelectItem{Path: []string{"c", "string"}},
-							Right:     parsers.Constant{Type: 0, Value: "hello"},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeString, Value: "hello"},
+							Operation: "=",
+						},
+						parsers.ComparisonExpression{
+							Left:      parsers.SelectItem{Path: []string{"c", "param"}},
+							Right:     parsers.Constant{Type: parsers.ConstantTypeParameterConstant, Value: "@param_id1"},
 							Operation: "=",
 						},
 					},
