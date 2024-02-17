@@ -25,12 +25,20 @@ const (
 	SelectItemTypeArray
 )
 
+type OrderDirection int
+
+const (
+	OrderDirectionAsc OrderDirection = iota
+	OrderDirectionDesc
+)
+
 type SelectStmt struct {
-	SelectItems []SelectItem
-	Table       Table
-	Filters     interface{}
-	Count       int
-	Parameters  map[string]interface{}
+	SelectItems      []SelectItem
+	Table            Table
+	Filters          interface{}
+	Count            int
+	Parameters       map[string]interface{}
+	OrderExpressions []OrderExpression
 }
 
 type Table struct {
@@ -59,4 +67,9 @@ type ComparisonExpression struct {
 type Constant struct {
 	Type  ConstantType
 	Value interface{}
+}
+
+type OrderExpression struct {
+	SelectItem SelectItem
+	Direction  OrderDirection
 }

@@ -3,7 +3,7 @@ package nosql
 
 import "github.com/pikami/cosmium/parsers"
 
-func makeSelectStmt(columns, table, whereClause interface{}, count interface{}) (parsers.SelectStmt, error) {
+func makeSelectStmt(columns, table, whereClause interface{}, count interface{}, orderList interface{}) (parsers.SelectStmt, error) {
 	selectStmt := parsers.SelectStmt{
 		SelectItems: columns.([]parsers.SelectItem),
 		Table:       table.(parsers.Table),
@@ -20,6 +20,10 @@ func makeSelectStmt(columns, table, whereClause interface{}, count interface{}) 
 	if n, ok := count.(int); ok {
 		selectStmt.Count = n
 	}
+
+    if orderExpressions, ok := orderList.([]parsers.OrderExpression); ok {
+        selectStmt.OrderExpressions = orderExpressions
+    }
 
 	return selectStmt, nil
 }
@@ -74,6 +78,33 @@ func makeSelectObject(field interface{}, other_fields interface{}) (parsers.Sele
 	}, nil
 }
 
+func makeOrderByClause(ex1 interface{}, others interface{}) ([]parsers.OrderExpression, error) {
+    othersArray := others.([]interface{})
+	orderList := make([]parsers.OrderExpression, len(othersArray)+1)
+	orderList[0] = ex1.(parsers.OrderExpression)
+
+	for i, v := range othersArray {
+		if col, ok := v.(parsers.OrderExpression); ok {
+			orderList[i+1] = col
+		}
+	}
+
+	return orderList, nil
+}
+
+func makeOrderExpression(field interface{}, order interface{}) (parsers.OrderExpression, error) {
+    value := parsers.OrderExpression{
+        SelectItem: field.(parsers.SelectItem),
+        Direction: parsers.OrderDirectionAsc,
+    }
+
+    if orderValue, ok := order.(parsers.OrderDirection); ok {
+		value.Direction = orderValue
+	}
+
+    return value, nil
+}
+
 func joinStrings(array []interface{}) string {
     var stringsArray []string
     for _, elem := range array {
@@ -106,8 +137,9 @@ Input <- selectStmt:SelectStmt {
 
 SelectStmt <- Select ws topClause:TopClause? ws columns:Selection ws
     From ws table:TableName ws
-    whereClause:(ws Where ws condition:Condition { return condition, nil })? {
-    return makeSelectStmt(columns, table, whereClause, topClause)
+    whereClause:(ws Where ws condition:Condition { return condition, nil })?
+    orderByClause:OrderByClause? {
+    return makeSelectStmt(columns, table, whereClause, topClause, orderByClause)
 }
 
 TopClause <- Top ws count:Integer {
@@ -193,6 +225,22 @@ ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
 } / ex:BooleanLiteral { return ex, nil }
 
+OrderByClause <- OrderBy ws ex1:OrderExpression others:(ws "," ws ex:OrderExpression { return ex, nil })* {
+    return makeOrderByClause(ex1, others)
+}
+
+OrderExpression <- field:SelectProperty ws order:OrderDirection? {
+    return makeOrderExpression(field, order)
+}
+
+OrderDirection <- ("ASC" / "asc" / "DESC" / "desc") {
+    switch string(c.text) {
+	case "DESC", "desc":
+		return parsers.OrderDirectionDesc, nil
+	}
+	return parsers.OrderDirectionAsc, nil
+}
+
 Select <- ("select" / "SELECT")
 
 Top <- ("top" / "TOP")
@@ -206,6 +254,8 @@ Where <- ("where" / "WHERE")
 And <- ("and" / "AND")
 
 Or <- ("or" / "OR")
+
+OrderBy <- ("order" / "ORDER") ws ("by" / "BY")
 
 ComparisonOperator <- "=" / "!=" / "<" / "<=" / ">" / ">=" {
     return string(c.text), nil

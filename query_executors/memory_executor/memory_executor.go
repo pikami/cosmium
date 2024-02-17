@@ -2,6 +2,8 @@ package memoryexecutor
 
 import (
 	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/pikami/cosmium/parsers"
 )
@@ -12,12 +14,17 @@ type ExpressionType interface{}
 func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 	result := make([]RowType, 0)
 
-	// Iterate over each row in the data
+	// Apply Filter
 	for _, row := range data {
 		// Check if the row satisfies the filter conditions
 		if evaluateFilters(query.Filters, query.Parameters, row) {
-			result = append(result, selectRow(query.SelectItems, row))
+			result = append(result, row)
 		}
+	}
+
+	// Apply order
+	if query.OrderExpressions != nil && len(query.OrderExpressions) > 0 {
+		orderBy(query.OrderExpressions, result)
 	}
 
 	// Apply result limit
@@ -31,7 +38,13 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 		result = result[:count]
 	}
 
-	return result
+	// Apply select
+	selectedData := make([]RowType, 0)
+	for _, row := range result {
+		selectedData = append(selectedData, selectRow(query.SelectItems, row))
+	}
+
+	return selectedData
 }
 
 func selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
@@ -158,4 +171,43 @@ func getExpressionParameterValue(
 	}
 	// TODO: Handle error
 	return nil
+}
+
+func orderBy(orderBy []parsers.OrderExpression, data []RowType) {
+	less := func(i, j int) bool {
+		for _, order := range orderBy {
+			val1 := getFieldValue(order.SelectItem, data[i])
+			val2 := getFieldValue(order.SelectItem, data[j])
+
+			cmp := compareValues(val1, val2)
+			if cmp != 0 {
+				if order.Direction == parsers.OrderDirectionDesc {
+					return cmp > 0
+				}
+				return cmp < 0
+			}
+		}
+		return i < j
+	}
+
+	sort.SliceStable(data, less)
+}
+
+func compareValues(val1, val2 interface{}) int {
+	switch val1 := val1.(type) {
+	case int:
+		val2 := val2.(int)
+		if val1 < val2 {
+			return -1
+		} else if val1 > val2 {
+			return 1
+		}
+		return 0
+	case string:
+		val2 := val2.(string)
+		return strings.Compare(val1, val2)
+	// TODO: Add more types
+	default:
+		return 0
+	}
 }

@@ -132,6 +132,30 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT with ORDER BY", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id, c["pk"] FROM c ORDER BY c.id DESC, c.pk`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				OrderExpressions: []parsers.OrderExpression{
+					{
+						SelectItem: parsers.SelectItem{Path: []string{"c", "id"}},
+						Direction:  parsers.OrderDirectionDesc,
+					},
+					{
+						SelectItem: parsers.SelectItem{Path: []string{"c", "pk"}},
+						Direction:  parsers.OrderDirectionAsc,
+					},
+				},
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT with single WHERE condition", func(t *testing.T) {
 		testQueryParse(
 			t,

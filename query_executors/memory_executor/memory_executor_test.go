@@ -126,7 +126,7 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
-	t.Run("Should parse SELECT object", func(t *testing.T) {
+	t.Run("Should execute SELECT object", func(t *testing.T) {
 		testQueryExecute(
 			t,
 			parsers.SelectStmt{
@@ -148,6 +148,36 @@ func Test_Execute(t *testing.T) {
 				map[string]interface{}{"obj": map[string]interface{}{"id": "67890", "_pk": 456}},
 				map[string]interface{}{"obj": map[string]interface{}{"id": "456", "_pk": 456}},
 				map[string]interface{}{"obj": map[string]interface{}{"id": "123", "_pk": 456}},
+			},
+		)
+	})
+
+	t.Run("Should execute SELECT with ORDER BY", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				OrderExpressions: []parsers.OrderExpression{
+					{
+						SelectItem: parsers.SelectItem{Path: []string{"c", "pk"}},
+						Direction:  parsers.OrderDirectionAsc,
+					},
+					{
+						SelectItem: parsers.SelectItem{Path: []string{"c", "id"}},
+						Direction:  parsers.OrderDirectionDesc,
+					},
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "12345", "pk": 123},
+				map[string]interface{}{"id": "67890", "pk": 456},
+				map[string]interface{}{"id": "456", "pk": 456},
+				map[string]interface{}{"id": "123", "pk": 456},
 			},
 		)
 	})
