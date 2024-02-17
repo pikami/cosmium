@@ -13,6 +13,8 @@ func makeSelectStmt(columns, table, whereClause interface{}, count interface{}) 
 		selectStmt.Filters = filters
 	} else if filters, ok := whereClause.(parsers.LogicalExpression); ok {
 		selectStmt.Filters = filters
+	} else if filters, ok := whereClause.(parsers.Constant); ok {
+		selectStmt.Filters = filters
 	}
 
 	if n, ok := count.(int); ok {
@@ -142,7 +144,7 @@ SelectObject <- "{" ws field:SelectObjectField ws other_fields:(ws "," ws coll:S
     return makeSelectObject(field, other_fields)
 }
 
-SelectObjectField <- name:Identifier ws ":" ws selectItem:SelectItem {
+SelectObjectField <- name:(Identifier / "\"" key:Identifier "\"" { return key, nil }) ws ":" ws selectItem:SelectItem {
     item := selectItem.(parsers.SelectItem)
 	item.Alias = name.(string)
 	return item, nil
@@ -178,18 +180,18 @@ Condition <- expression:OrExpression {
     return expression, nil
 }
 
-OrExpression <- ex1:AndExpression ex2:(ws "OR" ws ex:AndExpression { return ex, nil })* {
+OrExpression <- ex1:AndExpression ex2:(ws Or ws ex:AndExpression { return ex, nil })* {
     return combineExpressions(ex1, ex2, parsers.LogicalExpressionTypeOr)
 }
 
-AndExpression <- ex1:ComparisonExpression ex2:(ws "AND" ws ex:ComparisonExpression { return ex, nil })* {
+AndExpression <- ex1:ComparisonExpression ex2:(ws And ws ex:ComparisonExpression { return ex, nil })* {
     return combineExpressions(ex1, ex2, parsers.LogicalExpressionTypeAnd)
 }
 
 ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
     / left:(Literal / SelectItem) ws op:ComparisonOperator ws right:(Literal / SelectItem) {
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
-}
+} / ex:BooleanLiteral { return ex, nil }
 
 Select <- ("select" / "SELECT")
 
@@ -201,14 +203,21 @@ From <- ("from" / "FROM")
 
 Where <- ("where" / "WHERE")
 
+And <- ("and" / "AND")
+
+Or <- ("or" / "OR")
+
 ComparisonOperator <- "=" / "!=" / "<" / "<=" / ">" / ">=" {
     return string(c.text), nil
 }
 
-Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral / ParameterConstant
+Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral / ParameterConstant / NullConstant
 
 ParameterConstant <- "@" Identifier {
     return parsers.Constant{Type: parsers.ConstantTypeParameterConstant, Value: string(c.text)}, nil
+}
+NullConstant <- "null" {
+    return parsers.Constant{Value: nil}, nil
 }
 
 IntegerLiteral <- number:Integer {

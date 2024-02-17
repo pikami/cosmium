@@ -19,6 +19,9 @@ build-linux-amd64:
 	@echo "Building Linux binary..."
 	@GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64 .
 
+generate-parser-nosql:
+	pigeon -o ./parsers/nosql/nosql.go ./parsers/nosql/nosql.peg
+
 test:
 	@echo "Running unit tests..."
 	@$(GOTEST) -v ./...
@@ -28,4 +31,4 @@ clean:
 	@$(GOCLEAN)
 	@rm -rf $(DIST_DIR)
 
-.PHONY: all test build-all build-macos build-linux clean
+.PHONY: all test build-all build-macos build-linux clean generate-parser-nosql

@@ -1,6 +1,8 @@
 package memoryexecutor
 
 import (
+	"fmt"
+
 	"github.com/pikami/cosmium/parsers"
 )
 
@@ -40,10 +42,14 @@ func selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
 
 	// Construct a new row based on the selected columns
 	newRow := make(map[string]interface{})
-	for _, column := range selectItems {
+	for index, column := range selectItems {
 		destinationName := column.Alias
 		if destinationName == "" {
-			destinationName = column.Path[len(column.Path)-1]
+			if len(column.Path) < 1 {
+				destinationName = fmt.Sprintf("$%d", index+1)
+			} else {
+				destinationName = column.Path[len(column.Path)-1]
+			}
 		}
 
 		newRow[destinationName] = getFieldValue(column, row)
@@ -66,6 +72,8 @@ func evaluateFilters(expr ExpressionType, Parameters map[string]interface{}, row
 		switch typedValue.Operation {
 		case "=":
 			return leftValue == rightValue
+		case "!=":
+			return leftValue != rightValue
 			// Handle other comparison operators as needed
 		}
 	case parsers.LogicalExpression:
@@ -90,6 +98,12 @@ func evaluateFilters(expr ExpressionType, Parameters map[string]interface{}, row
 			}
 		}
 		return result
+	case parsers.Constant:
+		if value, ok := typedValue.Value.(bool); ok {
+			return value
+		}
+		// TODO: Check if we should do something if it is not a boolean constant
+		return false
 	}
 	return false
 }
