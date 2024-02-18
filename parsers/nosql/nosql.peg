@@ -186,12 +186,23 @@ SelectProperty <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)* {
     return makeSelectItem(name, path, parsers.SelectItemTypeField)
 }
 
-SelectItem <- selectItem:(SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
-    item := selectItem.(parsers.SelectItem)
+SelectItem <- selectItem:(Literal / SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
+    var itemResult parsers.SelectItem
+    switch typedValue := selectItem.(type) {
+    case parsers.SelectItem:
+        itemResult = typedValue
+    case parsers.Constant:
+        itemResult = parsers.SelectItem{
+            Type: parsers.SelectItemTypeConstant,
+            Value: typedValue,
+        }
+    }
+
 	if aliasValue, ok := asClause.(string); ok {
-		item.Alias = aliasValue
+		itemResult.Alias = aliasValue
 	}
-	return item, nil
+
+	return itemResult, nil
 }
 
 AsClause <- ws As ws alias:Identifier { return alias, nil }
@@ -221,7 +232,7 @@ AndExpression <- ex1:ComparisonExpression ex2:(ws And ws ex:ComparisonExpression
 }
 
 ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
-    / left:(Literal / SelectItem) ws op:ComparisonOperator ws right:(Literal / SelectItem) {
+    / left:SelectItem ws op:ComparisonOperator ws right:SelectItem {
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
 } / ex:BooleanLiteral { return ex, nil }
 

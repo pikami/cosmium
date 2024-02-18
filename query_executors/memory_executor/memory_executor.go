@@ -16,7 +16,6 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 
 	// Apply Filter
 	for _, row := range data {
-		// Check if the row satisfies the filter conditions
 		if evaluateFilters(query.Filters, query.Parameters, row) {
 			result = append(result, row)
 		}
@@ -24,7 +23,7 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 
 	// Apply order
 	if query.OrderExpressions != nil && len(query.OrderExpressions) > 0 {
-		orderBy(query.OrderExpressions, result)
+		orderBy(query.OrderExpressions, query.Parameters, result)
 	}
 
 	// Apply result limit
@@ -41,16 +40,16 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 	// Apply select
 	selectedData := make([]RowType, 0)
 	for _, row := range result {
-		selectedData = append(selectedData, selectRow(query.SelectItems, row))
+		selectedData = append(selectedData, selectRow(query.SelectItems, query.Parameters, row))
 	}
 
 	return selectedData
 }
 
-func selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
+func selectRow(selectItems []parsers.SelectItem, queryParameters map[string]interface{}, row RowType) interface{} {
 	// When the first value is top level, select it instead
 	if len(selectItems) > 0 && selectItems[0].IsTopLevel {
-		return getFieldValue(selectItems[0], row)
+		return getFieldValue(selectItems[0], queryParameters, row)
 	}
 
 	// Construct a new row based on the selected columns
@@ -58,41 +57,48 @@ func selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
 	for index, column := range selectItems {
 		destinationName := column.Alias
 		if destinationName == "" {
-			if len(column.Path) < 1 {
-				destinationName = fmt.Sprintf("$%d", index+1)
-			} else {
+			if len(column.Path) > 0 {
 				destinationName = column.Path[len(column.Path)-1]
+			} else {
+				destinationName = fmt.Sprintf("$%d", index+1)
 			}
 		}
 
-		newRow[destinationName] = getFieldValue(column, row)
+		newRow[destinationName] = getFieldValue(column, queryParameters, row)
 	}
 
 	return newRow
 }
 
-// Helper function to evaluate filter conditions recursively
-func evaluateFilters(expr ExpressionType, Parameters map[string]interface{}, row RowType) bool {
+func evaluateFilters(expr ExpressionType, queryParameters map[string]interface{}, row RowType) bool {
 	if expr == nil {
 		return true
 	}
 
 	switch typedValue := expr.(type) {
 	case parsers.ComparisonExpression:
-		leftValue := getExpressionParameterValue(typedValue.Left, Parameters, row)
-		rightValue := getExpressionParameterValue(typedValue.Right, Parameters, row)
+		leftValue := getExpressionParameterValue(typedValue.Left, queryParameters, row)
+		rightValue := getExpressionParameterValue(typedValue.Right, queryParameters, row)
 
+		cmp := compareValues(leftValue, rightValue)
 		switch typedValue.Operation {
 		case "=":
-			return leftValue == rightValue
+			return cmp == 0
 		case "!=":
-			return leftValue != rightValue
-			// Handle other comparison operators as needed
+			return cmp != 0
+		case "<":
+			return cmp < 0
+		case ">":
+			return cmp > 0
+		case "<=":
+			return cmp <= 0
+		case ">=":
+			return cmp >= 0
 		}
 	case parsers.LogicalExpression:
 		var result bool
 		for i, expression := range typedValue.Expressions {
-			expressionResult := evaluateFilters(expression, Parameters, row)
+			expressionResult := evaluateFilters(expression, queryParameters, row)
 			if i == 0 {
 				result = expressionResult
 			}
@@ -115,17 +121,16 @@ func evaluateFilters(expr ExpressionType, Parameters map[string]interface{}, row
 		if value, ok := typedValue.Value.(bool); ok {
 			return value
 		}
-		// TODO: Check if we should do something if it is not a boolean constant
 		return false
 	}
 	return false
 }
 
-func getFieldValue(field parsers.SelectItem, row RowType) interface{} {
+func getFieldValue(field parsers.SelectItem, queryParameters map[string]interface{}, row RowType) interface{} {
 	if field.Type == parsers.SelectItemTypeArray {
 		arrayValue := make([]interface{}, 0)
 		for _, selectItem := range field.SelectItems {
-			arrayValue = append(arrayValue, getFieldValue(selectItem, row))
+			arrayValue = append(arrayValue, getFieldValue(selectItem, queryParameters, row))
 		}
 		return arrayValue
 	}
@@ -133,9 +138,27 @@ func getFieldValue(field parsers.SelectItem, row RowType) interface{} {
 	if field.Type == parsers.SelectItemTypeObject {
 		objectValue := make(map[string]interface{})
 		for _, selectItem := range field.SelectItems {
-			objectValue[selectItem.Alias] = getFieldValue(selectItem, row)
+			objectValue[selectItem.Alias] = getFieldValue(selectItem, queryParameters, row)
 		}
 		return objectValue
+	}
+
+	if field.Type == parsers.SelectItemTypeConstant {
+		var typedValue parsers.Constant
+		var ok bool
+		if typedValue, ok = field.Value.(parsers.Constant); !ok {
+			// TODO: Handle error
+			fmt.Println("parsers.Constant has incorrect Value type")
+		}
+
+		if typedValue.Type == parsers.ConstantTypeParameterConstant &&
+			queryParameters != nil {
+			if key, ok := typedValue.Value.(string); ok {
+				return queryParameters[key]
+			}
+		}
+
+		return typedValue.Value
 	}
 
 	value := row
@@ -153,31 +176,24 @@ func getFieldValue(field parsers.SelectItem, row RowType) interface{} {
 
 func getExpressionParameterValue(
 	parameter interface{},
-	Parameters map[string]interface{},
+	queryParameters map[string]interface{},
 	row RowType,
 ) interface{} {
 	switch typedParameter := parameter.(type) {
 	case parsers.SelectItem:
-		return getFieldValue(typedParameter, row)
-	case parsers.Constant:
-		if typedParameter.Type == parsers.ConstantTypeParameterConstant &&
-			Parameters != nil {
-			if key, ok := typedParameter.Value.(string); ok {
-				return Parameters[key]
-			}
-		}
-
-		return typedParameter.Value
+		return getFieldValue(typedParameter, queryParameters, row)
 	}
-	// TODO: Handle error
+
+	fmt.Println("getExpressionParameterValue - got incorrect parameter type")
+
 	return nil
 }
 
-func orderBy(orderBy []parsers.OrderExpression, data []RowType) {
+func orderBy(orderBy []parsers.OrderExpression, queryParameters map[string]interface{}, data []RowType) {
 	less := func(i, j int) bool {
 		for _, order := range orderBy {
-			val1 := getFieldValue(order.SelectItem, data[i])
-			val2 := getFieldValue(order.SelectItem, data[j])
+			val1 := getFieldValue(order.SelectItem, queryParameters, data[i])
+			val2 := getFieldValue(order.SelectItem, queryParameters, data[j])
 
 			cmp := compareValues(val1, val2)
 			if cmp != 0 {
@@ -203,9 +219,26 @@ func compareValues(val1, val2 interface{}) int {
 			return 1
 		}
 		return 0
+	case float64:
+		val2 := val2.(float64)
+		if val1 < val2 {
+			return -1
+		} else if val1 > val2 {
+			return 1
+		}
+		return 0
 	case string:
 		val2 := val2.(string)
 		return strings.Compare(val1, val2)
+	case bool:
+		val2 := val2.(bool)
+		if val1 == val2 {
+			return 0
+		} else if val1 {
+			return 1
+		} else {
+			return -1
+		}
 	// TODO: Add more types
 	default:
 		return 0
