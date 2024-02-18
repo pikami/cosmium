@@ -20,6 +20,7 @@ const (
 	SelectItemTypeObject
 	SelectItemTypeArray
 	SelectItemTypeConstant
+	SelectItemTypeFunctionCall
 )
 
 type SelectItem struct {
@@ -74,4 +75,15 @@ const (
 type OrderExpression struct {
 	SelectItem SelectItem
 	Direction  OrderDirection
+}
+
+type FunctionCallType string
+
+const (
+	FunctionCallStringEquals FunctionCallType = "StringEquals"
+)
+
+type FunctionCall struct {
+	Arguments []interface{}
+	Type      FunctionCallType
 }

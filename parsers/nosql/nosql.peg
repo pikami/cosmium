@@ -146,7 +146,7 @@ TopClause <- Top ws count:Integer {
     return count, nil
 }
 
-Selection <- SelectValueSpec / ColumnList /SelectAsterisk
+Selection <- SelectValueSpec / ColumnList / SelectAsterisk
 
 SelectAsterisk <- "*" {
     selectItem, _ := makeSelectItem("c", make([]interface{}, 0), parsers.SelectItemTypeField)
@@ -158,7 +158,7 @@ ColumnList <- column:SelectItem other_columns:(ws "," ws coll:SelectItem {return
     return makeColumnList(column, other_columns)
 }
 
-SelectValueSpec <- "VALUE" ws column:SelectItem {
+SelectValueSpec <- "VALUE"i ws column:SelectItem {
     selectItem := column.(parsers.SelectItem)
 	selectItem.IsTopLevel = true
     return makeColumnList(selectItem, make([]interface{}, 0))
@@ -186,7 +186,7 @@ SelectProperty <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)* {
     return makeSelectItem(name, path, parsers.SelectItemTypeField)
 }
 
-SelectItem <- selectItem:(Literal / SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
+SelectItem <- selectItem:(Literal / StringEqualsExpression / SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
     var itemResult parsers.SelectItem
     switch typedValue := selectItem.(type) {
     case parsers.SelectItem:
@@ -194,6 +194,11 @@ SelectItem <- selectItem:(Literal / SelectArray / SelectObject / SelectProperty)
     case parsers.Constant:
         itemResult = parsers.SelectItem{
             Type: parsers.SelectItemTypeConstant,
+            Value: typedValue,
+        }
+    case parsers.FunctionCall:
+        itemResult = parsers.SelectItem{
+            Type: parsers.SelectItemTypeFunctionCall,
             Value: typedValue,
         }
     }
@@ -244,33 +249,35 @@ OrderExpression <- field:SelectProperty ws order:OrderDirection? {
     return makeOrderExpression(field, order)
 }
 
-OrderDirection <- ("ASC" / "asc" / "DESC" / "desc") {
-    switch string(c.text) {
-	case "DESC", "desc":
+OrderDirection <- ("ASC"i / "DESC"i) {
+    if strings.EqualFold(string(c.text), "DESC") {
 		return parsers.OrderDirectionDesc, nil
-	}
+    }
+
 	return parsers.OrderDirectionAsc, nil
 }
 
-Select <- ("select" / "SELECT")
+Select <- "SELECT"i
 
-Top <- ("top" / "TOP")
+Top <- "TOP"i
 
-As <- ("as" / "AS")
+As <- "AS"i
 
-From <- ("from" / "FROM")
+From <- "FROM"i
 
-Where <- ("where" / "WHERE")
+Where <- "WHERE"i
 
-And <- ("and" / "AND")
+And <- "AND"i
 
-Or <- ("or" / "OR")
+Or <- "OR"i
 
-OrderBy <- ("order" / "ORDER") ws ("by" / "BY")
+OrderBy <- "ORDER"i ws "BY"i
 
 ComparisonOperator <- "=" / "!=" / "<" / "<=" / ">" / ">=" {
     return string(c.text), nil
 }
+
+StringEquals <- "STRINGEQUALS"i
 
 Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral / ParameterConstant / NullConstant
 
@@ -291,9 +298,13 @@ FloatLiteral <- [0-9]+"."[0-9]+ {
     floatValue, _ := strconv.ParseFloat(string(c.text), 64)
     return parsers.Constant{Type: parsers.ConstantTypeFloat, Value: floatValue}, nil
 }
-BooleanLiteral <- ("true" / "false") {
+BooleanLiteral <- ("true"i / "false"i) {
     boolValue, _ := strconv.ParseBool(string(c.text))
     return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
+}
+
+StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
+    return parsers.FunctionCall{Type: parsers.FunctionCallStringEquals, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
 }
 
 Integer <- [0-9]+ {

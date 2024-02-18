@@ -161,6 +161,20 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 		return typedValue.Value
 	}
 
+	if field.Type == parsers.SelectItemTypeFunctionCall {
+		var typedValue parsers.FunctionCall
+		var ok bool
+		if typedValue, ok = field.Value.(parsers.FunctionCall); !ok {
+			// TODO: Handle error
+			fmt.Println("parsers.Constant has incorrect Value type")
+		}
+
+		switch typedValue.Type {
+		case parsers.FunctionCallStringEquals:
+			return strings_StringEquals(typedValue.Arguments, queryParameters, row)
+		}
+	}
+
 	value := row
 	if len(field.Path) > 1 {
 		for _, pathSegment := range field.Path[1:] {
