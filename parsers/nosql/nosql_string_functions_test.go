@@ -8,7 +8,7 @@ import (
 
 func Test_Execute_StringFunctions(t *testing.T) {
 
-	t.Run("Should execute function STRINGEQUALS(ex1, ex2, ignoreCase)", func(t *testing.T) {
+	t.Run("Should parse function STRINGEQUALS(ex1, ex2, ignoreCase)", func(t *testing.T) {
 		testQueryParse(
 			t,
 			`SELECT STRINGEQUALS(c.id, "123", true) FROM c`,
@@ -46,7 +46,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 		)
 	})
 
-	t.Run("Should execute function STRINGEQUALS(ex1, ex2)", func(t *testing.T) {
+	t.Run("Should parse function STRINGEQUALS(ex1, ex2)", func(t *testing.T) {
 		testQueryParse(
 			t,
 			`SELECT STRINGEQUALS(c.id, "123") FROM c`,

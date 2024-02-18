@@ -15,6 +15,8 @@ func makeSelectStmt(columns, table, whereClause interface{}, count interface{}, 
 		selectStmt.Filters = filters
 	} else if filters, ok := whereClause.(parsers.Constant); ok {
 		selectStmt.Filters = filters
+	} else if filters, ok := whereClause.(parsers.SelectItem); ok {
+		selectStmt.Filters = filters
 	}
 
 	if n, ok := count.(int); ok {
@@ -186,7 +188,7 @@ SelectProperty <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)* {
     return makeSelectItem(name, path, parsers.SelectItemTypeField)
 }
 
-SelectItem <- selectItem:(Literal / StringEqualsExpression / SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
+SelectItem <- selectItem:(Literal / FunctionCall / SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
     var itemResult parsers.SelectItem
     switch typedValue := selectItem.(type) {
     case parsers.SelectItem:
@@ -240,6 +242,7 @@ ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
     / left:SelectItem ws op:ComparisonOperator ws right:SelectItem {
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
 } / ex:BooleanLiteral { return ex, nil }
+  / ex:SelectItem { return ex, nil }
 
 OrderByClause <- OrderBy ws ex1:OrderExpression others:(ws "," ws ex:OrderExpression { return ex, nil })* {
     return makeOrderByClause(ex1, others)
@@ -303,8 +306,14 @@ BooleanLiteral <- ("true"i / "false"i) {
     return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
 }
 
+FunctionCall <- StringEqualsExpression / IsDefined
+
 StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallStringEquals, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
+}
+
+IsDefined <- "IS_DEFINED"i ws "(" ws ex:SelectItem ws ")" {
+    return parsers.FunctionCall{Type: parsers.FunctionCallIsDefined, Arguments: []interface{}{ex}}, nil
 }
 
 Integer <- [0-9]+ {

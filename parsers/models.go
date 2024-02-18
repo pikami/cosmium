@@ -81,6 +81,7 @@ type FunctionCallType string
 
 const (
 	FunctionCallStringEquals FunctionCallType = "StringEquals"
+	FunctionCallIsDefined    FunctionCallType = "IsDefined"
 )
 
 type FunctionCall struct {

@@ -2,6 +2,7 @@ package memoryexecutor
 
 import (
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 
@@ -122,6 +123,11 @@ func evaluateFilters(expr ExpressionType, queryParameters map[string]interface{}
 			return value
 		}
 		return false
+	case parsers.SelectItem:
+		resolvedValue := getFieldValue(typedValue, queryParameters, row)
+		if value, ok := resolvedValue.(bool); ok {
+			return value
+		}
 	}
 	return false
 }
@@ -172,6 +178,8 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 		switch typedValue.Type {
 		case parsers.FunctionCallStringEquals:
 			return strings_StringEquals(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsDefined:
+			return typeChecking_IsDefined(typedValue.Arguments, queryParameters, row)
 		}
 	}
 
@@ -224,6 +232,10 @@ func orderBy(orderBy []parsers.OrderExpression, queryParameters map[string]inter
 }
 
 func compareValues(val1, val2 interface{}) int {
+	if reflect.TypeOf(val1) != reflect.TypeOf(val2) {
+		return 1
+	}
+
 	switch val1 := val1.(type) {
 	case int:
 		val2 := val2.(int)
@@ -255,6 +267,9 @@ func compareValues(val1, val2 interface{}) int {
 		}
 	// TODO: Add more types
 	default:
-		return 0
+		if reflect.DeepEqual(val1, val2) {
+			return 0
+		}
+		return 1
 	}
 }
