@@ -3,7 +3,7 @@ GOBUILD=$(GOCMD) build
 GOTEST=$(GOCMD) test
 GOCLEAN=$(GOCMD) clean
 
-BINARY_NAME=codium
+BINARY_NAME=cosmium
 
 DIST_DIR=dist
 
