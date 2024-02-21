@@ -306,7 +306,7 @@ BooleanLiteral <- ("true"i / "false"i) {
     return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
 }
 
-FunctionCall <- StringEqualsExpression / ConcatExpression / IsDefined
+FunctionCall <- StringEqualsExpression / ConcatExpression / ContainsExpression / IsDefined
 
 StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallStringEquals, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
@@ -315,6 +315,10 @@ StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:Se
 ConcatExpression <- "CONCAT"i ws "(" ws ex1:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })+ ws ")" {
     arguments := append([]interface{}{ex1}, others.([]interface{})...)
     return parsers.FunctionCall{Type: parsers.FunctionCallConcat, Arguments: arguments}, nil
+}
+
+ContainsExpression <- "CONTAINS"i ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
+    return parsers.FunctionCall{Type: parsers.FunctionCallContains, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
 }
 
 IsDefined <- "IS_DEFINED"i ws "(" ws ex:SelectItem ws ")" {

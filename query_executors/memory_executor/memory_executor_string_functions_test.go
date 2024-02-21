@@ -151,4 +151,52 @@ func Test_Execute_StringFunctions(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should execute function CONTAINS()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "id"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "contains",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallContains,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "id"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeString,
+										Value: "2",
+									},
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeBoolean,
+										Value: true,
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "123", "contains": true},
+				map[string]interface{}{"id": "456", "contains": false},
+				map[string]interface{}{"id": "789", "contains": false},
+			},
+		)
+	})
 }

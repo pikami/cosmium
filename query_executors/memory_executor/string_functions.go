@@ -40,6 +40,40 @@ func strings_StringEquals(arguments []interface{}, queryParameters map[string]in
 	return str1 == str2
 }
 
+func strings_Contains(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
+	ignoreCase := false
+	if len(arguments) > 2 && arguments[2] != nil {
+		ignoreCaseItem := arguments[2].(parsers.SelectItem)
+		if value, ok := getFieldValue(ignoreCaseItem, queryParameters, row).(bool); ok {
+			ignoreCase = value
+		}
+	}
+
+	ex1Item := arguments[0].(parsers.SelectItem)
+	ex2Item := arguments[1].(parsers.SelectItem)
+
+	ex1 := getFieldValue(ex1Item, queryParameters, row)
+	ex2 := getFieldValue(ex2Item, queryParameters, row)
+
+	var ok bool
+	var str1 string
+	var str2 string
+
+	if str1, ok = ex1.(string); !ok {
+		fmt.Println("StringEquals got parameters of wrong type")
+	}
+	if str2, ok = ex2.(string); !ok {
+		fmt.Println("StringEquals got parameters of wrong type")
+	}
+
+	if ignoreCase {
+		str1 = strings.ToLower(str1)
+		str2 = strings.ToLower(str2)
+	}
+
+	return strings.Contains(str1, str2)
+}
+
 func strings_Concat(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
 	result := ""
 
