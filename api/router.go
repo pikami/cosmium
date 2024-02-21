@@ -10,6 +10,7 @@ func CreateRouter() *gin.Engine {
 	router := gin.Default()
 
 	router.Use(middleware.RequestLogger())
+	router.Use(middleware.Authentication())
 
 	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
 

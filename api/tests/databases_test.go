@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
+	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/repositories"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/stretchr/testify/assert"
@@ -19,13 +20,15 @@ func Test_Databases(t *testing.T) {
 	defer ts.Close()
 
 	client, err := azcosmos.NewClientFromConnectionString(
-		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, "asas"),
+		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.Config.AccountKey),
 		&azcosmos.ClientOptions{},
 	)
 	assert.Nil(t, err)
 
 	t.Run("Database Create", func(t *testing.T) {
 		t.Run("Should create database", func(t *testing.T) {
+			repositories.DeleteDatabase(testDatabaseName)
+
 			createResponse, err := client.CreateDatabase(context.TODO(), azcosmos.DatabaseProperties{
 				ID: testDatabaseName,
 			}, &azcosmos.CreateDatabaseOptions{})

@@ -4,6 +4,7 @@ type ServerConfig struct {
 	DatabaseAccount  string
 	DatabaseDomain   string
 	DatabaseEndpoint string
+	AccountKey       string
 
 	ExplorerPath        string
 	Port                int
@@ -11,4 +12,5 @@ type ServerConfig struct {
 	TLS_CertificatePath string
 	TLS_CertificateKey  string
 	DataFilePath        string
+	DisableAuth         bool
 }

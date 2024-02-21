@@ -4,9 +4,12 @@ import (
 	"net/http/httptest"
 
 	"github.com/pikami/cosmium/api"
+	"github.com/pikami/cosmium/api/config"
 )
 
 func runTestServer() *httptest.Server {
+	config.Config.AccountKey = config.DefaultAccountKey
+
 	return httptest.NewServer(api.CreateRouter())
 }
 

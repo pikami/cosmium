@@ -9,6 +9,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
+	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/repositories"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +20,7 @@ func Test_Collections(t *testing.T) {
 	defer ts.Close()
 
 	client, err := azcosmos.NewClientFromConnectionString(
-		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, "asas"),
+		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.Config.AccountKey),
 		&azcosmos.ClientOptions{},
 	)
 	assert.Nil(t, err)
