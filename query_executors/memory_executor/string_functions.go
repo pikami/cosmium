@@ -8,30 +8,9 @@ import (
 )
 
 func strings_StringEquals(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
-	ignoreCase := false
-	if len(arguments) > 2 && arguments[2] != nil {
-		ignoreCaseItem := arguments[2].(parsers.SelectItem)
-		if value, ok := getFieldValue(ignoreCaseItem, queryParameters, row).(bool); ok {
-			ignoreCase = value
-		}
-	}
-
-	ex1Item := arguments[0].(parsers.SelectItem)
-	ex2Item := arguments[1].(parsers.SelectItem)
-
-	ex1 := getFieldValue(ex1Item, queryParameters, row)
-	ex2 := getFieldValue(ex2Item, queryParameters, row)
-
-	var ok bool
-	var str1 string
-	var str2 string
-
-	if str1, ok = ex1.(string); !ok {
-		fmt.Println("StringEquals got parameters of wrong type")
-	}
-	if str2, ok = ex2.(string); !ok {
-		fmt.Println("StringEquals got parameters of wrong type")
-	}
+	str1 := parseString(arguments[0], queryParameters, row)
+	str2 := parseString(arguments[1], queryParameters, row)
+	ignoreCase := getBoolFlag(arguments, queryParameters, row)
 
 	if ignoreCase {
 		return strings.EqualFold(str1, str2)
@@ -41,30 +20,9 @@ func strings_StringEquals(arguments []interface{}, queryParameters map[string]in
 }
 
 func strings_Contains(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
-	ignoreCase := false
-	if len(arguments) > 2 && arguments[2] != nil {
-		ignoreCaseItem := arguments[2].(parsers.SelectItem)
-		if value, ok := getFieldValue(ignoreCaseItem, queryParameters, row).(bool); ok {
-			ignoreCase = value
-		}
-	}
-
-	ex1Item := arguments[0].(parsers.SelectItem)
-	ex2Item := arguments[1].(parsers.SelectItem)
-
-	ex1 := getFieldValue(ex1Item, queryParameters, row)
-	ex2 := getFieldValue(ex2Item, queryParameters, row)
-
-	var ok bool
-	var str1 string
-	var str2 string
-
-	if str1, ok = ex1.(string); !ok {
-		fmt.Println("StringEquals got parameters of wrong type")
-	}
-	if str2, ok = ex2.(string); !ok {
-		fmt.Println("StringEquals got parameters of wrong type")
-	}
+	str1 := parseString(arguments[0], queryParameters, row)
+	str2 := parseString(arguments[1], queryParameters, row)
+	ignoreCase := getBoolFlag(arguments, queryParameters, row)
 
 	if ignoreCase {
 		str1 = strings.ToLower(str1)
@@ -72,6 +30,32 @@ func strings_Contains(arguments []interface{}, queryParameters map[string]interf
 	}
 
 	return strings.Contains(str1, str2)
+}
+
+func strings_EndsWith(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
+	str1 := parseString(arguments[0], queryParameters, row)
+	str2 := parseString(arguments[1], queryParameters, row)
+	ignoreCase := getBoolFlag(arguments, queryParameters, row)
+
+	if ignoreCase {
+		str1 = strings.ToLower(str1)
+		str2 = strings.ToLower(str2)
+	}
+
+	return strings.HasSuffix(str1, str2)
+}
+
+func strings_StartsWith(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
+	str1 := parseString(arguments[0], queryParameters, row)
+	str2 := parseString(arguments[1], queryParameters, row)
+	ignoreCase := getBoolFlag(arguments, queryParameters, row)
+
+	if ignoreCase {
+		str1 = strings.ToLower(str1)
+		str2 = strings.ToLower(str2)
+	}
+
+	return strings.HasPrefix(str1, str2)
 }
 
 func strings_Concat(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
@@ -85,6 +69,29 @@ func strings_Concat(arguments []interface{}, queryParameters map[string]interfac
 	}
 
 	return result
+}
+
+func getBoolFlag(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
+	ignoreCase := false
+	if len(arguments) > 2 && arguments[2] != nil {
+		ignoreCaseItem := arguments[2].(parsers.SelectItem)
+		if value, ok := getFieldValue(ignoreCaseItem, queryParameters, row).(bool); ok {
+			ignoreCase = value
+		}
+	}
+
+	return ignoreCase
+}
+
+func parseString(argument interface{}, queryParameters map[string]interface{}, row RowType) string {
+	exItem := argument.(parsers.SelectItem)
+	ex := getFieldValue(exItem, queryParameters, row)
+	if str1, ok := ex.(string); ok {
+		fmt.Println("StringEquals got parameters of wrong type")
+		return str1
+	}
+
+	return ""
 }
 
 func convertToString(value interface{}) string {

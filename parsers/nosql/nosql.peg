@@ -306,7 +306,11 @@ BooleanLiteral <- ("true"i / "false"i) {
     return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
 }
 
-FunctionCall <- StringEqualsExpression / ConcatExpression / ContainsExpression / IsDefined
+FunctionCall <- StringFunctions / IsDefined
+
+StringFunctions <- StringEqualsExpression
+    / ConcatExpression
+    / ThreeArgumentStringFunctionExpression
 
 StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallStringEquals, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
@@ -317,9 +321,23 @@ ConcatExpression <- "CONCAT"i ws "(" ws ex1:SelectItem others:(ws "," ws ex:Sele
     return parsers.FunctionCall{Type: parsers.FunctionCallConcat, Arguments: arguments}, nil
 }
 
-ContainsExpression <- "CONTAINS"i ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
-    return parsers.FunctionCall{Type: parsers.FunctionCallContains, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
+ThreeArgumentStringFunctionExpression <- function:ThreeArgumentStringFunction ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
+    var functionType parsers.FunctionCallType
+
+    lowerFunction := strings.ToUpper(function.(string))
+    switch lowerFunction {
+    case "CONTAINS":
+        functionType = parsers.FunctionCallContains
+    case "ENDSWITH":
+        functionType = parsers.FunctionCallEndsWith
+    case "STARTSWITH":
+        functionType = parsers.FunctionCallStartsWith
+    }
+
+    return parsers.FunctionCall{Type: functionType, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
 }
+
+ThreeArgumentStringFunction <- "CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i
 
 IsDefined <- "IS_DEFINED"i ws "(" ws ex:SelectItem ws ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallIsDefined, Arguments: []interface{}{ex}}, nil

@@ -84,6 +84,8 @@ const (
 	FunctionCallIsDefined    FunctionCallType = "IsDefined"
 	FunctionCallConcat       FunctionCallType = "Concat"
 	FunctionCallContains     FunctionCallType = "Contains"
+	FunctionCallEndsWith     FunctionCallType = "EndsWith"
+	FunctionCallStartsWith   FunctionCallType = "StartsWith"
 )
 
 type FunctionCall struct {

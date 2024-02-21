@@ -180,6 +180,10 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 			return strings_StringEquals(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallContains:
 			return strings_Contains(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallEndsWith:
+			return strings_EndsWith(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallStartsWith:
+			return strings_StartsWith(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallConcat:
 			return strings_Concat(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallIsDefined:
