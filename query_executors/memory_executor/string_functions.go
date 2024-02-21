@@ -39,3 +39,28 @@ func strings_StringEquals(arguments []interface{}, queryParameters map[string]in
 
 	return str1 == str2
 }
+
+func strings_Concat(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	result := ""
+
+	for _, arg := range arguments {
+		if selectItem, ok := arg.(parsers.SelectItem); ok {
+			value := getFieldValue(selectItem, queryParameters, row)
+			result += convertToString(value)
+		}
+	}
+
+	return result
+}
+
+func convertToString(value interface{}) string {
+	switch v := value.(type) {
+	case string:
+		return v
+	case int:
+		return fmt.Sprintf("%d", v)
+	case float32, float64:
+		return fmt.Sprintf("%f", v)
+	}
+	return ""
+}

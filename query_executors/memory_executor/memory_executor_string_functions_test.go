@@ -103,4 +103,52 @@ func Test_Execute_StringFunctions(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should execute function CONCAT()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias: "concat",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallConcat,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "id"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeString,
+										Value: " ",
+									},
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeString,
+										Value: 123,
+									},
+								},
+								parsers.SelectItem{
+									Path: []string{"c", "pk"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"concat": "123 123aaa"},
+				map[string]interface{}{"concat": "456 123bbb"},
+				map[string]interface{}{"concat": "789 123AAA"},
+			},
+		)
+	})
 }
