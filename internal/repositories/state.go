@@ -29,3 +29,11 @@ func LoadStateFS(filePath string) {
 	collections = state.Collections
 	documents = state.Documents
 }
+
+func GetState() map[string]interface{} {
+	return map[string]interface{}{
+		"databases":   databases,
+		"collections": collections,
+		"documents":   documents,
+	}
+}

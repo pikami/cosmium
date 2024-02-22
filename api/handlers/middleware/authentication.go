@@ -13,7 +13,9 @@ import (
 func Authentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestUrl := c.Request.URL.String()
-		if config.Config.DisableAuth || strings.HasPrefix(requestUrl, "/_explorer") {
+		if config.Config.DisableAuth ||
+			strings.HasPrefix(requestUrl, "/_explorer") ||
+			strings.HasPrefix(requestUrl, "/cosmium") {
 			return
 		}
 

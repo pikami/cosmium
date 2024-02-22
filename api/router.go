@@ -37,6 +37,8 @@ func CreateRouter() *gin.Engine {
 	router.GET("/offers", handlers.GetOffers)
 	router.GET("/", handlers.GetServerInfo)
 
+	router.GET("/cosmium/export", handlers.CosmiumExport)
+
 	handlers.RegisterExplorerHandlers(router)
 
 	return router
