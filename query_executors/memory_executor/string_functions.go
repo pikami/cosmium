@@ -96,6 +96,11 @@ func strings_IndexOf(arguments []interface{}, queryParameters map[string]interfa
 	}
 }
 
+func strings_ToString(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	value := getFieldValue(arguments[0].(parsers.SelectItem), queryParameters, row)
+	return convertToString(value)
+}
+
 func getBoolFlag(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
 	ignoreCase := false
 	if len(arguments) > 2 && arguments[2] != nil {
@@ -127,6 +132,8 @@ func convertToString(value interface{}) string {
 		return fmt.Sprintf("%d", v)
 	case float32, float64:
 		return fmt.Sprintf("%f", v)
+	case bool:
+		return fmt.Sprintf("%t", v)
 	}
 	return ""
 }

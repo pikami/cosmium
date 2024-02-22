@@ -87,6 +87,7 @@ const (
 	FunctionCallEndsWith     FunctionCallType = "EndsWith"
 	FunctionCallStartsWith   FunctionCallType = "StartsWith"
 	FunctionCallIndexOf      FunctionCallType = "IndexOf"
+	FunctionCallToString     FunctionCallType = "ToString"
 )
 
 type FunctionCall struct {

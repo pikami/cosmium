@@ -264,4 +264,28 @@ func Test_Execute_StringFunctions(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse function ToString()", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT ToString(c.id) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallToString,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "id"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
 }

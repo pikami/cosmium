@@ -309,11 +309,16 @@ BooleanLiteral <- ("true"i / "false"i) {
 FunctionCall <- StringFunctions / IsDefined
 
 StringFunctions <- StringEqualsExpression
+    / ToStringExpression
     / ConcatExpression
     / ThreeArgumentStringFunctionExpression
 
 StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallStringEquals, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
+}
+
+ToStringExpression <- "TOSTRING"i ws "(" ws ex:SelectItem ws ")" {
+    return parsers.FunctionCall{Type: parsers.FunctionCallToString, Arguments: []interface{}{ex}}, nil
 }
 
 ConcatExpression <- "CONCAT"i ws "(" ws ex1:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })+ ws ")" {

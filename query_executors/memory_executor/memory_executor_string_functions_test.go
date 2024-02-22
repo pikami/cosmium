@@ -9,8 +9,8 @@ import (
 
 func Test_Execute_StringFunctions(t *testing.T) {
 	mockData := []memoryexecutor.RowType{
-		map[string]interface{}{"id": "123", "pk": "aaa", "str": "hello"},
-		map[string]interface{}{"id": "456", "pk": "bbb", "str": "world"},
+		map[string]interface{}{"id": "123", "pk": "aaa", "str": "hello", "rng_type": true},
+		map[string]interface{}{"id": "456", "pk": "bbb", "str": "world", "rng_type": 159},
 		map[string]interface{}{"id": "789", "pk": "AAA", "str": "cool world"},
 	}
 
@@ -340,6 +340,40 @@ func Test_Execute_StringFunctions(t *testing.T) {
 				map[string]interface{}{"str": "hello", "index": 4},
 				map[string]interface{}{"str": "world", "index": -1},
 				map[string]interface{}{"str": "cool world", "index": 6},
+			},
+		)
+	})
+
+	t.Run("Should execute function ToString()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "id"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "str",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallToString,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "rng_type"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "123", "str": "true"},
+				map[string]interface{}{"id": "456", "str": "159"},
+				map[string]interface{}{"id": "789", "str": ""},
 			},
 		)
 	})
