@@ -9,9 +9,9 @@ import (
 
 func Test_Execute_StringFunctions(t *testing.T) {
 	mockData := []memoryexecutor.RowType{
-		map[string]interface{}{"id": "123", "pk": "aaa"},
-		map[string]interface{}{"id": "456", "pk": "bbb"},
-		map[string]interface{}{"id": "789", "pk": "AAA"},
+		map[string]interface{}{"id": "123", "pk": "aaa", "str": "hello"},
+		map[string]interface{}{"id": "456", "pk": "bbb", "str": "world"},
+		map[string]interface{}{"id": "789", "pk": "AAA", "str": "cool world"},
 	}
 
 	t.Run("Should execute function STRINGEQUALS(ex1, ex2, ignoreCase)", func(t *testing.T) {
@@ -292,6 +292,54 @@ func Test_Execute_StringFunctions(t *testing.T) {
 				map[string]interface{}{"id": "123", "starts": true},
 				map[string]interface{}{"id": "456", "starts": false},
 				map[string]interface{}{"id": "789", "starts": false},
+			},
+		)
+	})
+
+	t.Run("Should execute function INDEX_OF()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "index",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallIndexOf,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeString,
+										Value: "o",
+									},
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeInteger,
+										Value: 4,
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "index": 4},
+				map[string]interface{}{"str": "world", "index": -1},
+				map[string]interface{}{"str": "cool world", "index": 6},
 			},
 		)
 	})

@@ -240,7 +240,7 @@ AndExpression <- ex1:ComparisonExpression ex2:(ws And ws ex:ComparisonExpression
 
 ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
     / left:SelectItem ws op:ComparisonOperator ws right:SelectItem {
-    return parsers.ComparisonExpression{Left:left,Right:right,Operation:string(op.([]uint8))}, nil
+    return parsers.ComparisonExpression{Left:left,Right:right,Operation:op.(string)}, nil
 } / ex:BooleanLiteral { return ex, nil }
   / ex:SelectItem { return ex, nil }
 
@@ -276,7 +276,7 @@ Or <- "OR"i
 
 OrderBy <- "ORDER"i ws "BY"i
 
-ComparisonOperator <- "=" / "!=" / "<" / "<=" / ">" / ">=" {
+ComparisonOperator <- ("=" / "!=" / "<" / "<=" / ">" / ">=") {
     return string(c.text), nil
 }
 
@@ -332,12 +332,16 @@ ThreeArgumentStringFunctionExpression <- function:ThreeArgumentStringFunction ws
         functionType = parsers.FunctionCallEndsWith
     case "STARTSWITH":
         functionType = parsers.FunctionCallStartsWith
+    case "INDEX_OF":
+        functionType = parsers.FunctionCallIndexOf
     }
 
     return parsers.FunctionCall{Type: functionType, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
 }
 
-ThreeArgumentStringFunction <- "CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i
+ThreeArgumentStringFunction <- ("CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i / "INDEX_OF"i) {
+    return string(c.text), nil
+}
 
 IsDefined <- "IS_DEFINED"i ws "(" ws ex:SelectItem ws ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallIsDefined, Arguments: []interface{}{ex}}, nil

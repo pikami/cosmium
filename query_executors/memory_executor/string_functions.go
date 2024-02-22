@@ -71,6 +71,31 @@ func strings_Concat(arguments []interface{}, queryParameters map[string]interfac
 	return result
 }
 
+func strings_IndexOf(arguments []interface{}, queryParameters map[string]interface{}, row RowType) int {
+	str1 := parseString(arguments[0], queryParameters, row)
+	str2 := parseString(arguments[1], queryParameters, row)
+
+	start := 0
+	if len(arguments) > 2 && arguments[2] != nil {
+		if startPos, ok := getFieldValue(arguments[2].(parsers.SelectItem), queryParameters, row).(int); ok {
+			start = startPos
+		}
+	}
+
+	if len(str1) <= start {
+		return -1
+	}
+
+	str1 = str1[start:]
+	result := strings.Index(str1, str2)
+
+	if result == -1 {
+		return result
+	} else {
+		return result + start
+	}
+}
+
 func getBoolFlag(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
 	ignoreCase := false
 	if len(arguments) > 2 && arguments[2] != nil {

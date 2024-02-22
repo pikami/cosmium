@@ -226,4 +226,42 @@ func Test_Execute_StringFunctions(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse function INDEX_OF()", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT INDEX_OF(c.id, "2", 1) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallIndexOf,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "id"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeString,
+										Value: "2",
+									},
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeInteger,
+										Value: 1,
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
 }
