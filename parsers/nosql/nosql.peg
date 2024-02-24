@@ -306,7 +306,7 @@ BooleanLiteral <- ("true"i / "false"i) {
     return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
 }
 
-FunctionCall <- StringFunctions / IsDefined
+FunctionCall <- StringFunctions / IsDefined / InFunction
 
 StringFunctions <- StringEqualsExpression
     / ToStringExpression
@@ -350,6 +350,11 @@ ThreeArgumentStringFunction <- ("CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i / "IND
 
 IsDefined <- "IS_DEFINED"i ws "(" ws ex:SelectItem ws ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallIsDefined, Arguments: []interface{}{ex}}, nil
+}
+
+InFunction <- ex1:SelectProperty ws "IN"i ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
+    arguments := append([]interface{}{ex1, ex2}, others.([]interface{})...)
+    return parsers.FunctionCall{Type: parsers.FunctionCallIn, Arguments: arguments}, nil
 }
 
 Integer <- [0-9]+ {

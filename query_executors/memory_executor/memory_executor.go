@@ -192,6 +192,8 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 			return strings_ToString(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallIsDefined:
 			return typeChecking_IsDefined(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIn:
+			return misc_In(typedValue.Arguments, queryParameters, row)
 		}
 	}
 
