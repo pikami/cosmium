@@ -236,6 +236,17 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 		case parsers.FunctionCallIsString:
 			return typeChecking_IsString(typedValue.Arguments, queryParameters, row)
 
+		case parsers.FunctionCallArrayConcat:
+			return array_Concat(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallArrayLength:
+			return array_Length(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallArraySlice:
+			return array_Slice(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallSetIntersect:
+			return set_Intersect(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallSetUnion:
+			return set_Union(typedValue.Arguments, queryParameters, row)
+
 		case parsers.FunctionCallIn:
 			return misc_In(typedValue.Arguments, queryParameters, row)
 		}

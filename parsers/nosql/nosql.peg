@@ -312,18 +312,8 @@ BooleanLiteral <- ("true"i / "false"i) {
 
 FunctionCall <- StringFunctions
     / TypeCheckingFunctions
+    / ArrayFunctions
     / InFunction
-
-TypeCheckingFunctions <- IsDefined
-    / IsArray
-    / IsBool
-    / IsFiniteNumber
-    / IsInteger
-    / IsNull
-    / IsNumber
-    / IsObject
-    / IsPrimitive
-    / IsString
 
 StringFunctions <- StringEqualsExpression
     / ToStringExpression
@@ -341,6 +331,23 @@ StringFunctions <- StringEqualsExpression
     / RTrimExpression
     / SubstringExpression
     / TrimExpression
+
+TypeCheckingFunctions <- IsDefined
+    / IsArray
+    / IsBool
+    / IsFiniteNumber
+    / IsInteger
+    / IsNull
+    / IsNumber
+    / IsObject
+    / IsPrimitive
+    / IsString
+
+ArrayFunctions <- ArrayConcatExpression
+    / ArrayLengthExpression
+    / ArraySliceExpression
+    / SetIntersectExpression
+    / SetUnionExpression
 
 UpperExpression <- "UPPER"i ws "(" ex:SelectItem ")" {
     return createFunctionCall(parsers.FunctionCallUpper, []interface{}{ex})
@@ -463,6 +470,26 @@ IsPrimitive <- "IS_PRIMITIVE"i ws "(" ws ex:SelectItem ws ")" {
 
 IsString <- "IS_STRING"i ws "(" ws ex:SelectItem ws ")" {
     return createFunctionCall(parsers.FunctionCallIsString, []interface{}{ex})
+}
+
+ArrayConcatExpression <- "ARRAY_CONCAT"i ws "(" ws arrays:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })+ ws ")" {
+    return createFunctionCall(parsers.FunctionCallArrayConcat, append([]interface{}{arrays}, others.([]interface{})...))
+}
+
+ArrayLengthExpression <- "ARRAY_LENGTH"i ws "(" ws array:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallArrayLength, []interface{}{array})
+}
+
+ArraySliceExpression <- "ARRAY_SLICE"i ws "(" ws array:SelectItem ws "," ws start:SelectItem length:(ws "," ws ex:SelectItem { return ex, nil })? ws ")" {
+    return createFunctionCall(parsers.FunctionCallArraySlice, []interface{}{array, start, length})
+}
+
+SetIntersectExpression <- "SetIntersect"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallSetIntersect, []interface{}{set1, set2})
+}
+
+SetUnionExpression <- "SetUnion"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallSetUnion, []interface{}{set1, set2})
 }
 
 InFunction <- ex1:SelectProperty ws "IN"i ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {

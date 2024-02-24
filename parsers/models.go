@@ -111,6 +111,12 @@ const (
 	FunctionCallIsPrimitive    FunctionCallType = "IsPrimitive"
 	FunctionCallIsString       FunctionCallType = "IsString"
 
+	FunctionCallArrayConcat  FunctionCallType = "ArrayConcat"
+	FunctionCallArrayLength  FunctionCallType = "ArrayLength"
+	FunctionCallArraySlice   FunctionCallType = "ArraySlice"
+	FunctionCallSetIntersect FunctionCallType = "SetIntersect"
+	FunctionCallSetUnion     FunctionCallType = "SetUnion"
+
 	FunctionCallIn FunctionCallType = "In"
 )
 
