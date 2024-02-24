@@ -107,6 +107,10 @@ func makeOrderExpression(field interface{}, order interface{}) (parsers.OrderExp
     return value, nil
 }
 
+func createFunctionCall(functionType parsers.FunctionCallType, arguments []interface{}) (parsers.FunctionCall, error) {
+    return parsers.FunctionCall{Type: functionType, Arguments: arguments}, nil
+}
+
 func joinStrings(array []interface{}) string {
     var stringsArray []string
     for _, elem := range array {
@@ -314,26 +318,76 @@ StringFunctions <- StringEqualsExpression
     / ThreeArgumentStringFunctionExpression
     / UpperExpression
     / LowerExpression
+    / LeftExpression
+    / LengthExpression
+    / LTrimExpression
+    / ReplaceExpression
+    / ReplicateExpression
+    / ReverseExpression
+    / RightExpression
+    / RTrimExpression
+    / SubstringExpression
+    / TrimExpression
 
 UpperExpression <- "UPPER"i ws "(" ex:SelectItem ")" {
-    return parsers.FunctionCall{Type: parsers.FunctionCallUpper, Arguments: []interface{}{ex}}, nil
+    return createFunctionCall(parsers.FunctionCallUpper, []interface{}{ex})
 }
 
 LowerExpression <- "LOWER"i ws "(" ex:SelectItem ")" {
-    return parsers.FunctionCall{Type: parsers.FunctionCallLower, Arguments: []interface{}{ex}}, nil
+    return createFunctionCall(parsers.FunctionCallLower, []interface{}{ex})
 }
 
 StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
-    return parsers.FunctionCall{Type: parsers.FunctionCallStringEquals, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
+    return createFunctionCall(parsers.FunctionCallStringEquals, []interface{}{ex1, ex2, ignoreCase})
 }
 
 ToStringExpression <- "TOSTRING"i ws "(" ws ex:SelectItem ws ")" {
-    return parsers.FunctionCall{Type: parsers.FunctionCallToString, Arguments: []interface{}{ex}}, nil
+    return createFunctionCall(parsers.FunctionCallToString, []interface{}{ex})
 }
 
 ConcatExpression <- "CONCAT"i ws "(" ws ex1:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })+ ws ")" {
     arguments := append([]interface{}{ex1}, others.([]interface{})...)
-    return parsers.FunctionCall{Type: parsers.FunctionCallConcat, Arguments: arguments}, nil
+    return createFunctionCall(parsers.FunctionCallConcat, arguments)
+}
+
+LeftExpression <- "LEFT"i ws "(" ws ex:SelectItem ws "," ws length:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallLeft, []interface{}{ex, length})
+}
+
+LengthExpression <- "LENGTH"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallLength, []interface{}{ex})
+}
+
+LTrimExpression <- "LTRIM"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallLTrim, []interface{}{ex})
+}
+
+ReplaceExpression <- "REPLACE"i ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws "," ws ex3:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallReplace, []interface{}{ex1, ex2, ex3})
+}
+
+ReplicateExpression <- "REPLICATE"i ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallReplicate, []interface{}{ex1, ex2})
+}
+
+ReverseExpression <- "REVERSE"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallReverse, []interface{}{ex})
+}
+
+RightExpression <- "RIGHT"i ws "(" ws ex:SelectItem ws "," ws length:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallRight, []interface{}{ex, length})
+}
+
+RTrimExpression <- "RTRIM"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallRTrim, []interface{}{ex})
+}
+
+SubstringExpression <- "SUBSTRING"i ws "(" ws ex:SelectItem ws "," ws startPos:SelectItem ws "," ws length:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallSubstring, []interface{}{ex, startPos, length})
+}
+
+TrimExpression <- "TRIM"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallTrim, []interface{}{ex})
 }
 
 ThreeArgumentStringFunctionExpression <- function:ThreeArgumentStringFunction ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {

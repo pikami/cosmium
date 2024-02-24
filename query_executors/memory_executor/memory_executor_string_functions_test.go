@@ -9,9 +9,9 @@ import (
 
 func Test_Execute_StringFunctions(t *testing.T) {
 	mockData := []memoryexecutor.RowType{
-		map[string]interface{}{"id": "123", "pk": "aaa", "str": "hello", "rng_type": true},
-		map[string]interface{}{"id": "456", "pk": "bbb", "str": "world", "rng_type": 159},
-		map[string]interface{}{"id": "789", "pk": "AAA", "str": "cool world"},
+		map[string]interface{}{"id": "123", "pk": "aaa", "str": "hello", "rng_type": true, "str2": "   hello "},
+		map[string]interface{}{"id": "456", "pk": "bbb", "str": "world", "rng_type": 159, "str2": "  world   "},
+		map[string]interface{}{"id": "789", "pk": "AAA", "str": "cool world", "str2": "          cool world  "},
 	}
 
 	t.Run("Should execute function STRINGEQUALS(ex1, ex2, ignoreCase)", func(t *testing.T) {
@@ -374,6 +374,395 @@ func Test_Execute_StringFunctions(t *testing.T) {
 				map[string]interface{}{"id": "123", "str": "true"},
 				map[string]interface{}{"id": "456", "str": "159"},
 				map[string]interface{}{"id": "789", "str": ""},
+			},
+		)
+	})
+
+	t.Run("Should execute function LEFT()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "left",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallLeft,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeInteger,
+										Value: 3,
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "left": "hel"},
+				map[string]interface{}{"str": "world", "left": "wor"},
+				map[string]interface{}{"str": "cool world", "left": "coo"},
+			},
+		)
+	})
+
+	t.Run("Should execute function LENGTH()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "length",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallLength,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "length": 5},
+				map[string]interface{}{"str": "world", "length": 5},
+				map[string]interface{}{"str": "cool world", "length": 10},
+			},
+		)
+	})
+
+	t.Run("Should execute function LTRIM()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "ltrimmed",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallLTrim,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str2"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "ltrimmed": "hello "},
+				map[string]interface{}{"str": "world", "ltrimmed": "world   "},
+				map[string]interface{}{"str": "cool world", "ltrimmed": "cool world  "},
+			},
+		)
+	})
+
+	t.Run("Should execute function REPLACE()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "replaced",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallReplace,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeString,
+										Value: "world",
+									},
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeString,
+										Value: "universe",
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "replaced": "hello"},
+				map[string]interface{}{"str": "world", "replaced": "universe"},
+				map[string]interface{}{"str": "cool world", "replaced": "cool universe"},
+			},
+		)
+	})
+
+	t.Run("Should execute function REPLICATE()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "replicated",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallReplicate,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeInteger,
+										Value: 3,
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "replicated": "hellohellohello"},
+				map[string]interface{}{"str": "world", "replicated": "worldworldworld"},
+				map[string]interface{}{"str": "cool world", "replicated": "cool worldcool worldcool world"},
+			},
+		)
+	})
+
+	t.Run("Should execute function REVERSE()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "reversed",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallReverse,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "reversed": "olleh"},
+				map[string]interface{}{"str": "world", "reversed": "dlrow"},
+				map[string]interface{}{"str": "cool world", "reversed": "dlrow looc"},
+			},
+		)
+	})
+
+	t.Run("Should execute function RIGHT()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "right",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallRight,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeInteger,
+										Value: 3,
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "right": "llo"},
+				map[string]interface{}{"str": "world", "right": "rld"},
+				map[string]interface{}{"str": "cool world", "right": "rld"},
+			},
+		)
+	})
+
+	t.Run("Should execute function RTRIM()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "rtrimmed",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallRTrim,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str2"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "rtrimmed": "   hello"},
+				map[string]interface{}{"str": "world", "rtrimmed": "  world"},
+				map[string]interface{}{"str": "cool world", "rtrimmed": "          cool world"},
+			},
+		)
+	})
+
+	t.Run("Should execute function SUBSTRING()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "substring",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallSubstring,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeInteger,
+										Value: 2,
+									},
+								},
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeConstant,
+									Value: parsers.Constant{
+										Type:  parsers.ConstantTypeInteger,
+										Value: 4,
+									},
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "substring": "llo"},
+				map[string]interface{}{"str": "world", "substring": "rld"},
+				map[string]interface{}{"str": "cool world", "substring": "ol w"},
+			},
+		)
+	})
+
+	t.Run("Should execute function TRIM()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "str"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "trimmed",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallTrim,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str2"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"str": "hello", "trimmed": "hello"},
+				map[string]interface{}{"str": "world", "trimmed": "world"},
+				map[string]interface{}{"str": "cool world", "trimmed": "cool world"},
 			},
 		)
 	})

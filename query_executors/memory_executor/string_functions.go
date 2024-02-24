@@ -111,6 +111,139 @@ func strings_Lower(arguments []interface{}, queryParameters map[string]interface
 	return strings.ToLower(convertToString(value))
 }
 
+func strings_Left(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	var ok bool
+	var length int
+	str := parseString(arguments[0], queryParameters, row)
+	lengthEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
+
+	if length, ok = lengthEx.(int); !ok {
+		fmt.Println("strings_Left - got parameters of wrong type")
+		return ""
+	}
+
+	if length <= 0 {
+		return ""
+	}
+
+	if len(str) <= length {
+		return str
+	}
+
+	return str[:length]
+}
+
+func strings_Length(arguments []interface{}, queryParameters map[string]interface{}, row RowType) int {
+	str := parseString(arguments[0], queryParameters, row)
+	return len(str)
+}
+
+func strings_LTrim(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	str := parseString(arguments[0], queryParameters, row)
+	return strings.TrimLeft(str, " ")
+}
+
+func strings_Replace(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	str := parseString(arguments[0], queryParameters, row)
+	oldStr := parseString(arguments[1], queryParameters, row)
+	newStr := parseString(arguments[2], queryParameters, row)
+	return strings.Replace(str, oldStr, newStr, -1)
+}
+
+func strings_Replicate(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	var ok bool
+	var times int
+	str := parseString(arguments[0], queryParameters, row)
+	timesEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
+
+	if times, ok = timesEx.(int); !ok {
+		fmt.Println("strings_Replicate - got parameters of wrong type")
+		return ""
+	}
+
+	if times <= 0 {
+		return ""
+	}
+
+	if len(str) <= times {
+		return str
+	}
+
+	return strings.Repeat(str, times)
+}
+
+func strings_Reverse(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	str := parseString(arguments[0], queryParameters, row)
+	runes := []rune(str)
+
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+
+	return string(runes)
+}
+
+func strings_Right(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	var ok bool
+	var length int
+	str := parseString(arguments[0], queryParameters, row)
+	lengthEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
+
+	if length, ok = lengthEx.(int); !ok {
+		fmt.Println("strings_Right - got parameters of wrong type")
+		return ""
+	}
+
+	if length <= 0 {
+		return ""
+	}
+
+	if len(str) <= length {
+		return str
+	}
+
+	return str[len(str)-length:]
+}
+
+func strings_RTrim(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	str := parseString(arguments[0], queryParameters, row)
+	return strings.TrimRight(str, " ")
+}
+
+func strings_Substring(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	var ok bool
+	var startPos int
+	var length int
+	str := parseString(arguments[0], queryParameters, row)
+	startPosEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
+	lengthEx := getFieldValue(arguments[2].(parsers.SelectItem), queryParameters, row)
+
+	if startPos, ok = startPosEx.(int); !ok {
+		fmt.Println("strings_Substring - got start parameters of wrong type")
+		return ""
+	}
+	if length, ok = lengthEx.(int); !ok {
+		fmt.Println("strings_Substring - got length parameters of wrong type")
+		return ""
+	}
+
+	if startPos >= len(str) {
+		return ""
+	}
+
+	endPos := startPos + length
+	if endPos > len(str) {
+		endPos = len(str)
+	}
+
+	return str[startPos:endPos]
+}
+
+func strings_Trim(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	str := parseString(arguments[0], queryParameters, row)
+	return strings.TrimSpace(str)
+}
+
 func getBoolFlag(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
 	ignoreCase := false
 	if len(arguments) > 2 && arguments[2] != nil {

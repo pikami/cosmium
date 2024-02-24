@@ -194,6 +194,26 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 			return strings_Upper(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallLower:
 			return strings_Lower(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallLeft:
+			return strings_Left(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallLength:
+			return strings_Length(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallLTrim:
+			return strings_LTrim(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallReplace:
+			return strings_Replace(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallReplicate:
+			return strings_Replicate(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallReverse:
+			return strings_Reverse(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallRight:
+			return strings_Right(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallRTrim:
+			return strings_RTrim(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallSubstring:
+			return strings_Substring(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallTrim:
+			return strings_Trim(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallIsDefined:
 			return typeChecking_IsDefined(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallIn:

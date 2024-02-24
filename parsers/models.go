@@ -91,6 +91,16 @@ const (
 	FunctionCallIn           FunctionCallType = "In"
 	FunctionCallUpper        FunctionCallType = "Upper"
 	FunctionCallLower        FunctionCallType = "Lower"
+	FunctionCallLeft         FunctionCallType = "Left"
+	FunctionCallLength       FunctionCallType = "Length"
+	FunctionCallLTrim        FunctionCallType = "LTrim"
+	FunctionCallReplace      FunctionCallType = "Replace"
+	FunctionCallReplicate    FunctionCallType = "Replicate"
+	FunctionCallReverse      FunctionCallType = "Reverse"
+	FunctionCallRight        FunctionCallType = "Right"
+	FunctionCallRTrim        FunctionCallType = "RTrim"
+	FunctionCallSubstring    FunctionCallType = "Substring"
+	FunctionCallTrim         FunctionCallType = "Trim"
 )
 
 type FunctionCall struct {
