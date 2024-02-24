@@ -288,4 +288,52 @@ func Test_Execute_StringFunctions(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse function UPPER()", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT UPPER(c.id) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallUpper,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "id"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
+	t.Run("Should parse function LOWER()", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT LOWER(c.id) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallLower,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "id"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
 }

@@ -6,6 +6,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.2
 	github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos v0.3.6
 	github.com/gin-gonic/gin v1.9.1
+	github.com/google/uuid v1.1.1
 	github.com/stretchr/testify v1.8.4
 )
 

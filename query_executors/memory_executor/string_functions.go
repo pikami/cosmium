@@ -101,6 +101,16 @@ func strings_ToString(arguments []interface{}, queryParameters map[string]interf
 	return convertToString(value)
 }
 
+func strings_Upper(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	value := getFieldValue(arguments[0].(parsers.SelectItem), queryParameters, row)
+	return strings.ToUpper(convertToString(value))
+}
+
+func strings_Lower(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+	value := getFieldValue(arguments[0].(parsers.SelectItem), queryParameters, row)
+	return strings.ToLower(convertToString(value))
+}
+
 func getBoolFlag(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
 	ignoreCase := false
 	if len(arguments) > 2 && arguments[2] != nil {
@@ -117,10 +127,10 @@ func parseString(argument interface{}, queryParameters map[string]interface{}, r
 	exItem := argument.(parsers.SelectItem)
 	ex := getFieldValue(exItem, queryParameters, row)
 	if str1, ok := ex.(string); ok {
-		fmt.Println("StringEquals got parameters of wrong type")
 		return str1
 	}
 
+	fmt.Println("StringEquals got parameters of wrong type")
 	return ""
 }
 

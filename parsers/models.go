@@ -89,6 +89,8 @@ const (
 	FunctionCallIndexOf      FunctionCallType = "IndexOf"
 	FunctionCallToString     FunctionCallType = "ToString"
 	FunctionCallIn           FunctionCallType = "In"
+	FunctionCallUpper        FunctionCallType = "Upper"
+	FunctionCallLower        FunctionCallType = "Lower"
 )
 
 type FunctionCall struct {

@@ -1,6 +1,12 @@
 package repositories
 
-import repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+import (
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+)
 
 var databases = []repositorymodels.Database{
 	{ID: "db1"},
@@ -39,6 +45,9 @@ func CreateDatabase(newDatabase repositorymodels.Database) repositorymodels.Repo
 		}
 	}
 
+	newDatabase.TimeStamp = time.Now().Unix()
+	newDatabase.UniqueID = uuid.New().String()
+	newDatabase.ETag = fmt.Sprintf("\"%s\"", newDatabase.UniqueID)
 	databases = append(databases, newDatabase)
 	return repositorymodels.StatusOk
 }

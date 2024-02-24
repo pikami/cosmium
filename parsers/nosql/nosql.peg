@@ -312,6 +312,16 @@ StringFunctions <- StringEqualsExpression
     / ToStringExpression
     / ConcatExpression
     / ThreeArgumentStringFunctionExpression
+    / UpperExpression
+    / LowerExpression
+
+UpperExpression <- "UPPER"i ws "(" ex:SelectItem ")" {
+    return parsers.FunctionCall{Type: parsers.FunctionCallUpper, Arguments: []interface{}{ex}}, nil
+}
+
+LowerExpression <- "LOWER"i ws "(" ex:SelectItem ")" {
+    return parsers.FunctionCall{Type: parsers.FunctionCallLower, Arguments: []interface{}{ex}}, nil
+}
 
 StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
     return parsers.FunctionCall{Type: parsers.FunctionCallStringEquals, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil

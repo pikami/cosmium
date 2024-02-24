@@ -1,14 +1,15 @@
 package repositories
 
 import (
+	"fmt"
+	"time"
+
+	"github.com/google/uuid"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	structhidrators "github.com/pikami/cosmium/internal/struct_hidrators"
 )
 
-var collections = []repositorymodels.Collection{
-	{ID: "db1"},
-	{ID: "db2"},
-}
+var collections = []repositorymodels.Collection{}
 
 func GetAllCollections(databaseId string) ([]repositorymodels.Collection, repositorymodels.RepositoryStatus) {
 	dbCollections := make([]repositorymodels.Collection, 0)
@@ -52,6 +53,9 @@ func CreateCollection(databaseId string, newCollection repositorymodels.Collecti
 
 	newCollection = structhidrators.Hidrate(newCollection).(repositorymodels.Collection)
 
+	newCollection.TimeStamp = time.Now().Unix()
+	newCollection.UniqueID = uuid.New().String()
+	newCollection.ETag = fmt.Sprintf("\"%s\"", newCollection.UniqueID)
 	newCollection.Internals = struct{ DatabaseId string }{
 		DatabaseId: databaseId,
 	}

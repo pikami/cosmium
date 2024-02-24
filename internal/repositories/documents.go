@@ -1,9 +1,12 @@
 package repositories
 
 import (
+	"fmt"
 	"log"
 	"strings"
+	"time"
 
+	"github.com/google/uuid"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/pikami/cosmium/parsers"
 	"github.com/pikami/cosmium/parsers/nosql"
@@ -93,6 +96,9 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 		partitionKeyValue = append(partitionKeyValue, val.(string))
 	}
 
+	document["_ts"] = time.Now().Unix()
+	document["_rid"] = uuid.New().String()
+	document["_etag"] = fmt.Sprintf("\"%s\"", document["_rid"])
 	document["_internal"] = map[string]interface{}{
 		"databaseId":        databaseId,
 		"collectionId":      collectionId,

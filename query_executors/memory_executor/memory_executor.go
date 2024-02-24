@@ -190,6 +190,10 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 			return strings_IndexOf(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallToString:
 			return strings_ToString(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallUpper:
+			return strings_Upper(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallLower:
+			return strings_Lower(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallIsDefined:
 			return typeChecking_IsDefined(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallIn:
