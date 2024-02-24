@@ -310,7 +310,20 @@ BooleanLiteral <- ("true"i / "false"i) {
     return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
 }
 
-FunctionCall <- StringFunctions / IsDefined / InFunction
+FunctionCall <- StringFunctions
+    / TypeCheckingFunctions
+    / InFunction
+
+TypeCheckingFunctions <- IsDefined
+    / IsArray
+    / IsBool
+    / IsFiniteNumber
+    / IsInteger
+    / IsNull
+    / IsNumber
+    / IsObject
+    / IsPrimitive
+    / IsString
 
 StringFunctions <- StringEqualsExpression
     / ToStringExpression
@@ -413,7 +426,43 @@ ThreeArgumentStringFunction <- ("CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i / "IND
 }
 
 IsDefined <- "IS_DEFINED"i ws "(" ws ex:SelectItem ws ")" {
-    return parsers.FunctionCall{Type: parsers.FunctionCallIsDefined, Arguments: []interface{}{ex}}, nil
+    return createFunctionCall(parsers.FunctionCallIsDefined, []interface{}{ex})
+}
+
+IsArray <- "IS_ARRAY"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsArray, []interface{}{ex})
+}
+
+IsBool <- "IS_BOOL"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsBool, []interface{}{ex})
+}
+
+IsFiniteNumber <- "IS_FINITE_NUMBER"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsFiniteNumber, []interface{}{ex})
+}
+
+IsInteger <- "IS_INTEGER"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsInteger, []interface{}{ex})
+}
+
+IsNull <- "IS_NULL"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsNull, []interface{}{ex})
+}
+
+IsNumber <- "IS_NUMBER"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsNumber, []interface{}{ex})
+}
+
+IsObject <- "IS_OBJECT"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsObject, []interface{}{ex})
+}
+
+IsPrimitive <- "IS_PRIMITIVE"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsPrimitive, []interface{}{ex})
+}
+
+IsString <- "IS_STRING"i ws "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIsString, []interface{}{ex})
 }
 
 InFunction <- ex1:SelectProperty ws "IN"i ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {

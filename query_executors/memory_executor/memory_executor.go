@@ -214,8 +214,28 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 			return strings_Substring(typedValue.Arguments, queryParameters, row)
 		case parsers.FunctionCallTrim:
 			return strings_Trim(typedValue.Arguments, queryParameters, row)
+
 		case parsers.FunctionCallIsDefined:
 			return typeChecking_IsDefined(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsArray:
+			return typeChecking_IsArray(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsBool:
+			return typeChecking_IsBool(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsFiniteNumber:
+			return typeChecking_IsFiniteNumber(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsInteger:
+			return typeChecking_IsInteger(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsNull:
+			return typeChecking_IsNull(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsNumber:
+			return typeChecking_IsNumber(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsObject:
+			return typeChecking_IsObject(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsPrimitive:
+			return typeChecking_IsPrimitive(typedValue.Arguments, queryParameters, row)
+		case parsers.FunctionCallIsString:
+			return typeChecking_IsString(typedValue.Arguments, queryParameters, row)
+
 		case parsers.FunctionCallIn:
 			return misc_In(typedValue.Arguments, queryParameters, row)
 		}

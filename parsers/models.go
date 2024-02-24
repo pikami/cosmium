@@ -81,14 +81,12 @@ type FunctionCallType string
 
 const (
 	FunctionCallStringEquals FunctionCallType = "StringEquals"
-	FunctionCallIsDefined    FunctionCallType = "IsDefined"
 	FunctionCallConcat       FunctionCallType = "Concat"
 	FunctionCallContains     FunctionCallType = "Contains"
 	FunctionCallEndsWith     FunctionCallType = "EndsWith"
 	FunctionCallStartsWith   FunctionCallType = "StartsWith"
 	FunctionCallIndexOf      FunctionCallType = "IndexOf"
 	FunctionCallToString     FunctionCallType = "ToString"
-	FunctionCallIn           FunctionCallType = "In"
 	FunctionCallUpper        FunctionCallType = "Upper"
 	FunctionCallLower        FunctionCallType = "Lower"
 	FunctionCallLeft         FunctionCallType = "Left"
@@ -101,6 +99,19 @@ const (
 	FunctionCallRTrim        FunctionCallType = "RTrim"
 	FunctionCallSubstring    FunctionCallType = "Substring"
 	FunctionCallTrim         FunctionCallType = "Trim"
+
+	FunctionCallIsDefined      FunctionCallType = "IsDefined"
+	FunctionCallIsArray        FunctionCallType = "IsArray"
+	FunctionCallIsBool         FunctionCallType = "IsBool"
+	FunctionCallIsFiniteNumber FunctionCallType = "IsFiniteNumber"
+	FunctionCallIsInteger      FunctionCallType = "IsInteger"
+	FunctionCallIsNull         FunctionCallType = "IsNull"
+	FunctionCallIsNumber       FunctionCallType = "IsNumber"
+	FunctionCallIsObject       FunctionCallType = "IsObject"
+	FunctionCallIsPrimitive    FunctionCallType = "IsPrimitive"
+	FunctionCallIsString       FunctionCallType = "IsString"
+
+	FunctionCallIn FunctionCallType = "In"
 )
 
 type FunctionCall struct {
