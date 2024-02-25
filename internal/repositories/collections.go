@@ -7,48 +7,50 @@ import (
 	"github.com/google/uuid"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	structhidrators "github.com/pikami/cosmium/internal/struct_hidrators"
+	"golang.org/x/exp/maps"
 )
 
-var collections = []repositorymodels.Collection{}
-
 func GetAllCollections(databaseId string) ([]repositorymodels.Collection, repositorymodels.RepositoryStatus) {
-	dbCollections := make([]repositorymodels.Collection, 0)
-
-	for _, coll := range collections {
-		if coll.Internals.DatabaseId == databaseId {
-			dbCollections = append(dbCollections, coll)
-		}
+	if _, ok := storeState.Databases[databaseId]; !ok {
+		return make([]repositorymodels.Collection, 0), repositorymodels.StatusNotFound
 	}
 
-	return dbCollections, repositorymodels.StatusOk
+	return maps.Values(storeState.Collections[databaseId]), repositorymodels.StatusOk
 }
 
-func GetCollection(databaseId string, id string) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
-	for _, coll := range collections {
-		if coll.Internals.DatabaseId == databaseId && coll.ID == id {
-			return coll, repositorymodels.StatusOk
-		}
+func GetCollection(databaseId string, collectionId string) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
+	if _, ok := storeState.Databases[databaseId]; !ok {
+		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
 	}
 
-	return repositorymodels.Collection{}, repositorymodels.StatusNotFound
+	if _, ok := storeState.Collections[databaseId][collectionId]; !ok {
+		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
+	}
+
+	return storeState.Collections[databaseId][collectionId], repositorymodels.StatusOk
 }
 
-func DeleteCollection(databaseId string, id string) repositorymodels.RepositoryStatus {
-	for index, coll := range collections {
-		if coll.Internals.DatabaseId == databaseId && coll.ID == id {
-			collections = append(collections[:index], collections[index+1:]...)
-			return repositorymodels.StatusOk
-		}
+func DeleteCollection(databaseId string, collectionId string) repositorymodels.RepositoryStatus {
+	if _, ok := storeState.Databases[databaseId]; !ok {
+		return repositorymodels.StatusNotFound
 	}
 
-	return repositorymodels.StatusNotFound
+	if _, ok := storeState.Collections[databaseId][collectionId]; !ok {
+		return repositorymodels.StatusNotFound
+	}
+
+	delete(storeState.Collections[databaseId], collectionId)
+
+	return repositorymodels.StatusOk
 }
 
 func CreateCollection(databaseId string, newCollection repositorymodels.Collection) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
-	for _, coll := range collections {
-		if coll.Internals.DatabaseId == databaseId && coll.ID == newCollection.ID {
-			return repositorymodels.Collection{}, repositorymodels.Conflict
-		}
+	if _, ok := storeState.Databases[databaseId]; !ok {
+		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
+	}
+
+	if _, ok := storeState.Collections[databaseId][newCollection.ID]; ok {
+		return repositorymodels.Collection{}, repositorymodels.Conflict
 	}
 
 	newCollection = structhidrators.Hidrate(newCollection).(repositorymodels.Collection)
@@ -56,9 +58,9 @@ func CreateCollection(databaseId string, newCollection repositorymodels.Collecti
 	newCollection.TimeStamp = time.Now().Unix()
 	newCollection.UniqueID = uuid.New().String()
 	newCollection.ETag = fmt.Sprintf("\"%s\"", newCollection.UniqueID)
-	newCollection.Internals = struct{ DatabaseId string }{
-		DatabaseId: databaseId,
-	}
-	collections = append(collections, newCollection)
+
+	storeState.Collections[databaseId][newCollection.ID] = newCollection
+	storeState.Documents[databaseId][newCollection.ID] = make(map[string]repositorymodels.Document)
+
 	return newCollection, repositorymodels.StatusOk
 }

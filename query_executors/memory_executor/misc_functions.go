@@ -4,11 +4,11 @@ import (
 	"github.com/pikami/cosmium/parsers"
 )
 
-func misc_In(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
-	value := getFieldValue(arguments[0].(parsers.SelectItem), queryParameters, row)
+func (c memoryExecutorContext) misc_In(arguments []interface{}, row RowType) bool {
+	value := c.getFieldValue(arguments[0].(parsers.SelectItem), row)
 
 	for i := 1; i < len(arguments); i++ {
-		compareValue := getFieldValue(arguments[i].(parsers.SelectItem), queryParameters, row)
+		compareValue := c.getFieldValue(arguments[i].(parsers.SelectItem), row)
 		if compareValues(value, compareValue) == 0 {
 			return true
 		}

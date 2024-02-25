@@ -14,12 +14,13 @@ var Config = ServerConfig{}
 func ParseFlags() {
 	host := flag.String("Host", "localhost", "Hostname")
 	port := flag.Int("Port", 8081, "Listen port")
-	explorerPath := flag.String("ExplorerDir", "/home/pk/pro/cosmos-explorer/dist", "Path to cosmos-explorer files")
-	tlsCertificatePath := flag.String("Cert", "../example.crt", "Hostname")
-	tlsCertificateKey := flag.String("CertKey", "../example.key", "Hostname")
+	explorerPath := flag.String("ExplorerDir", "", "Path to cosmos-explorer files")
+	tlsCertificatePath := flag.String("Cert", "", "Hostname")
+	tlsCertificateKey := flag.String("CertKey", "", "Hostname")
 	initialDataPath := flag.String("InitialData", "", "Path to JSON containing initial state")
 	accountKey := flag.String("AccountKey", DefaultAccountKey, "Account key for authentication")
 	disableAuthentication := flag.Bool("DisableAuth", false, "Disable authentication")
+	persistDataPath := flag.String("Persist", "", "Saves data to given path on application exit")
 
 	flag.Parse()
 
@@ -28,7 +29,8 @@ func ParseFlags() {
 	Config.ExplorerPath = *explorerPath
 	Config.TLS_CertificatePath = *tlsCertificatePath
 	Config.TLS_CertificateKey = *tlsCertificateKey
-	Config.DataFilePath = *initialDataPath
+	Config.InitialDataFilePath = *initialDataPath
+	Config.PersistDataFilePath = *persistDataPath
 	Config.DisableAuth = *disableAuthentication
 
 	Config.DatabaseAccount = Config.Host

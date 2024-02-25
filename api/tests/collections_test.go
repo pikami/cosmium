@@ -25,6 +25,7 @@ func Test_Collections(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
+	repositories.CreateDatabase(repositorymodels.Database{ID: testDatabaseName})
 	databaseClient, err := client.NewDatabase(testDatabaseName)
 	assert.Nil(t, err)
 

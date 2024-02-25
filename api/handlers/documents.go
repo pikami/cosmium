@@ -78,14 +78,14 @@ func ReplaceDocument(c *gin.Context) {
 		return
 	}
 
-	status = repositories.CreateDocument(databaseId, collectionId, requestBody)
+	createdDocument, status := repositories.CreateDocument(databaseId, collectionId, requestBody)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
 	if status == repositorymodels.StatusOk {
-		c.IndentedJSON(http.StatusCreated, requestBody)
+		c.IndentedJSON(http.StatusCreated, createdDocument)
 		return
 	}
 
@@ -114,7 +114,6 @@ func DocumentsPost(c *gin.Context) {
 			queryParameters = parametersToMap(paramsArray)
 		}
 
-		// TODO: Handle these {"query":"select c.id, c._self, c._rid, c._ts, [c[\"pk\"]] as _partitionKeyValue from c"}
 		docs, status := repositories.ExecuteQueryDocuments(databaseId, collectionId, query.(string), queryParameters)
 		if status != repositorymodels.StatusOk {
 			// TODO: Currently we return everything if the query fails
@@ -131,14 +130,14 @@ func DocumentsPost(c *gin.Context) {
 		return
 	}
 
-	status := repositories.CreateDocument(databaseId, collectionId, requestBody)
+	createdDocument, status := repositories.CreateDocument(databaseId, collectionId, requestBody)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
 	if status == repositorymodels.StatusOk {
-		c.IndentedJSON(http.StatusCreated, requestBody)
+		c.IndentedJSON(http.StatusCreated, createdDocument)
 		return
 	}
 

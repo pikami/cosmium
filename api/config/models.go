@@ -11,6 +11,7 @@ type ServerConfig struct {
 	Host                string
 	TLS_CertificatePath string
 	TLS_CertificateKey  string
-	DataFilePath        string
+	InitialDataFilePath string
+	PersistDataFilePath string
 	DisableAuth         bool
 }

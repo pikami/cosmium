@@ -65,14 +65,14 @@ func CreateDatabase(c *gin.Context) {
 		return
 	}
 
-	status := repositories.CreateDatabase(newDatabase)
+	createdDatabase, status := repositories.CreateDatabase(newDatabase)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
 	if status == repositorymodels.StatusOk {
-		c.IndentedJSON(http.StatusCreated, newDatabase)
+		c.IndentedJSON(http.StatusCreated, createdDatabase)
 		return
 	}
 

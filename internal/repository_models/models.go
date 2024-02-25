@@ -29,9 +29,6 @@ type Collection struct {
 	Triggers       string                   `json:"_triggers"`
 	Udfs           string                   `json:"_udfs"`
 	Conflicts      string                   `json:"_conflicts"`
-	Internals      struct {
-		DatabaseId string
-	}
 }
 
 type CollectionIndexingPolicy struct {
@@ -57,29 +54,21 @@ type CollectionPartitionKey struct {
 }
 
 type UserDefinedFunction struct {
-	Body      string `json:"body"`
-	ID        string `json:"id"`
-	Rid       string `json:"_rid"`
-	Ts        int    `json:"_ts"`
-	Self      string `json:"_self"`
-	Etag      string `json:"_etag"`
-	Internals struct {
-		DatabaseId   string
-		CollectionId string
-	}
+	Body string `json:"body"`
+	ID   string `json:"id"`
+	Rid  string `json:"_rid"`
+	Ts   int    `json:"_ts"`
+	Self string `json:"_self"`
+	Etag string `json:"_etag"`
 }
 
 type StoredProcedure struct {
-	Body      string `json:"body"`
-	ID        string `json:"id"`
-	Rid       string `json:"_rid"`
-	Ts        int    `json:"_ts"`
-	Self      string `json:"_self"`
-	Etag      string `json:"_etag"`
-	Internals struct {
-		DatabaseId   string
-		CollectionId string
-	}
+	Body string `json:"body"`
+	ID   string `json:"id"`
+	Rid  string `json:"_rid"`
+	Ts   int    `json:"_ts"`
+	Self string `json:"_self"`
+	Etag string `json:"_etag"`
 }
 
 type Trigger struct {
@@ -91,10 +80,6 @@ type Trigger struct {
 	Ts               int    `json:"_ts"`
 	Self             string `json:"_self"`
 	Etag             string `json:"_etag"`
-	Internals        struct {
-		DatabaseId   string
-		CollectionId string
-	}
 }
 
 type Document map[string]interface{}
@@ -115,7 +100,12 @@ type PartitionKeyRange struct {
 }
 
 type State struct {
-	Databases   []Database   `json:"databases"`
-	Collections []Collection `json:"collections"`
-	Documents   []Document   `json:"documents"`
+	// Map databaseId -> Database
+	Databases map[string]Database `json:"databases"`
+
+	// Map databaseId -> collectionId -> Collection
+	Collections map[string]map[string]Collection `json:"collections"`
+
+	// Map databaseId -> collectionId -> documentId -> Documents
+	Documents map[string]map[string]map[string]Document `json:"documents"`
 }

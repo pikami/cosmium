@@ -12,19 +12,27 @@ import (
 type RowType interface{}
 type ExpressionType interface{}
 
+type memoryExecutorContext struct {
+	parameters map[string]interface{}
+}
+
 func Execute(query parsers.SelectStmt, data []RowType) []RowType {
+	ctx := memoryExecutorContext{
+		parameters: query.Parameters,
+	}
+
 	result := make([]RowType, 0)
 
 	// Apply Filter
 	for _, row := range data {
-		if evaluateFilters(query.Filters, query.Parameters, row) {
+		if ctx.evaluateFilters(query.Filters, row) {
 			result = append(result, row)
 		}
 	}
 
 	// Apply order
 	if query.OrderExpressions != nil && len(query.OrderExpressions) > 0 {
-		orderBy(query.OrderExpressions, query.Parameters, result)
+		ctx.orderBy(query.OrderExpressions, result)
 	}
 
 	// Apply result limit
@@ -41,16 +49,16 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 	// Apply select
 	selectedData := make([]RowType, 0)
 	for _, row := range result {
-		selectedData = append(selectedData, selectRow(query.SelectItems, query.Parameters, row))
+		selectedData = append(selectedData, ctx.selectRow(query.SelectItems, row))
 	}
 
 	return selectedData
 }
 
-func selectRow(selectItems []parsers.SelectItem, queryParameters map[string]interface{}, row RowType) interface{} {
+func (c memoryExecutorContext) selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
 	// When the first value is top level, select it instead
 	if len(selectItems) > 0 && selectItems[0].IsTopLevel {
-		return getFieldValue(selectItems[0], queryParameters, row)
+		return c.getFieldValue(selectItems[0], row)
 	}
 
 	// Construct a new row based on the selected columns
@@ -65,21 +73,21 @@ func selectRow(selectItems []parsers.SelectItem, queryParameters map[string]inte
 			}
 		}
 
-		newRow[destinationName] = getFieldValue(column, queryParameters, row)
+		newRow[destinationName] = c.getFieldValue(column, row)
 	}
 
 	return newRow
 }
 
-func evaluateFilters(expr ExpressionType, queryParameters map[string]interface{}, row RowType) bool {
+func (c memoryExecutorContext) evaluateFilters(expr ExpressionType, row RowType) bool {
 	if expr == nil {
 		return true
 	}
 
 	switch typedValue := expr.(type) {
 	case parsers.ComparisonExpression:
-		leftValue := getExpressionParameterValue(typedValue.Left, queryParameters, row)
-		rightValue := getExpressionParameterValue(typedValue.Right, queryParameters, row)
+		leftValue := c.getExpressionParameterValue(typedValue.Left, row)
+		rightValue := c.getExpressionParameterValue(typedValue.Right, row)
 
 		cmp := compareValues(leftValue, rightValue)
 		switch typedValue.Operation {
@@ -99,7 +107,7 @@ func evaluateFilters(expr ExpressionType, queryParameters map[string]interface{}
 	case parsers.LogicalExpression:
 		var result bool
 		for i, expression := range typedValue.Expressions {
-			expressionResult := evaluateFilters(expression, queryParameters, row)
+			expressionResult := c.evaluateFilters(expression, row)
 			if i == 0 {
 				result = expressionResult
 			}
@@ -124,7 +132,7 @@ func evaluateFilters(expr ExpressionType, queryParameters map[string]interface{}
 		}
 		return false
 	case parsers.SelectItem:
-		resolvedValue := getFieldValue(typedValue, queryParameters, row)
+		resolvedValue := c.getFieldValue(typedValue, row)
 		if value, ok := resolvedValue.(bool); ok {
 			return value
 		}
@@ -132,11 +140,11 @@ func evaluateFilters(expr ExpressionType, queryParameters map[string]interface{}
 	return false
 }
 
-func getFieldValue(field parsers.SelectItem, queryParameters map[string]interface{}, row RowType) interface{} {
+func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowType) interface{} {
 	if field.Type == parsers.SelectItemTypeArray {
 		arrayValue := make([]interface{}, 0)
 		for _, selectItem := range field.SelectItems {
-			arrayValue = append(arrayValue, getFieldValue(selectItem, queryParameters, row))
+			arrayValue = append(arrayValue, c.getFieldValue(selectItem, row))
 		}
 		return arrayValue
 	}
@@ -144,7 +152,7 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 	if field.Type == parsers.SelectItemTypeObject {
 		objectValue := make(map[string]interface{})
 		for _, selectItem := range field.SelectItems {
-			objectValue[selectItem.Alias] = getFieldValue(selectItem, queryParameters, row)
+			objectValue[selectItem.Alias] = c.getFieldValue(selectItem, row)
 		}
 		return objectValue
 	}
@@ -158,9 +166,9 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 		}
 
 		if typedValue.Type == parsers.ConstantTypeParameterConstant &&
-			queryParameters != nil {
+			c.parameters != nil {
 			if key, ok := typedValue.Value.(string); ok {
-				return queryParameters[key]
+				return c.parameters[key]
 			}
 		}
 
@@ -177,78 +185,78 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 
 		switch typedValue.Type {
 		case parsers.FunctionCallStringEquals:
-			return strings_StringEquals(typedValue.Arguments, queryParameters, row)
+			return c.strings_StringEquals(typedValue.Arguments, row)
 		case parsers.FunctionCallContains:
-			return strings_Contains(typedValue.Arguments, queryParameters, row)
+			return c.strings_Contains(typedValue.Arguments, row)
 		case parsers.FunctionCallEndsWith:
-			return strings_EndsWith(typedValue.Arguments, queryParameters, row)
+			return c.strings_EndsWith(typedValue.Arguments, row)
 		case parsers.FunctionCallStartsWith:
-			return strings_StartsWith(typedValue.Arguments, queryParameters, row)
+			return c.strings_StartsWith(typedValue.Arguments, row)
 		case parsers.FunctionCallConcat:
-			return strings_Concat(typedValue.Arguments, queryParameters, row)
+			return c.strings_Concat(typedValue.Arguments, row)
 		case parsers.FunctionCallIndexOf:
-			return strings_IndexOf(typedValue.Arguments, queryParameters, row)
+			return c.strings_IndexOf(typedValue.Arguments, row)
 		case parsers.FunctionCallToString:
-			return strings_ToString(typedValue.Arguments, queryParameters, row)
+			return c.strings_ToString(typedValue.Arguments, row)
 		case parsers.FunctionCallUpper:
-			return strings_Upper(typedValue.Arguments, queryParameters, row)
+			return c.strings_Upper(typedValue.Arguments, row)
 		case parsers.FunctionCallLower:
-			return strings_Lower(typedValue.Arguments, queryParameters, row)
+			return c.strings_Lower(typedValue.Arguments, row)
 		case parsers.FunctionCallLeft:
-			return strings_Left(typedValue.Arguments, queryParameters, row)
+			return c.strings_Left(typedValue.Arguments, row)
 		case parsers.FunctionCallLength:
-			return strings_Length(typedValue.Arguments, queryParameters, row)
+			return c.strings_Length(typedValue.Arguments, row)
 		case parsers.FunctionCallLTrim:
-			return strings_LTrim(typedValue.Arguments, queryParameters, row)
+			return c.strings_LTrim(typedValue.Arguments, row)
 		case parsers.FunctionCallReplace:
-			return strings_Replace(typedValue.Arguments, queryParameters, row)
+			return c.strings_Replace(typedValue.Arguments, row)
 		case parsers.FunctionCallReplicate:
-			return strings_Replicate(typedValue.Arguments, queryParameters, row)
+			return c.strings_Replicate(typedValue.Arguments, row)
 		case parsers.FunctionCallReverse:
-			return strings_Reverse(typedValue.Arguments, queryParameters, row)
+			return c.strings_Reverse(typedValue.Arguments, row)
 		case parsers.FunctionCallRight:
-			return strings_Right(typedValue.Arguments, queryParameters, row)
+			return c.strings_Right(typedValue.Arguments, row)
 		case parsers.FunctionCallRTrim:
-			return strings_RTrim(typedValue.Arguments, queryParameters, row)
+			return c.strings_RTrim(typedValue.Arguments, row)
 		case parsers.FunctionCallSubstring:
-			return strings_Substring(typedValue.Arguments, queryParameters, row)
+			return c.strings_Substring(typedValue.Arguments, row)
 		case parsers.FunctionCallTrim:
-			return strings_Trim(typedValue.Arguments, queryParameters, row)
+			return c.strings_Trim(typedValue.Arguments, row)
 
 		case parsers.FunctionCallIsDefined:
-			return typeChecking_IsDefined(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsDefined(typedValue.Arguments, row)
 		case parsers.FunctionCallIsArray:
-			return typeChecking_IsArray(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsArray(typedValue.Arguments, row)
 		case parsers.FunctionCallIsBool:
-			return typeChecking_IsBool(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsBool(typedValue.Arguments, row)
 		case parsers.FunctionCallIsFiniteNumber:
-			return typeChecking_IsFiniteNumber(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsFiniteNumber(typedValue.Arguments, row)
 		case parsers.FunctionCallIsInteger:
-			return typeChecking_IsInteger(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsInteger(typedValue.Arguments, row)
 		case parsers.FunctionCallIsNull:
-			return typeChecking_IsNull(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsNull(typedValue.Arguments, row)
 		case parsers.FunctionCallIsNumber:
-			return typeChecking_IsNumber(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsNumber(typedValue.Arguments, row)
 		case parsers.FunctionCallIsObject:
-			return typeChecking_IsObject(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsObject(typedValue.Arguments, row)
 		case parsers.FunctionCallIsPrimitive:
-			return typeChecking_IsPrimitive(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsPrimitive(typedValue.Arguments, row)
 		case parsers.FunctionCallIsString:
-			return typeChecking_IsString(typedValue.Arguments, queryParameters, row)
+			return c.typeChecking_IsString(typedValue.Arguments, row)
 
 		case parsers.FunctionCallArrayConcat:
-			return array_Concat(typedValue.Arguments, queryParameters, row)
+			return c.array_Concat(typedValue.Arguments, row)
 		case parsers.FunctionCallArrayLength:
-			return array_Length(typedValue.Arguments, queryParameters, row)
+			return c.array_Length(typedValue.Arguments, row)
 		case parsers.FunctionCallArraySlice:
-			return array_Slice(typedValue.Arguments, queryParameters, row)
+			return c.array_Slice(typedValue.Arguments, row)
 		case parsers.FunctionCallSetIntersect:
-			return set_Intersect(typedValue.Arguments, queryParameters, row)
+			return c.set_Intersect(typedValue.Arguments, row)
 		case parsers.FunctionCallSetUnion:
-			return set_Union(typedValue.Arguments, queryParameters, row)
+			return c.set_Union(typedValue.Arguments, row)
 
 		case parsers.FunctionCallIn:
-			return misc_In(typedValue.Arguments, queryParameters, row)
+			return c.misc_In(typedValue.Arguments, row)
 		}
 	}
 
@@ -265,14 +273,13 @@ func getFieldValue(field parsers.SelectItem, queryParameters map[string]interfac
 	return value
 }
 
-func getExpressionParameterValue(
+func (c memoryExecutorContext) getExpressionParameterValue(
 	parameter interface{},
-	queryParameters map[string]interface{},
 	row RowType,
 ) interface{} {
 	switch typedParameter := parameter.(type) {
 	case parsers.SelectItem:
-		return getFieldValue(typedParameter, queryParameters, row)
+		return c.getFieldValue(typedParameter, row)
 	}
 
 	fmt.Println("getExpressionParameterValue - got incorrect parameter type")
@@ -280,11 +287,11 @@ func getExpressionParameterValue(
 	return nil
 }
 
-func orderBy(orderBy []parsers.OrderExpression, queryParameters map[string]interface{}, data []RowType) {
+func (c memoryExecutorContext) orderBy(orderBy []parsers.OrderExpression, data []RowType) {
 	less := func(i, j int) bool {
 		for _, order := range orderBy {
-			val1 := getFieldValue(order.SelectItem, queryParameters, data[i])
-			val2 := getFieldValue(order.SelectItem, queryParameters, data[j])
+			val1 := c.getFieldValue(order.SelectItem, data[i])
+			val2 := c.getFieldValue(order.SelectItem, data[j])
 
 			cmp := compareValues(val1, val2)
 			if cmp != 0 {

@@ -24,6 +24,9 @@ func RegisterExplorerHandlers(router *gin.Engine) {
 				ctx.Next()
 			}
 		})
-		explorer.Static("/", config.Config.ExplorerPath)
+
+		if config.Config.ExplorerPath != "" {
+			explorer.Static("/", config.Config.ExplorerPath)
+		}
 	}
 }

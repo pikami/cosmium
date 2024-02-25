@@ -6,48 +6,42 @@ import (
 
 	"github.com/google/uuid"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"golang.org/x/exp/maps"
 )
 
-var databases = []repositorymodels.Database{
-	{ID: "db1"},
-	{ID: "db2"},
-}
-
 func GetAllDatabases() ([]repositorymodels.Database, repositorymodels.RepositoryStatus) {
-	return databases, repositorymodels.StatusOk
+	return maps.Values(storeState.Databases), repositorymodels.StatusOk
 }
 
 func GetDatabase(id string) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
-	for _, db := range databases {
-		if db.ID == id {
-			return db, repositorymodels.StatusOk
-		}
+	if database, ok := storeState.Databases[id]; ok {
+		return database, repositorymodels.StatusOk
 	}
 
 	return repositorymodels.Database{}, repositorymodels.StatusNotFound
 }
 
 func DeleteDatabase(id string) repositorymodels.RepositoryStatus {
-	for index, db := range databases {
-		if db.ID == id {
-			databases = append(databases[:index], databases[index+1:]...)
-			return repositorymodels.StatusOk
-		}
+	if _, ok := storeState.Databases[id]; !ok {
+		return repositorymodels.StatusNotFound
 	}
 
-	return repositorymodels.StatusNotFound
+	delete(storeState.Databases, id)
+
+	return repositorymodels.StatusOk
 }
 
-func CreateDatabase(newDatabase repositorymodels.Database) repositorymodels.RepositoryStatus {
-	for _, db := range databases {
-		if db.ID == newDatabase.ID {
-			return repositorymodels.Conflict
-		}
+func CreateDatabase(newDatabase repositorymodels.Database) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	if _, ok := storeState.Databases[newDatabase.ID]; ok {
+		return repositorymodels.Database{}, repositorymodels.Conflict
 	}
 
 	newDatabase.TimeStamp = time.Now().Unix()
 	newDatabase.UniqueID = uuid.New().String()
 	newDatabase.ETag = fmt.Sprintf("\"%s\"", newDatabase.UniqueID)
-	databases = append(databases, newDatabase)
-	return repositorymodels.StatusOk
+	storeState.Databases[newDatabase.ID] = newDatabase
+	storeState.Collections[newDatabase.ID] = make(map[string]repositorymodels.Collection)
+	storeState.Documents[newDatabase.ID] = make(map[string]map[string]repositorymodels.Document)
+
+	return newDatabase, repositorymodels.StatusOk
 }

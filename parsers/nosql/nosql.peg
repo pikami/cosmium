@@ -9,15 +9,10 @@ func makeSelectStmt(columns, table, whereClause interface{}, count interface{}, 
 		Table:       table.(parsers.Table),
 	}
 
-	if filters, ok := whereClause.(parsers.ComparisonExpression); ok {
-		selectStmt.Filters = filters
-	} else if filters, ok := whereClause.(parsers.LogicalExpression); ok {
-		selectStmt.Filters = filters
-	} else if filters, ok := whereClause.(parsers.Constant); ok {
-		selectStmt.Filters = filters
-	} else if filters, ok := whereClause.(parsers.SelectItem); ok {
-		selectStmt.Filters = filters
-	}
+    switch v := whereClause.(type) {
+        case parsers.ComparisonExpression, parsers.LogicalExpression, parsers.Constant, parsers.SelectItem:
+            selectStmt.Filters = v
+    }
 
 	if n, ok := count.(int); ok {
 		selectStmt.Count = n
@@ -284,14 +279,12 @@ ComparisonOperator <- ("=" / "!=" / "<" / "<=" / ">" / ">=") {
     return string(c.text), nil
 }
 
-StringEquals <- "STRINGEQUALS"i
-
 Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral / ParameterConstant / NullConstant
 
 ParameterConstant <- "@" Identifier {
     return parsers.Constant{Type: parsers.ConstantTypeParameterConstant, Value: string(c.text)}, nil
 }
-NullConstant <- "null" {
+NullConstant <- "null"i {
     return parsers.Constant{Value: nil}, nil
 }
 
@@ -357,7 +350,7 @@ LowerExpression <- "LOWER"i ws "(" ex:SelectItem ")" {
     return createFunctionCall(parsers.FunctionCallLower, []interface{}{ex})
 }
 
-StringEqualsExpression <- StringEquals ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
+StringEqualsExpression <- "STRINGEQUALS"i ws "(" ws ex1:SelectItem ws "," ws ex2:SelectItem ws ignoreCase:("," ws boolean:SelectItem { return boolean, nil })? ")" {
     return createFunctionCall(parsers.FunctionCallStringEquals, []interface{}{ex1, ex2, ignoreCase})
 }
 
@@ -425,7 +418,7 @@ ThreeArgumentStringFunctionExpression <- function:ThreeArgumentStringFunction ws
         functionType = parsers.FunctionCallIndexOf
     }
 
-    return parsers.FunctionCall{Type: functionType, Arguments: []interface{}{ex1, ex2, ignoreCase}}, nil
+    return createFunctionCall(functionType, []interface{}{ex1, ex2, ignoreCase})
 }
 
 ThreeArgumentStringFunction <- ("CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i / "INDEX_OF"i) {
@@ -493,8 +486,7 @@ SetUnionExpression <- "SetUnion"i ws "(" ws set1:SelectItem ws "," ws set2:Selec
 }
 
 InFunction <- ex1:SelectProperty ws "IN"i ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
-    arguments := append([]interface{}{ex1, ex2}, others.([]interface{})...)
-    return parsers.FunctionCall{Type: parsers.FunctionCallIn, Arguments: arguments}, nil
+    return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))
 }
 
 Integer <- [0-9]+ {

@@ -7,10 +7,10 @@ import (
 	"github.com/pikami/cosmium/parsers"
 )
 
-func strings_StringEquals(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
-	str1 := parseString(arguments[0], queryParameters, row)
-	str2 := parseString(arguments[1], queryParameters, row)
-	ignoreCase := getBoolFlag(arguments, queryParameters, row)
+func (c memoryExecutorContext) strings_StringEquals(arguments []interface{}, row RowType) bool {
+	str1 := c.parseString(arguments[0], row)
+	str2 := c.parseString(arguments[1], row)
+	ignoreCase := c.getBoolFlag(arguments, row)
 
 	if ignoreCase {
 		return strings.EqualFold(str1, str2)
@@ -19,10 +19,10 @@ func strings_StringEquals(arguments []interface{}, queryParameters map[string]in
 	return str1 == str2
 }
 
-func strings_Contains(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
-	str1 := parseString(arguments[0], queryParameters, row)
-	str2 := parseString(arguments[1], queryParameters, row)
-	ignoreCase := getBoolFlag(arguments, queryParameters, row)
+func (c memoryExecutorContext) strings_Contains(arguments []interface{}, row RowType) bool {
+	str1 := c.parseString(arguments[0], row)
+	str2 := c.parseString(arguments[1], row)
+	ignoreCase := c.getBoolFlag(arguments, row)
 
 	if ignoreCase {
 		str1 = strings.ToLower(str1)
@@ -32,10 +32,10 @@ func strings_Contains(arguments []interface{}, queryParameters map[string]interf
 	return strings.Contains(str1, str2)
 }
 
-func strings_EndsWith(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
-	str1 := parseString(arguments[0], queryParameters, row)
-	str2 := parseString(arguments[1], queryParameters, row)
-	ignoreCase := getBoolFlag(arguments, queryParameters, row)
+func (c memoryExecutorContext) strings_EndsWith(arguments []interface{}, row RowType) bool {
+	str1 := c.parseString(arguments[0], row)
+	str2 := c.parseString(arguments[1], row)
+	ignoreCase := c.getBoolFlag(arguments, row)
 
 	if ignoreCase {
 		str1 = strings.ToLower(str1)
@@ -45,10 +45,10 @@ func strings_EndsWith(arguments []interface{}, queryParameters map[string]interf
 	return strings.HasSuffix(str1, str2)
 }
 
-func strings_StartsWith(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
-	str1 := parseString(arguments[0], queryParameters, row)
-	str2 := parseString(arguments[1], queryParameters, row)
-	ignoreCase := getBoolFlag(arguments, queryParameters, row)
+func (c memoryExecutorContext) strings_StartsWith(arguments []interface{}, row RowType) bool {
+	str1 := c.parseString(arguments[0], row)
+	str2 := c.parseString(arguments[1], row)
+	ignoreCase := c.getBoolFlag(arguments, row)
 
 	if ignoreCase {
 		str1 = strings.ToLower(str1)
@@ -58,12 +58,12 @@ func strings_StartsWith(arguments []interface{}, queryParameters map[string]inte
 	return strings.HasPrefix(str1, str2)
 }
 
-func strings_Concat(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+func (c memoryExecutorContext) strings_Concat(arguments []interface{}, row RowType) string {
 	result := ""
 
 	for _, arg := range arguments {
 		if selectItem, ok := arg.(parsers.SelectItem); ok {
-			value := getFieldValue(selectItem, queryParameters, row)
+			value := c.getFieldValue(selectItem, row)
 			result += convertToString(value)
 		}
 	}
@@ -71,13 +71,13 @@ func strings_Concat(arguments []interface{}, queryParameters map[string]interfac
 	return result
 }
 
-func strings_IndexOf(arguments []interface{}, queryParameters map[string]interface{}, row RowType) int {
-	str1 := parseString(arguments[0], queryParameters, row)
-	str2 := parseString(arguments[1], queryParameters, row)
+func (c memoryExecutorContext) strings_IndexOf(arguments []interface{}, row RowType) int {
+	str1 := c.parseString(arguments[0], row)
+	str2 := c.parseString(arguments[1], row)
 
 	start := 0
 	if len(arguments) > 2 && arguments[2] != nil {
-		if startPos, ok := getFieldValue(arguments[2].(parsers.SelectItem), queryParameters, row).(int); ok {
+		if startPos, ok := c.getFieldValue(arguments[2].(parsers.SelectItem), row).(int); ok {
 			start = startPos
 		}
 	}
@@ -96,26 +96,26 @@ func strings_IndexOf(arguments []interface{}, queryParameters map[string]interfa
 	}
 }
 
-func strings_ToString(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	value := getFieldValue(arguments[0].(parsers.SelectItem), queryParameters, row)
+func (c memoryExecutorContext) strings_ToString(arguments []interface{}, row RowType) string {
+	value := c.getFieldValue(arguments[0].(parsers.SelectItem), row)
 	return convertToString(value)
 }
 
-func strings_Upper(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	value := getFieldValue(arguments[0].(parsers.SelectItem), queryParameters, row)
+func (c memoryExecutorContext) strings_Upper(arguments []interface{}, row RowType) string {
+	value := c.getFieldValue(arguments[0].(parsers.SelectItem), row)
 	return strings.ToUpper(convertToString(value))
 }
 
-func strings_Lower(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	value := getFieldValue(arguments[0].(parsers.SelectItem), queryParameters, row)
+func (c memoryExecutorContext) strings_Lower(arguments []interface{}, row RowType) string {
+	value := c.getFieldValue(arguments[0].(parsers.SelectItem), row)
 	return strings.ToLower(convertToString(value))
 }
 
-func strings_Left(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+func (c memoryExecutorContext) strings_Left(arguments []interface{}, row RowType) string {
 	var ok bool
 	var length int
-	str := parseString(arguments[0], queryParameters, row)
-	lengthEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
+	str := c.parseString(arguments[0], row)
+	lengthEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
 
 	if length, ok = lengthEx.(int); !ok {
 		fmt.Println("strings_Left - got parameters of wrong type")
@@ -133,28 +133,28 @@ func strings_Left(arguments []interface{}, queryParameters map[string]interface{
 	return str[:length]
 }
 
-func strings_Length(arguments []interface{}, queryParameters map[string]interface{}, row RowType) int {
-	str := parseString(arguments[0], queryParameters, row)
+func (c memoryExecutorContext) strings_Length(arguments []interface{}, row RowType) int {
+	str := c.parseString(arguments[0], row)
 	return len(str)
 }
 
-func strings_LTrim(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	str := parseString(arguments[0], queryParameters, row)
+func (c memoryExecutorContext) strings_LTrim(arguments []interface{}, row RowType) string {
+	str := c.parseString(arguments[0], row)
 	return strings.TrimLeft(str, " ")
 }
 
-func strings_Replace(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	str := parseString(arguments[0], queryParameters, row)
-	oldStr := parseString(arguments[1], queryParameters, row)
-	newStr := parseString(arguments[2], queryParameters, row)
+func (c memoryExecutorContext) strings_Replace(arguments []interface{}, row RowType) string {
+	str := c.parseString(arguments[0], row)
+	oldStr := c.parseString(arguments[1], row)
+	newStr := c.parseString(arguments[2], row)
 	return strings.Replace(str, oldStr, newStr, -1)
 }
 
-func strings_Replicate(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+func (c memoryExecutorContext) strings_Replicate(arguments []interface{}, row RowType) string {
 	var ok bool
 	var times int
-	str := parseString(arguments[0], queryParameters, row)
-	timesEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
+	str := c.parseString(arguments[0], row)
+	timesEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
 
 	if times, ok = timesEx.(int); !ok {
 		fmt.Println("strings_Replicate - got parameters of wrong type")
@@ -172,8 +172,8 @@ func strings_Replicate(arguments []interface{}, queryParameters map[string]inter
 	return strings.Repeat(str, times)
 }
 
-func strings_Reverse(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	str := parseString(arguments[0], queryParameters, row)
+func (c memoryExecutorContext) strings_Reverse(arguments []interface{}, row RowType) string {
+	str := c.parseString(arguments[0], row)
 	runes := []rune(str)
 
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
@@ -183,11 +183,11 @@ func strings_Reverse(arguments []interface{}, queryParameters map[string]interfa
 	return string(runes)
 }
 
-func strings_Right(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+func (c memoryExecutorContext) strings_Right(arguments []interface{}, row RowType) string {
 	var ok bool
 	var length int
-	str := parseString(arguments[0], queryParameters, row)
-	lengthEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
+	str := c.parseString(arguments[0], row)
+	lengthEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
 
 	if length, ok = lengthEx.(int); !ok {
 		fmt.Println("strings_Right - got parameters of wrong type")
@@ -205,18 +205,18 @@ func strings_Right(arguments []interface{}, queryParameters map[string]interface
 	return str[len(str)-length:]
 }
 
-func strings_RTrim(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	str := parseString(arguments[0], queryParameters, row)
+func (c memoryExecutorContext) strings_RTrim(arguments []interface{}, row RowType) string {
+	str := c.parseString(arguments[0], row)
 	return strings.TrimRight(str, " ")
 }
 
-func strings_Substring(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
+func (c memoryExecutorContext) strings_Substring(arguments []interface{}, row RowType) string {
 	var ok bool
 	var startPos int
 	var length int
-	str := parseString(arguments[0], queryParameters, row)
-	startPosEx := getFieldValue(arguments[1].(parsers.SelectItem), queryParameters, row)
-	lengthEx := getFieldValue(arguments[2].(parsers.SelectItem), queryParameters, row)
+	str := c.parseString(arguments[0], row)
+	startPosEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
+	lengthEx := c.getFieldValue(arguments[2].(parsers.SelectItem), row)
 
 	if startPos, ok = startPosEx.(int); !ok {
 		fmt.Println("strings_Substring - got start parameters of wrong type")
@@ -239,16 +239,16 @@ func strings_Substring(arguments []interface{}, queryParameters map[string]inter
 	return str[startPos:endPos]
 }
 
-func strings_Trim(arguments []interface{}, queryParameters map[string]interface{}, row RowType) string {
-	str := parseString(arguments[0], queryParameters, row)
+func (c memoryExecutorContext) strings_Trim(arguments []interface{}, row RowType) string {
+	str := c.parseString(arguments[0], row)
 	return strings.TrimSpace(str)
 }
 
-func getBoolFlag(arguments []interface{}, queryParameters map[string]interface{}, row RowType) bool {
+func (c memoryExecutorContext) getBoolFlag(arguments []interface{}, row RowType) bool {
 	ignoreCase := false
 	if len(arguments) > 2 && arguments[2] != nil {
 		ignoreCaseItem := arguments[2].(parsers.SelectItem)
-		if value, ok := getFieldValue(ignoreCaseItem, queryParameters, row).(bool); ok {
+		if value, ok := c.getFieldValue(ignoreCaseItem, row).(bool); ok {
 			ignoreCase = value
 		}
 	}
@@ -256,9 +256,9 @@ func getBoolFlag(arguments []interface{}, queryParameters map[string]interface{}
 	return ignoreCase
 }
 
-func parseString(argument interface{}, queryParameters map[string]interface{}, row RowType) string {
+func (c memoryExecutorContext) parseString(argument interface{}, row RowType) string {
 	exItem := argument.(parsers.SelectItem)
-	ex := getFieldValue(exItem, queryParameters, row)
+	ex := c.getFieldValue(exItem, row)
 	if str1, ok := ex.(string); ok {
 		return str1
 	}

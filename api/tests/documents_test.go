@@ -50,6 +50,7 @@ func testCosmosQuery(t *testing.T,
 }
 
 func Test_Documents(t *testing.T) {
+	repositories.CreateDatabase(repositorymodels.Database{ID: testDatabaseName})
 	repositories.CreateCollection(testDatabaseName, repositorymodels.Collection{
 		ID: testCollectionName,
 		PartitionKey: struct {
@@ -77,7 +78,7 @@ func Test_Documents(t *testing.T) {
 
 	t.Run("Should query document", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
-			"SELECT c.id, c[\"pk\"] FROM c",
+			"SELECT c.id, c[\"pk\"] FROM c ORDER BY c.id",
 			nil,
 			[]interface{}{
 				map[string]interface{}{"id": "12345", "pk": "123"},
@@ -88,7 +89,7 @@ func Test_Documents(t *testing.T) {
 
 	t.Run("Should query VALUE array", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
-			"SELECT VALUE [c.id, c[\"pk\"]] FROM c",
+			"SELECT VALUE [c.id, c[\"pk\"]] FROM c ORDER BY c.id",
 			nil,
 			[]interface{}{
 				[]interface{}{"12345", "123"},
@@ -99,7 +100,7 @@ func Test_Documents(t *testing.T) {
 
 	t.Run("Should query VALUE object", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
-			"SELECT VALUE { id: c.id, _pk: c.pk } FROM c",
+			"SELECT VALUE { id: c.id, _pk: c.pk } FROM c ORDER BY c.id",
 			nil,
 			[]interface{}{
 				map[string]interface{}{"id": "12345", "_pk": "123"},
@@ -112,7 +113,8 @@ func Test_Documents(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			`select c.id
 			FROM c
-			WHERE c.isCool=true`,
+			WHERE c.isCool=true
+			ORDER BY c.id`,
 			nil,
 			[]interface{}{
 				map[string]interface{}{"id": "67890"},
@@ -124,7 +126,8 @@ func Test_Documents(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			`select c.id
 			FROM c
-			WHERE c.id=@param_id`,
+			WHERE c.id=@param_id
+			ORDER BY c.id`,
 			[]azcosmos.QueryParameter{
 				{Name: "@param_id", Value: "67890"},
 			},
