@@ -25,7 +25,7 @@ build-linux-amd64:
 
 build-windows-amd64:
 	@echo "Building Windows x64 binary..."
-    @GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe .
+	@GOOS=windows GOARCH=amd64 $(GOBUILD) -o $(DIST_DIR)/$(BINARY_NAME)-windows-amd64.exe .
 
 generate-parser-nosql:
 	pigeon -o ./parsers/nosql/nosql.go ./parsers/nosql/nosql.peg

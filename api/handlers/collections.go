@@ -13,7 +13,13 @@ func GetAllCollections(c *gin.Context) {
 
 	collections, status := repositories.GetAllCollections(databaseId)
 	if status == repositorymodels.StatusOk {
-		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "DocumentCollections": collections, "_count": len(collections)})
+		database, _ := repositories.GetDatabase(databaseId)
+
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"_rid":                database.ResourceID,
+			"DocumentCollections": collections,
+			"_count":              len(collections),
+		})
 		return
 	}
 

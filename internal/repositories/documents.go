@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/resourceid"
 	"github.com/pikami/cosmium/parsers"
 	"github.com/pikami/cosmium/parsers/nosql"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
@@ -60,17 +61,19 @@ func DeleteDocument(databaseId string, collectionId string, documentId string) r
 }
 
 func CreateDocument(databaseId string, collectionId string, document map[string]interface{}) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
-	var documentId string
 	var ok bool
+	var documentId string
+	var database repositorymodels.Database
+	var collection repositorymodels.Collection
 	if documentId, ok = document["id"].(string); !ok || documentId == "" {
 		return repositorymodels.Document{}, repositorymodels.BadRequest
 	}
 
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	if database, ok = storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
 
-	if _, ok = storeState.Collections[databaseId][collectionId]; !ok {
+	if collection, ok = storeState.Collections[databaseId][collectionId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
 
@@ -79,8 +82,9 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 	}
 
 	document["_ts"] = time.Now().Unix()
-	document["_rid"] = uuid.New().String()
-	document["_etag"] = fmt.Sprintf("\"%s\"", document["_rid"])
+	document["_rid"] = resourceid.NewCombined(database.ResourceID, collection.ResourceID, resourceid.New())
+	document["_etag"] = fmt.Sprintf("\"%s\"", uuid.New())
+	document["_self"] = fmt.Sprintf("dbs/%s/colls/%s/docs/%s/", database.ResourceID, collection.ResourceID, document["_rid"])
 
 	storeState.Documents[databaseId][collectionId][documentId] = document
 

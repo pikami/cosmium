@@ -15,7 +15,13 @@ func GetAllDocuments(c *gin.Context) {
 
 	documents, status := repositories.GetAllDocuments(databaseId, collectionId)
 	if status == repositorymodels.StatusOk {
-		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Documents": documents, "_count": len(documents)})
+		collection, _ := repositories.GetCollection(databaseId, collectionId)
+
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"_rid":      collection.ID,
+			"Documents": documents,
+			"_count":    len(documents),
+		})
 		return
 	}
 
@@ -121,7 +127,12 @@ func DocumentsPost(c *gin.Context) {
 			return
 		}
 
-		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Documents": docs, "_count": len(docs)})
+		collection, _ := repositories.GetCollection(databaseId, collectionId)
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"_rid":      collection.ResourceID,
+			"Documents": docs,
+			"_count":    len(docs),
+		})
 		return
 	}
 

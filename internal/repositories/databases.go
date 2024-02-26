@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/resourceid"
 	"golang.org/x/exp/maps"
 )
 
@@ -37,8 +38,10 @@ func CreateDatabase(newDatabase repositorymodels.Database) (repositorymodels.Dat
 	}
 
 	newDatabase.TimeStamp = time.Now().Unix()
-	newDatabase.UniqueID = uuid.New().String()
-	newDatabase.ETag = fmt.Sprintf("\"%s\"", newDatabase.UniqueID)
+	newDatabase.ResourceID = resourceid.New()
+	newDatabase.ETag = fmt.Sprintf("\"%s\"", uuid.New())
+	newDatabase.Self = fmt.Sprintf("dbs/%s/", newDatabase.ResourceID)
+
 	storeState.Databases[newDatabase.ID] = newDatabase
 	storeState.Collections[newDatabase.ID] = make(map[string]repositorymodels.Collection)
 	storeState.Documents[newDatabase.ID] = make(map[string]map[string]repositorymodels.Document)

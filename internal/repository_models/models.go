@@ -1,10 +1,11 @@
 package repositorymodels
 
 type Database struct {
-	ID        string `json:"id"`
-	TimeStamp int64  `json:"_ts"`
-	UniqueID  string `json:"_rid"`
-	ETag      string `json:"_etag"`
+	ID         string `json:"id"`
+	TimeStamp  int64  `json:"_ts"`
+	ResourceID string `json:"_rid"`
+	ETag       string `json:"_etag"`
+	Self       string `json:"_self"`
 }
 
 type RepositoryStatus int
@@ -20,7 +21,7 @@ type Collection struct {
 	ID             string                   `json:"id"`
 	IndexingPolicy CollectionIndexingPolicy `json:"indexingPolicy"`
 	PartitionKey   CollectionPartitionKey   `json:"partitionKey"`
-	UniqueID       string                   `json:"_rid"`
+	ResourceID     string                   `json:"_rid"`
 	TimeStamp      int64                    `json:"_ts"`
 	Self           string                   `json:"_self"`
 	ETag           string                   `json:"_etag"`
@@ -54,21 +55,21 @@ type CollectionPartitionKey struct {
 }
 
 type UserDefinedFunction struct {
-	Body string `json:"body"`
-	ID   string `json:"id"`
-	Rid  string `json:"_rid"`
-	Ts   int    `json:"_ts"`
-	Self string `json:"_self"`
-	Etag string `json:"_etag"`
+	Body       string `json:"body"`
+	ID         string `json:"id"`
+	ResourceID string `json:"_rid"`
+	TimeStamp  int    `json:"_ts"`
+	Self       string `json:"_self"`
+	Etag       string `json:"_etag"`
 }
 
 type StoredProcedure struct {
-	Body string `json:"body"`
-	ID   string `json:"id"`
-	Rid  string `json:"_rid"`
-	Ts   int    `json:"_ts"`
-	Self string `json:"_self"`
-	Etag string `json:"_etag"`
+	Body       string `json:"body"`
+	ID         string `json:"id"`
+	ResourceID string `json:"_rid"`
+	TimeStamp  int    `json:"_ts"`
+	Self       string `json:"_self"`
+	Etag       string `json:"_etag"`
 }
 
 type Trigger struct {
@@ -76,8 +77,8 @@ type Trigger struct {
 	ID               string `json:"id"`
 	TriggerOperation string `json:"triggerOperation"`
 	TriggerType      string `json:"triggerType"`
-	Rid              string `json:"_rid"`
-	Ts               int    `json:"_ts"`
+	ResourceID       string `json:"_rid"`
+	TimeStamp        int    `json:"_ts"`
 	Self             string `json:"_self"`
 	Etag             string `json:"_etag"`
 }
@@ -85,7 +86,7 @@ type Trigger struct {
 type Document map[string]interface{}
 
 type PartitionKeyRange struct {
-	Rid                string `json:"_rid"`
+	ResourceID         string `json:"_rid"`
 	ID                 string `json:"id"`
 	Etag               string `json:"_etag"`
 	MinInclusive       string `json:"minInclusive"`
@@ -95,7 +96,7 @@ type PartitionKeyRange struct {
 	ThroughputFraction int    `json:"throughputFraction"`
 	Status             string `json:"status"`
 	Parents            []any  `json:"parents"`
-	Ts                 int    `json:"_ts"`
+	TimeStamp          int64  `json:"_ts"`
 	Lsn                int    `json:"lsn"`
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/resourceid"
 	structhidrators "github.com/pikami/cosmium/internal/struct_hidrators"
 	"golang.org/x/exp/maps"
 )
@@ -45,19 +46,22 @@ func DeleteCollection(databaseId string, collectionId string) repositorymodels.R
 }
 
 func CreateCollection(databaseId string, newCollection repositorymodels.Collection) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	var ok bool
+	var database repositorymodels.Database
+	if database, ok = storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Collections[databaseId][newCollection.ID]; ok {
+	if _, ok = storeState.Collections[databaseId][newCollection.ID]; ok {
 		return repositorymodels.Collection{}, repositorymodels.Conflict
 	}
 
 	newCollection = structhidrators.Hidrate(newCollection).(repositorymodels.Collection)
 
 	newCollection.TimeStamp = time.Now().Unix()
-	newCollection.UniqueID = uuid.New().String()
-	newCollection.ETag = fmt.Sprintf("\"%s\"", newCollection.UniqueID)
+	newCollection.ResourceID = resourceid.NewCombined(database.ResourceID, resourceid.New())
+	newCollection.ETag = fmt.Sprintf("\"%s\"", uuid.New())
+	newCollection.Self = fmt.Sprintf("dbs/%s/colls/%s/", database.ResourceID, newCollection.ResourceID)
 
 	storeState.Collections[databaseId][newCollection.ID] = newCollection
 	storeState.Documents[databaseId][newCollection.ID] = make(map[string]repositorymodels.Document)

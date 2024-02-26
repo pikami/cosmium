@@ -11,7 +11,11 @@ import (
 func GetAllDatabases(c *gin.Context) {
 	databases, status := repositories.GetAllDatabases()
 	if status == repositorymodels.StatusOk {
-		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Databases": databases, "_count": len(databases)})
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"_rid":      "",
+			"Databases": databases,
+			"_count":    len(databases),
+		})
 		return
 	}
 
