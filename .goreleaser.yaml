@@ -1,0 +1,35 @@
+builds:
+  - binary: cosmium
+    goos:
+      - darwin
+      - linux
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ignore:
+      - goos: linux
+        goarch: arm64
+      - goos: windows
+        goarch: arm64
+
+release:
+  prerelease: auto
+
+universal_binaries:
+  - replace: true
+
+brews:
+  - name: cosmium
+    homepage: 'https://github.com/pikami/cosmium'
+    repository:
+      owner: pikami
+      name: homebrew-pikami
+    commit_author:
+      name: pikami
+      email: git@pikami.org
+
+checksum:
+  name_template: 'checksums.txt'
