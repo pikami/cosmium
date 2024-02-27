@@ -13,9 +13,7 @@ import (
 func main() {
 	config.ParseFlags()
 
-	if config.Config.InitialDataFilePath != "" {
-		repositories.LoadStateFS(config.Config.InitialDataFilePath)
-	}
+	repositories.InitializeRepository()
 
 	go api.StartAPI()
 

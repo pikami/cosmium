@@ -23,9 +23,7 @@ Cosmium is available for the following platforms:
 Once downloaded, you can launch Cosmium using the following command:
 
 ```sh
-./cosmium-linux-amd64 \
-  -Persist "./save.json" \
-  -InitialData "./save.json"
+cosmium -Persist "./save.json"
 ```
 
 Connection String Example:
@@ -51,7 +49,7 @@ To disable SSL and run Cosmium on HTTP instead, you can use the `-DisableTls` fl
 * **-DisableAuth**: Disable authentication
 * **-Host**: Hostname (default "localhost")
 * **-InitialData**: Path to JSON containing initial state
-* **-Persist**: Saves data to the given path on application exit
+* **-Persist**: Saves data to the given path on application exit (When `-InitialData` argument is not supplied, it will try to load data from path supplied in `-Persist`)
 * **-Port**: Listen port (default 8081)
 
 These arguments allow you to configure various aspects of Cosmium's behavior according to your requirements.

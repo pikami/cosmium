@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 
+	"github.com/pikami/cosmium/api/config"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
@@ -19,15 +20,39 @@ var storeState = repositorymodels.State{
 	Documents:   make(map[string]map[string]map[string]repositorymodels.Document),
 }
 
+func InitializeRepository() {
+	if config.Config.InitialDataFilePath != "" {
+		LoadStateFS(config.Config.InitialDataFilePath)
+		return
+	}
+
+	if config.Config.PersistDataFilePath != "" {
+		stat, err := os.Stat(config.Config.PersistDataFilePath)
+		if err != nil {
+			return
+		}
+
+		if stat.IsDir() {
+			fmt.Println("Argument '-Persist' must be a path to file, not a directory.")
+			os.Exit(1)
+		}
+
+		LoadStateFS(config.Config.PersistDataFilePath)
+		return
+	}
+}
+
 func LoadStateFS(filePath string) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Error reading state JSON file: %v", err)
+		return
 	}
 
 	var state repositorymodels.State
 	if err := json.Unmarshal(data, &state); err != nil {
 		log.Fatalf("Error unmarshalling state JSON: %v", err)
+		return
 	}
 
 	fmt.Println("Loaded state:")
