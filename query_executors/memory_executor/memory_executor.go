@@ -35,6 +35,18 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 		ctx.orderBy(query.OrderExpressions, result)
 	}
 
+	// Apply select
+	selectedData := make([]RowType, 0)
+	for _, row := range result {
+		selectedData = append(selectedData, ctx.selectRow(query.SelectItems, row))
+	}
+	result = selectedData
+
+	// Apply distinct
+	if query.Distinct {
+		result = deduplicate(result)
+	}
+
 	// Apply result limit
 	if query.Count > 0 {
 		count := func() int {
@@ -46,13 +58,7 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 		result = result[:count]
 	}
 
-	// Apply select
-	selectedData := make([]RowType, 0)
-	for _, row := range result {
-		selectedData = append(selectedData, ctx.selectRow(query.SelectItems, row))
-	}
-
-	return selectedData
+	return result
 }
 
 func (c memoryExecutorContext) selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
@@ -348,4 +354,24 @@ func compareValues(val1, val2 interface{}) int {
 		}
 		return 1
 	}
+}
+
+func deduplicate(slice []RowType) []RowType {
+	var result []RowType
+
+	for i := 0; i < len(slice); i++ {
+		unique := true
+		for j := 0; j < len(result); j++ {
+			if compareValues(slice[i], result[j]) == 0 {
+				unique = false
+				break
+			}
+		}
+
+		if unique {
+			result = append(result, slice[i])
+		}
+	}
+
+	return result
 }

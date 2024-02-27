@@ -3,24 +3,32 @@ package nosql
 
 import "github.com/pikami/cosmium/parsers"
 
-func makeSelectStmt(columns, table, whereClause interface{}, count interface{}, orderList interface{}) (parsers.SelectStmt, error) {
+func makeSelectStmt(
+	columns, table,
+	whereClause interface{}, distinctClause interface{},
+	count interface{}, orderList interface{},
+) (parsers.SelectStmt, error) {
 	selectStmt := parsers.SelectStmt{
 		SelectItems: columns.([]parsers.SelectItem),
 		Table:       table.(parsers.Table),
 	}
 
-    switch v := whereClause.(type) {
-        case parsers.ComparisonExpression, parsers.LogicalExpression, parsers.Constant, parsers.SelectItem:
-            selectStmt.Filters = v
-    }
+	switch v := whereClause.(type) {
+	case parsers.ComparisonExpression, parsers.LogicalExpression, parsers.Constant, parsers.SelectItem:
+		selectStmt.Filters = v
+	}
+
+	if distinctClause != nil {
+		selectStmt.Distinct = true
+	}
 
 	if n, ok := count.(int); ok {
 		selectStmt.Count = n
 	}
 
-    if orderExpressions, ok := orderList.([]parsers.OrderExpression); ok {
-        selectStmt.OrderExpressions = orderExpressions
-    }
+	if orderExpressions, ok := orderList.([]parsers.OrderExpression); ok {
+		selectStmt.OrderExpressions = orderExpressions
+	}
 
 	return selectStmt, nil
 }
@@ -136,12 +144,16 @@ Input <- selectStmt:SelectStmt {
     return selectStmt, nil
 }
 
-SelectStmt <- Select ws topClause:TopClause? ws columns:Selection ws
+SelectStmt <- Select ws
+    distinctClause:DistinctClause? ws
+    topClause:TopClause? ws columns:Selection ws
     From ws table:TableName ws
     whereClause:(ws Where ws condition:Condition { return condition, nil })?
     orderByClause:OrderByClause? {
-    return makeSelectStmt(columns, table, whereClause, topClause, orderByClause)
+    return makeSelectStmt(columns, table, whereClause, distinctClause, topClause, orderByClause)
 }
+
+DistinctClause <- "DISTINCT"i
 
 TopClause <- Top ws count:Integer {
     return count, nil

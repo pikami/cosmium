@@ -35,6 +35,24 @@ func Test_Execute_Select(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT DISTINCT", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "pk"}},
+				},
+				Table:    parsers.Table{Value: "c"},
+				Distinct: true,
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"pk": 123},
+				map[string]interface{}{"pk": 456},
+			},
+		)
+	})
+
 	t.Run("Should execute SELECT TOP", func(t *testing.T) {
 		testQueryExecute(
 			t,

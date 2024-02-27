@@ -4,6 +4,7 @@ type SelectStmt struct {
 	SelectItems      []SelectItem
 	Table            Table
 	Filters          interface{}
+	Distinct         bool
 	Count            int
 	Parameters       map[string]interface{}
 	OrderExpressions []OrderExpression

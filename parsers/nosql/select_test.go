@@ -22,6 +22,20 @@ func Test_Parse_Select(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT DISTINCT", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT DISTINCT c.id FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+				},
+				Table:    parsers.Table{Value: "c"},
+				Distinct: true,
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT TOP", func(t *testing.T) {
 		testQueryParse(
 			t,
