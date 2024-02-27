@@ -26,9 +26,14 @@ func GetPartitionKeyRanges(c *gin.Context) {
 		c.Header("x-ms-global-committed-lsn", "420")
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(partitionKeyRanges)))
 
+		collectionRid := collectionId
 		collection, _ := repositories.GetCollection(databaseId, collectionId)
+		if collection.ResourceID != "" {
+			collectionRid = collection.ResourceID
+		}
+
 		c.IndentedJSON(http.StatusOK, gin.H{
-			"_rid":               collection.ResourceID,
+			"_rid":               collectionRid,
 			"_count":             len(partitionKeyRanges),
 			"PartitionKeyRanges": partitionKeyRanges,
 		})

@@ -10,19 +10,21 @@ import (
 
 // I have no idea what this is tbh
 func GetPartitionKeyRanges(databaseId string, collectionId string) ([]repositorymodels.PartitionKeyRange, repositorymodels.RepositoryStatus) {
-	var ok bool
-	var database repositorymodels.Database
-	var collection repositorymodels.Collection
-	if database, ok = storeState.Databases[databaseId]; !ok {
-		return make([]repositorymodels.PartitionKeyRange, 0), repositorymodels.StatusNotFound
+	databaseRid := databaseId
+	collectionRid := collectionId
+	var timestamp int64 = 0
+
+	if database, ok := storeState.Databases[databaseId]; !ok {
+		databaseRid = database.ResourceID
 	}
 
-	if collection, ok = storeState.Collections[databaseId][collectionId]; !ok {
-		return make([]repositorymodels.PartitionKeyRange, 0), repositorymodels.StatusNotFound
+	if collection, ok := storeState.Collections[databaseId][collectionId]; !ok {
+		collectionRid = collection.ResourceID
+		timestamp = collection.TimeStamp
 	}
 
-	pkrResourceId := resourceid.NewCombined(database.ResourceID, collection.ResourceID, resourceid.New())
-	pkrSelf := fmt.Sprintf("dbs/%s/colls/%s/pkranges/%s/", database.ResourceID, collection.ResourceID, pkrResourceId)
+	pkrResourceId := resourceid.NewCombined(databaseRid, collectionRid, resourceid.New())
+	pkrSelf := fmt.Sprintf("dbs/%s/colls/%s/pkranges/%s/", databaseRid, collectionRid, pkrResourceId)
 	etag := fmt.Sprintf("\"%s\"", uuid.New())
 
 	return []repositorymodels.PartitionKeyRange{
@@ -37,7 +39,7 @@ func GetPartitionKeyRanges(databaseId string, collectionId string) ([]repository
 			ThroughputFraction: 1,
 			Status:             "online",
 			Parents:            []interface{}{},
-			TimeStamp:          collection.TimeStamp,
+			TimeStamp:          timestamp,
 			Lsn:                17,
 		},
 	}, repositorymodels.StatusOk
