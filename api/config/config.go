@@ -20,6 +20,7 @@ func ParseFlags() {
 	initialDataPath := flag.String("InitialData", "", "Path to JSON containing initial state")
 	accountKey := flag.String("AccountKey", DefaultAccountKey, "Account key for authentication")
 	disableAuthentication := flag.Bool("DisableAuth", false, "Disable authentication")
+	disableTls := flag.Bool("DisableTls", false, "Disable TLS, serve over HTTP")
 	persistDataPath := flag.String("Persist", "", "Saves data to given path on application exit")
 
 	flag.Parse()
@@ -32,6 +33,7 @@ func ParseFlags() {
 	Config.InitialDataFilePath = *initialDataPath
 	Config.PersistDataFilePath = *persistDataPath
 	Config.DisableAuth = *disableAuthentication
+	Config.DisableTls = *disableTls
 
 	Config.DatabaseAccount = Config.Host
 	Config.DatabaseDomain = Config.Host

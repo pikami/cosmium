@@ -24,8 +24,6 @@ Once downloaded, you can launch Cosmium using the following command:
 
 ```sh
 ./cosmium-linux-amd64 \
-  -Cert "cert.crt" \
-  -CertKey "cert.key" \
   -Persist "./save.json" \
   -InitialData "./save.json"
 ```
@@ -43,7 +41,9 @@ Once running, the explorer can be reached by navigating following URL: `https://
 
 ### SSL Certificate
 
-By default, Cosmium runs on HTTP. However, if you provide an SSL certificate, it will use HTTPS. Most applications will require HTTPS, so you can specify paths to the SSL certificate and key (PEM format) using the `-Cert` and `-CertKey` arguments, respectively.
+By default, Cosmium uses a pre-generated SSL certificate. You can provide your own certificates by specifying paths to the SSL certificate and key (PEM format) using the `-Cert` and `-CertKey` arguments, respectively.
+
+To disable SSL and run Cosmium on HTTP instead, you can use the `-DisableTls` flag. However most applications will require HTTPS.
 
 ### Other Available Arguments
 

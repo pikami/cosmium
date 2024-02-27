@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,16 +17,7 @@ func main() {
 		repositories.LoadStateFS(config.Config.InitialDataFilePath)
 	}
 
-	router := api.CreateRouter()
-	if config.Config.TLS_CertificatePath == "" ||
-		config.Config.TLS_CertificateKey == "" {
-		go router.Run(fmt.Sprintf(":%d", config.Config.Port))
-	} else {
-		go router.RunTLS(
-			fmt.Sprintf(":%d", config.Config.Port),
-			config.Config.TLS_CertificatePath,
-			config.Config.TLS_CertificateKey)
-	}
+	go api.StartAPI()
 
 	waitForExit()
 }

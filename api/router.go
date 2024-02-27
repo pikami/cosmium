@@ -1,7 +1,11 @@
 package api
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/api/handlers"
 	"github.com/pikami/cosmium/api/handlers/middleware"
 )
@@ -42,4 +46,40 @@ func CreateRouter() *gin.Engine {
 	handlers.RegisterExplorerHandlers(router)
 
 	return router
+}
+
+func StartAPI() {
+	router := CreateRouter()
+	listenAddress := fmt.Sprintf(":%d", config.Config.Port)
+
+	if config.Config.TLS_CertificatePath != "" && config.Config.TLS_CertificateKey != "" {
+		err := router.RunTLS(
+			listenAddress,
+			config.Config.TLS_CertificatePath,
+			config.Config.TLS_CertificateKey)
+		if err != nil {
+			fmt.Println("Failed to start HTTPS server:", err)
+		}
+
+		return
+	}
+
+	if config.Config.DisableTls {
+		router.Run(listenAddress)
+	}
+
+	tlsConfig := config.GetDefaultTlsConfig()
+	server := &http.Server{
+		Addr:      listenAddress,
+		Handler:   router.Handler(),
+		TLSConfig: tlsConfig,
+	}
+
+	fmt.Printf("Listening and serving HTTPS on %s\n", server.Addr)
+	err := server.ListenAndServeTLS("", "")
+	if err != nil {
+		fmt.Println("Failed to start HTTPS server:", err)
+	}
+
+	router.Run()
 }

@@ -14,4 +14,5 @@ type ServerConfig struct {
 	InitialDataFilePath string
 	PersistDataFilePath string
 	DisableAuth         bool
+	DisableTls          bool
 }
