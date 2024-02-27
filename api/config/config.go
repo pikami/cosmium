@@ -22,6 +22,7 @@ func ParseFlags() {
 	disableAuthentication := flag.Bool("DisableAuth", false, "Disable authentication")
 	disableTls := flag.Bool("DisableTls", false, "Disable TLS, serve over HTTP")
 	persistDataPath := flag.String("Persist", "", "Saves data to given path on application exit")
+	debug := flag.Bool("Debug", false, "Runs application in debug mode, this provides additional logging")
 
 	flag.Parse()
 
@@ -34,6 +35,7 @@ func ParseFlags() {
 	Config.PersistDataFilePath = *persistDataPath
 	Config.DisableAuth = *disableAuthentication
 	Config.DisableTls = *disableTls
+	Config.Debug = *debug
 
 	Config.DatabaseAccount = Config.Host
 	Config.DatabaseDomain = Config.Host

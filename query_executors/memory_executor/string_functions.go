@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pikami/cosmium/internal/logger"
 	"github.com/pikami/cosmium/parsers"
 )
 
@@ -118,7 +119,7 @@ func (c memoryExecutorContext) strings_Left(arguments []interface{}, row RowType
 	lengthEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
 
 	if length, ok = lengthEx.(int); !ok {
-		fmt.Println("strings_Left - got parameters of wrong type")
+		logger.Error("strings_Left - got parameters of wrong type")
 		return ""
 	}
 
@@ -157,7 +158,7 @@ func (c memoryExecutorContext) strings_Replicate(arguments []interface{}, row Ro
 	timesEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
 
 	if times, ok = timesEx.(int); !ok {
-		fmt.Println("strings_Replicate - got parameters of wrong type")
+		logger.Error("strings_Replicate - got parameters of wrong type")
 		return ""
 	}
 
@@ -190,7 +191,7 @@ func (c memoryExecutorContext) strings_Right(arguments []interface{}, row RowTyp
 	lengthEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
 
 	if length, ok = lengthEx.(int); !ok {
-		fmt.Println("strings_Right - got parameters of wrong type")
+		logger.Error("strings_Right - got parameters of wrong type")
 		return ""
 	}
 
@@ -219,11 +220,11 @@ func (c memoryExecutorContext) strings_Substring(arguments []interface{}, row Ro
 	lengthEx := c.getFieldValue(arguments[2].(parsers.SelectItem), row)
 
 	if startPos, ok = startPosEx.(int); !ok {
-		fmt.Println("strings_Substring - got start parameters of wrong type")
+		logger.Error("strings_Substring - got start parameters of wrong type")
 		return ""
 	}
 	if length, ok = lengthEx.(int); !ok {
-		fmt.Println("strings_Substring - got length parameters of wrong type")
+		logger.Error("strings_Substring - got length parameters of wrong type")
 		return ""
 	}
 
@@ -263,7 +264,7 @@ func (c memoryExecutorContext) parseString(argument interface{}, row RowType) st
 		return str1
 	}
 
-	fmt.Println("StringEquals got parameters of wrong type")
+	logger.Error("StringEquals got parameters of wrong type")
 	return ""
 }
 

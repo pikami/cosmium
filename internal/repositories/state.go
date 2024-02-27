@@ -2,12 +2,12 @@ package repositories
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"reflect"
 
 	"github.com/pikami/cosmium/api/config"
+	"github.com/pikami/cosmium/internal/logger"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
@@ -33,7 +33,7 @@ func InitializeRepository() {
 		}
 
 		if stat.IsDir() {
-			fmt.Println("Argument '-Persist' must be a path to file, not a directory.")
+			logger.Error("Argument '-Persist' must be a path to file, not a directory.")
 			os.Exit(1)
 		}
 
@@ -55,10 +55,10 @@ func LoadStateFS(filePath string) {
 		return
 	}
 
-	fmt.Println("Loaded state:")
-	fmt.Printf("Databases: %d\n", getLength(state.Databases))
-	fmt.Printf("Collections: %d\n", getLength(state.Collections))
-	fmt.Printf("Documents: %d\n", getLength(state.Documents))
+	logger.Info("Loaded state:")
+	logger.Infof("Databases: %d\n", getLength(state.Databases))
+	logger.Infof("Collections: %d\n", getLength(state.Collections))
+	logger.Infof("Documents: %d\n", getLength(state.Documents))
 
 	storeState = state
 
@@ -68,16 +68,16 @@ func LoadStateFS(filePath string) {
 func SaveStateFS(filePath string) {
 	data, err := json.MarshalIndent(storeState, "", "\t")
 	if err != nil {
-		fmt.Printf("Failed to save state: %v\n", err)
+		logger.Errorf("Failed to save state: %v\n", err)
 		return
 	}
 
 	os.WriteFile(filePath, data, os.ModePerm)
 
-	fmt.Println("Saved state:")
-	fmt.Printf("Databases: %d\n", getLength(storeState.Databases))
-	fmt.Printf("Collections: %d\n", getLength(storeState.Collections))
-	fmt.Printf("Documents: %d\n", getLength(storeState.Documents))
+	logger.Info("Saved state:")
+	logger.Infof("Databases: %d\n", getLength(storeState.Databases))
+	logger.Infof("Collections: %d\n", getLength(storeState.Collections))
+	logger.Infof("Documents: %d\n", getLength(storeState.Documents))
 }
 
 func GetState() repositorymodels.State {

@@ -1,9 +1,9 @@
 package memoryexecutor
 
 import (
-	"fmt"
 	"reflect"
 
+	"github.com/pikami/cosmium/internal/logger"
 	"github.com/pikami/cosmium/parsers"
 )
 
@@ -36,13 +36,13 @@ func (c memoryExecutorContext) array_Slice(arguments []interface{}, row RowType)
 		lengthEx := c.getFieldValue(arguments[2].(parsers.SelectItem), row)
 
 		if length, ok = lengthEx.(int); !ok {
-			fmt.Println("array_Slice - got length parameters of wrong type")
+			logger.Error("array_Slice - got length parameters of wrong type")
 			return []interface{}{}
 		}
 	}
 
 	if start, ok = startEx.(int); !ok {
-		fmt.Println("array_Slice - got start parameters of wrong type")
+		logger.Error("array_Slice - got start parameters of wrong type")
 		return []interface{}{}
 	}
 
@@ -117,7 +117,7 @@ func (c memoryExecutorContext) parseArray(argument interface{}, row RowType) []i
 
 	arrValue := reflect.ValueOf(ex)
 	if arrValue.Kind() != reflect.Slice {
-		fmt.Println("parseArray got parameters of wrong type")
+		logger.Error("parseArray got parameters of wrong type")
 		return nil
 	}
 

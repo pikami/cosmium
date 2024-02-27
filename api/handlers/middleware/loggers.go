@@ -2,10 +2,10 @@ package middleware
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/internal/logger"
 )
 
 func RequestLogger() gin.HandlerFunc {
@@ -16,7 +16,7 @@ func RequestLogger() gin.HandlerFunc {
 
 		bodyStr := readBody(rdr1)
 		if bodyStr != "" {
-			fmt.Println(bodyStr)
+			logger.Debug(bodyStr)
 		}
 
 		c.Request.Body = rdr2

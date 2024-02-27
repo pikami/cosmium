@@ -8,12 +8,17 @@ import (
 	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/api/handlers"
 	"github.com/pikami/cosmium/api/handlers/middleware"
+	"github.com/pikami/cosmium/internal/logger"
+	tlsprovider "github.com/pikami/cosmium/internal/tls_provider"
 )
 
 func CreateRouter() *gin.Engine {
 	router := gin.Default()
 
-	router.Use(middleware.RequestLogger())
+	if config.Config.Debug {
+		router.Use(middleware.RequestLogger())
+	}
+
 	router.Use(middleware.Authentication())
 
 	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
@@ -49,6 +54,10 @@ func CreateRouter() *gin.Engine {
 }
 
 func StartAPI() {
+	if !config.Config.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	router := CreateRouter()
 	listenAddress := fmt.Sprintf(":%d", config.Config.Port)
 
@@ -58,7 +67,7 @@ func StartAPI() {
 			config.Config.TLS_CertificatePath,
 			config.Config.TLS_CertificateKey)
 		if err != nil {
-			fmt.Println("Failed to start HTTPS server:", err)
+			logger.Error("Failed to start HTTPS server:", err)
 		}
 
 		return
@@ -68,17 +77,17 @@ func StartAPI() {
 		router.Run(listenAddress)
 	}
 
-	tlsConfig := config.GetDefaultTlsConfig()
+	tlsConfig := tlsprovider.GetDefaultTlsConfig()
 	server := &http.Server{
 		Addr:      listenAddress,
 		Handler:   router.Handler(),
 		TLSConfig: tlsConfig,
 	}
 
-	fmt.Printf("Listening and serving HTTPS on %s\n", server.Addr)
+	logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
 	err := server.ListenAndServeTLS("", "")
 	if err != nil {
-		fmt.Println("Failed to start HTTPS server:", err)
+		logger.Error("Failed to start HTTPS server:", err)
 	}
 
 	router.Run()

@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/pikami/cosmium/internal/logger"
 	"github.com/pikami/cosmium/parsers"
 )
 
@@ -168,7 +169,7 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 		var ok bool
 		if typedValue, ok = field.Value.(parsers.Constant); !ok {
 			// TODO: Handle error
-			fmt.Println("parsers.Constant has incorrect Value type")
+			logger.Error("parsers.Constant has incorrect Value type")
 		}
 
 		if typedValue.Type == parsers.ConstantTypeParameterConstant &&
@@ -186,7 +187,7 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 		var ok bool
 		if typedValue, ok = field.Value.(parsers.FunctionCall); !ok {
 			// TODO: Handle error
-			fmt.Println("parsers.Constant has incorrect Value type")
+			logger.Error("parsers.Constant has incorrect Value type")
 		}
 
 		switch typedValue.Type {
@@ -288,7 +289,7 @@ func (c memoryExecutorContext) getExpressionParameterValue(
 		return c.getFieldValue(typedParameter, row)
 	}
 
-	fmt.Println("getExpressionParameterValue - got incorrect parameter type")
+	logger.Error("getExpressionParameterValue - got incorrect parameter type")
 
 	return nil
 }

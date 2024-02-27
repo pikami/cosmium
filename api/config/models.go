@@ -15,4 +15,5 @@ type ServerConfig struct {
 	PersistDataFilePath string
 	DisableAuth         bool
 	DisableTls          bool
+	Debug               bool
 }

@@ -1,13 +1,13 @@
 package middleware
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/authentication"
+	"github.com/pikami/cosmium/internal/logger"
 )
 
 func Authentication() gin.HandlerFunc {
@@ -53,7 +53,7 @@ func Authentication() gin.HandlerFunc {
 		params, _ := url.ParseQuery(decoded)
 		clientSignature := strings.Replace(params.Get("sig"), " ", "+", -1)
 		if clientSignature != expectedSignature {
-			fmt.Printf("Got wrong signature from client.\n- Expected: %s\n- Got: %s\n", expectedSignature, clientSignature)
+			logger.Errorf("Got wrong signature from client.\n- Expected: %s\n- Got: %s\n", expectedSignature, clientSignature)
 			c.IndentedJSON(401, gin.H{
 				"code":    "Unauthorized",
 				"message": "Wrong signature.",

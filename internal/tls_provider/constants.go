@@ -1,9 +1,4 @@
-package config
-
-import (
-	"crypto/tls"
-	"fmt"
-)
+package tlsprovider
 
 const certificate = `
 -----BEGIN CERTIFICATE-----
@@ -64,15 +59,3 @@ ilcZlmaCS9pqIXAFK9GQ89V/xa8OibOuJUiBgShnfSQqAwQrfX1vYjtKErnjoRFs
 9+zaWugLCC47Hw6QlMDa
 -----END PRIVATE KEY-----
 `
-
-func GetDefaultTlsConfig() *tls.Config {
-	cert, err := tls.X509KeyPair([]byte(certificate), []byte(certificateKey))
-	if err != nil {
-		fmt.Println("Failed to parse certificate and key:", err)
-		return &tls.Config{}
-	}
-
-	return &tls.Config{
-		Certificates: []tls.Certificate{cert},
-	}
-}
