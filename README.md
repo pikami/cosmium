@@ -5,7 +5,17 @@ Cosmium is a lightweight Cosmos DB emulator designed to facilitate local develop
 One of Cosmium's notable features is its ability to save and load state to a single JSON file. This feature makes it easy to load different test cases or share state with other developers, enhancing collaboration and efficiency in development workflows.
 
 # Getting Started
-### Downloading Cosmium
+### Installation via Homebrew
+You can install Cosmium using Homebrew by adding the `pikami/brew` tap and then installing the package.
+
+```sh
+brew tap pikami/brew
+brew install cosmium
+```
+
+This will download and install Cosmium on your system, making it easy to manage and update using Homebrew.
+
+### Downloading Cosmium Binaries
 
 You can download the latest version of Cosmium from the [GitHub Releases page](https://github.com/pikami/cosmium/releases). Choose the appropriate release for your operating system and architecture.
 

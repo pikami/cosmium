@@ -26,7 +26,7 @@ brews:
     homepage: 'https://github.com/pikami/cosmium'
     repository:
       owner: pikami
-      name: homebrew-pikami
+      name: homebrew-brew
     commit_author:
       name: pikami
       email: git@pikami.org
