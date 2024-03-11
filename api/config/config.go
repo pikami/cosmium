@@ -3,10 +3,13 @@ package config
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
 )
 
 const (
 	DefaultAccountKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+	EnvPrefix         = "COSMIUM_"
 )
 
 var Config = ServerConfig{}
@@ -25,6 +28,7 @@ func ParseFlags() {
 	debug := flag.Bool("Debug", false, "Runs application in debug mode, this provides additional logging")
 
 	flag.Parse()
+	setFlagsFromEnvironment()
 
 	Config.Host = *host
 	Config.Port = *port
@@ -41,4 +45,18 @@ func ParseFlags() {
 	Config.DatabaseDomain = Config.Host
 	Config.DatabaseEndpoint = fmt.Sprintf("https://%s:%d/", Config.Host, Config.Port)
 	Config.AccountKey = *accountKey
+}
+
+func setFlagsFromEnvironment() (err error) {
+	flag.VisitAll(func(f *flag.Flag) {
+		name := EnvPrefix + strings.ToUpper(strings.Replace(f.Name, "-", "_", -1))
+		if value, ok := os.LookupEnv(name); ok {
+			err2 := flag.Set(f.Name, value)
+			if err2 != nil {
+				err = fmt.Errorf("failed setting flag from environment: %w", err2)
+			}
+		}
+	})
+
+	return
 }

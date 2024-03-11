@@ -65,5 +65,14 @@ To disable SSL and run Cosmium on HTTP instead, you can use the `-DisableTls` fl
 
 These arguments allow you to configure various aspects of Cosmium's behavior according to your requirements.
 
+All mentioned arguments can also be set using environment variables:
+* **COSMIUM_ACCOUNTKEY** for `-AccountKey`
+* **COSMIUM_DISABLEAUTH** for `-DisableAuth`
+* **COSMIUM_HOST** for `-Host`
+* **COSMIUM_INITIALDATA** for `-InitialData`
+* **COSMIUM_PERSIST** for `-Persist`
+* **COSMIUM_PORT** for `-Port`
+* **COSMIUM_DEBUG** for `-Debug`
+
 # License
 This project is [MIT licensed](./LICENSE).
