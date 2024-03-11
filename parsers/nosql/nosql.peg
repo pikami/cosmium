@@ -7,6 +7,7 @@ func makeSelectStmt(
 	columns, table,
 	whereClause interface{}, distinctClause interface{},
 	count interface{}, groupByClause interface{}, orderList interface{},
+	offsetClause interface{},
 ) (parsers.SelectStmt, error) {
 	selectStmt := parsers.SelectStmt{
 		SelectItems: columns.([]parsers.SelectItem),
@@ -26,13 +27,23 @@ func makeSelectStmt(
 		selectStmt.Count = n
 	}
 
+	if offsetArr, ok := offsetClause.([]interface{}); ok && len(offsetArr) == 2 {
+		if n, ok := offsetArr[0].(int); ok {
+			selectStmt.Offset = n
+		}
+
+		if n, ok := offsetArr[1].(int); ok {
+			selectStmt.Count = n
+		}
+	}
+
 	if orderExpressions, ok := orderList.([]parsers.OrderExpression); ok {
 		selectStmt.OrderExpressions = orderExpressions
 	}
 
-    if groupByClause != nil {
-        selectStmt.GroupBy = groupByClause.([]parsers.SelectItem)
-    }
+	if groupByClause != nil {
+		selectStmt.GroupBy = groupByClause.([]parsers.SelectItem)
+	}
 
 	return selectStmt, nil
 }
@@ -154,15 +165,20 @@ SelectStmt <- Select ws
     From ws table:TableName ws
     whereClause:(ws Where ws condition:Condition { return condition, nil })?
     groupByClause:(ws GroupBy ws columns:ColumnList { return columns, nil })?
-    orderByClause:OrderByClause? {
+    orderByClause:OrderByClause?
+    offsetClause:OffsetClause? {
     return makeSelectStmt(columns, table, whereClause,
-        distinctClause, topClause, groupByClause, orderByClause)
+        distinctClause, topClause, groupByClause, orderByClause, offsetClause)
 }
 
 DistinctClause <- "DISTINCT"i
 
 TopClause <- Top ws count:Integer {
     return count, nil
+}
+
+OffsetClause <- "OFFSET"i ws offset:IntegerLiteral ws "LIMIT"i ws limit:IntegerLiteral {
+    return []interface{}{offset.(parsers.Constant).Value, limit.(parsers.Constant).Value}, nil
 }
 
 Selection <- SelectValueSpec / ColumnList / SelectAsterisk

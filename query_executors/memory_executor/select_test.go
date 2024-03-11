@@ -71,6 +71,32 @@ func Test_Execute_Select(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT OFFSET", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "pk"}},
+				},
+				Table:  parsers.Table{Value: "c"},
+				Count:  2,
+				Offset: 1,
+				OrderExpressions: []parsers.OrderExpression{
+					{
+						SelectItem: parsers.SelectItem{Path: []string{"c", "id"}},
+						Direction:  parsers.OrderDirectionDesc,
+					},
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "67890", "pk": 456},
+				map[string]interface{}{"id": "456", "pk": 456},
+			},
+		)
+	})
+
 	t.Run("Should execute SELECT VALUE", func(t *testing.T) {
 		testQueryExecute(
 			t,

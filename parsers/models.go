@@ -6,6 +6,7 @@ type SelectStmt struct {
 	Filters          interface{}
 	Distinct         bool
 	Count            int
+	Offset           int
 	Parameters       map[string]interface{}
 	OrderExpressions []OrderExpression
 	GroupBy          []SelectItem

@@ -50,6 +50,21 @@ func Test_Parse_Select(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT OFFSET", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id FROM c OFFSET 3 LIMIT 5`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+				},
+				Table:  parsers.Table{Value: "c"},
+				Count:  5,
+				Offset: 3,
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT VALUE", func(t *testing.T) {
 		testQueryParse(
 			t,

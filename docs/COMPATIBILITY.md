@@ -36,7 +36,7 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | WHERE        | Yes         |
 | ORDER BY     | Yes         |
 | GROUP BY     | Yes         |
-| OFFSET LIMIT | No          |
+| OFFSET LIMIT | Yes         |
 
 ### Keywords
 | Keyword  | Implemented |
