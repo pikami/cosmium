@@ -327,6 +327,7 @@ FunctionCall <- StringFunctions
     / TypeCheckingFunctions
     / ArrayFunctions
     / InFunction
+    / AggregateFunctions
 
 StringFunctions <- StringEqualsExpression
     / ToStringExpression
@@ -355,6 +356,12 @@ TypeCheckingFunctions <- IsDefined
     / IsObject
     / IsPrimitive
     / IsString
+
+AggregateFunctions <- AvgAggregateExpression
+    / CountAggregateExpression
+    / MaxAggregateExpression
+    / MinAggregateExpression
+    / SumAggregateExpression
 
 ArrayFunctions <- ArrayConcatExpression
     / ArrayLengthExpression
@@ -507,6 +514,26 @@ SetUnionExpression <- "SetUnion"i ws "(" ws set1:SelectItem ws "," ws set2:Selec
 
 InFunction <- ex1:SelectProperty ws "IN"i ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
     return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))
+}
+
+AvgAggregateExpression   <- "AVG"i "(" ws ex:SelectItem  ws ")" {
+    return createFunctionCall(parsers.FunctionCallAggregateAvg, []interface{}{ex})
+}
+
+CountAggregateExpression <- "COUNT"i "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallAggregateCount, []interface{}{ex})
+}
+
+MaxAggregateExpression   <- "MAX"i "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallAggregateMax, []interface{}{ex})
+}
+
+MinAggregateExpression   <- "MIN"i "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallAggregateMin, []interface{}{ex})
+}
+
+SumAggregateExpression   <- "SUM"i "(" ws ex:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallAggregateSum, []interface{}{ex})
 }
 
 Integer <- [0-9]+ {

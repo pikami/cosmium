@@ -8,6 +8,7 @@ import (
 
 	"github.com/pikami/cosmium/internal/logger"
 	"github.com/pikami/cosmium/parsers"
+	"golang.org/x/exp/slices"
 )
 
 type RowType interface{}
@@ -45,9 +46,16 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 	// Apply select
 	if !isGroupSelect {
 		selectedData := make([]RowType, 0)
-		for _, row := range result {
-			selectedData = append(selectedData, ctx.selectRow(query.SelectItems, row))
+		if hasAggregateFunctions(query.SelectItems) {
+			// When can have aggregate functions without GROUP BY clause,
+			// we should aggregate all rows in that case
+			selectedData = append(selectedData, ctx.selectRow(query.SelectItems, result))
+		} else {
+			for _, row := range result {
+				selectedData = append(selectedData, ctx.selectRow(query.SelectItems, row))
+			}
 		}
+
 		result = selectedData
 	}
 
@@ -275,6 +283,17 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 		case parsers.FunctionCallSetUnion:
 			return c.set_Union(typedValue.Arguments, rowValue)
 
+		case parsers.FunctionCallAggregateAvg:
+			return c.aggregate_Avg(typedValue.Arguments, row)
+		case parsers.FunctionCallAggregateCount:
+			return c.aggregate_Count(typedValue.Arguments, row)
+		case parsers.FunctionCallAggregateMax:
+			return c.aggregate_Max(typedValue.Arguments, row)
+		case parsers.FunctionCallAggregateMin:
+			return c.aggregate_Min(typedValue.Arguments, row)
+		case parsers.FunctionCallAggregateSum:
+			return c.aggregate_Sum(typedValue.Arguments, row)
+
 		case parsers.FunctionCallIn:
 			return c.misc_In(typedValue.Arguments, rowValue)
 		}
@@ -430,4 +449,24 @@ func deduplicate(slice []RowType) []RowType {
 	}
 
 	return result
+}
+
+func hasAggregateFunctions(selectItems []parsers.SelectItem) bool {
+	if selectItems == nil {
+		return false
+	}
+
+	for _, selectItem := range selectItems {
+		if selectItem.Type == parsers.SelectItemTypeFunctionCall {
+			if typedValue, ok := selectItem.Value.(parsers.FunctionCall); ok && slices.Contains[[]parsers.FunctionCallType](parsers.AggregateFunctions, typedValue.Type) {
+				return true
+			}
+		}
+
+		if hasAggregateFunctions(selectItem.SelectItems) {
+			return true
+		}
+	}
+
+	return false
 }

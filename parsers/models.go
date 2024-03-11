@@ -119,8 +119,22 @@ const (
 	FunctionCallSetIntersect FunctionCallType = "SetIntersect"
 	FunctionCallSetUnion     FunctionCallType = "SetUnion"
 
+	FunctionCallAggregateAvg   FunctionCallType = "AggregateAvg"
+	FunctionCallAggregateCount FunctionCallType = "AggregateCount"
+	FunctionCallAggregateMax   FunctionCallType = "AggregateMax"
+	FunctionCallAggregateMin   FunctionCallType = "AggregateMin"
+	FunctionCallAggregateSum   FunctionCallType = "AggregateSum"
+
 	FunctionCallIn FunctionCallType = "In"
 )
+
+var AggregateFunctions = []FunctionCallType{
+	FunctionCallAggregateAvg,
+	FunctionCallAggregateCount,
+	FunctionCallAggregateMax,
+	FunctionCallAggregateMin,
+	FunctionCallAggregateSum,
+}
 
 type FunctionCall struct {
 	Arguments []interface{}
