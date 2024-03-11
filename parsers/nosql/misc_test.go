@@ -63,6 +63,24 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT with GROUP BY", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id, c["pk"] FROM c GROUP BY c.id, c.pk`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				GroupBy: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "pk"}},
+				},
+			},
+		)
+	})
+
 	t.Run("Should parse IN function", func(t *testing.T) {
 		testQueryParse(
 			t,

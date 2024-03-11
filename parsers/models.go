@@ -8,6 +8,7 @@ type SelectStmt struct {
 	Count            int
 	Parameters       map[string]interface{}
 	OrderExpressions []OrderExpression
+	GroupBy          []SelectItem
 }
 
 type Table struct {

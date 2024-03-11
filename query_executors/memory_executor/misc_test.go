@@ -59,6 +59,26 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT with GROUP BY", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				GroupBy: []parsers.SelectItem{
+					{Path: []string{"c", "pk"}},
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"pk": 123},
+				map[string]interface{}{"pk": 456},
+			},
+		)
+	})
+
 	t.Run("Should execute IN function", func(t *testing.T) {
 		testQueryExecute(
 			t,

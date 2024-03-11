@@ -6,7 +6,7 @@ import "github.com/pikami/cosmium/parsers"
 func makeSelectStmt(
 	columns, table,
 	whereClause interface{}, distinctClause interface{},
-	count interface{}, orderList interface{},
+	count interface{}, groupByClause interface{}, orderList interface{},
 ) (parsers.SelectStmt, error) {
 	selectStmt := parsers.SelectStmt{
 		SelectItems: columns.([]parsers.SelectItem),
@@ -29,6 +29,10 @@ func makeSelectStmt(
 	if orderExpressions, ok := orderList.([]parsers.OrderExpression); ok {
 		selectStmt.OrderExpressions = orderExpressions
 	}
+
+    if groupByClause != nil {
+        selectStmt.GroupBy = groupByClause.([]parsers.SelectItem)
+    }
 
 	return selectStmt, nil
 }
@@ -149,8 +153,10 @@ SelectStmt <- Select ws
     topClause:TopClause? ws columns:Selection ws
     From ws table:TableName ws
     whereClause:(ws Where ws condition:Condition { return condition, nil })?
+    groupByClause:(ws GroupBy ws columns:ColumnList { return columns, nil })?
     orderByClause:OrderByClause? {
-    return makeSelectStmt(columns, table, whereClause, distinctClause, topClause, orderByClause)
+    return makeSelectStmt(columns, table, whereClause,
+        distinctClause, topClause, groupByClause, orderByClause)
 }
 
 DistinctClause <- "DISTINCT"i
@@ -284,6 +290,8 @@ Where <- "WHERE"i
 And <- "AND"i
 
 Or <- "OR"i
+
+GroupBy <- "GROUP"i ws "BY"i
 
 OrderBy <- "ORDER"i ws "BY"i
 
