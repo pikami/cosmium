@@ -32,7 +32,9 @@ brews:
       email: git@pikami.org
 
 dockers:
-  - image_templates: ["ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-amd64"]
+  - image_templates:
+    - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}"
+    - "ghcr.io/pikami/{{ .ProjectName }}:latest"
     dockerfile: Dockerfile
     use: docker
     build_flag_templates:
