@@ -31,5 +31,20 @@ brews:
       name: pikami
       email: git@pikami.org
 
+dockers:
+  - image_templates: ["ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-amd64"]
+    dockerfile: Dockerfile
+    use: docker
+    build_flag_templates:
+    - "--platform=linux/amd64"
+    - "--pull"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.description=Lightweight Cosmos DB emulator"
+    - "--label=org.opencontainers.image.url=https://github.com/pikami/cosmium"
+    - "--label=org.opencontainers.image.source=https://github.com/pikami/cosmium"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+
 checksum:
   name_template: 'checksums.txt'

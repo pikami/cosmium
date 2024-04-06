@@ -47,6 +47,17 @@ If you want to run Cosmos DB Explorer alongside Cosmium, you'll need to build it
 
 Once running, the explorer can be reached by navigating following URL: `https://127.0.0.1:8081/_explorer/` (might be different depending on your configuration).
 
+### Running with docker (optional)
+
+If you wan to run the application using docker, configure it using environment variables see example:
+```sh
+docker run --rm \
+  -e Persist=/save.json \
+  -v ./save.json:/save.json \
+  -p 8081:8081 \
+  ghcr.io/pikami/cosmium
+```
+
 ### SSL Certificate
 
 By default, Cosmium uses a pre-generated SSL certificate. You can provide your own certificates by specifying paths to the SSL certificate and key (PEM format) using the `-Cert` and `-CertKey` arguments, respectively.
