@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,7 @@ func GetAllTriggers(c *gin.Context) {
 	triggers, status := repositories.GetAllTriggers(databaseId, collectionId)
 
 	if status == repositorymodels.StatusOk {
+		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(triggers)))
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "Triggers": triggers, "_count": len(triggers)})
 		return
 	}

@@ -66,7 +66,8 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 	var database repositorymodels.Database
 	var collection repositorymodels.Collection
 	if documentId, ok = document["id"].(string); !ok || documentId == "" {
-		return repositorymodels.Document{}, repositorymodels.BadRequest
+		documentId = fmt.Sprint(uuid.New())
+		document["id"] = documentId
 	}
 
 	if database, ok = storeState.Databases[databaseId]; !ok {

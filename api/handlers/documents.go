@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,7 @@ func GetAllDocuments(c *gin.Context) {
 	if status == repositorymodels.StatusOk {
 		collection, _ := repositories.GetCollection(databaseId, collectionId)
 
+		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(documents)))
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":      collection.ID,
 			"Documents": documents,
@@ -128,6 +130,7 @@ func DocumentsPost(c *gin.Context) {
 		}
 
 		collection, _ := repositories.GetCollection(databaseId, collectionId)
+		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(docs)))
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":      collection.ResourceID,
 			"Documents": docs,

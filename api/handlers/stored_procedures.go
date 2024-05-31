@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,7 @@ func GetAllStoredProcedures(c *gin.Context) {
 	sps, status := repositories.GetAllStoredProcedures(databaseId, collectionId)
 
 	if status == repositorymodels.StatusOk {
+		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(sps)))
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "StoredProcedures": sps, "_count": len(sps)})
 		return
 	}

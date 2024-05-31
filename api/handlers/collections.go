@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +16,7 @@ func GetAllCollections(c *gin.Context) {
 	if status == repositorymodels.StatusOk {
 		database, _ := repositories.GetDatabase(databaseId)
 
+		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(collections)))
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":                database.ResourceID,
 			"DocumentCollections": collections,

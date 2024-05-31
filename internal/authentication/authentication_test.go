@@ -27,4 +27,9 @@ func Test_GenerateSignature(t *testing.T) {
 		signature := authentication.GenerateSignature("DELETE", "dbs", "dbs/Test Database", testDate, config.DefaultAccountKey)
 		assert.Equal(t, "LcuXXg0TcXxZG0kUCj9tZIWRy2yCzim3oiqGiHpRqGs=", signature)
 	})
+
+	t.Run("Should generate PKRANGES signature", func(t *testing.T) {
+		signature := authentication.GenerateSignature("GET", "pkranges", "m4d+xG08uVM=", testDate, config.DefaultAccountKey)
+		assert.Equal(t, "6S5ceZsl2EXWB3Jo5bJcK7zv8NxXnsxWPWD9TH3nNMo=", signature)
+	})
 }

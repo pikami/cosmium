@@ -44,6 +44,11 @@ func Authentication() gin.HandlerFunc {
 			resourceId += "/docs/" + docId
 		}
 
+		isFeed := c.Request.Header.Get("A-Im") == "Incremental Feed"
+		if resourceType == "pkranges" && isFeed {
+			resourceId = collId
+		}
+
 		authHeader := c.Request.Header.Get("authorization")
 		date := c.Request.Header.Get("x-ms-date")
 		expectedSignature := authentication.GenerateSignature(
