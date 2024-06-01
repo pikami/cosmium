@@ -1,2 +1,6 @@
 dist/
 ignored/
+explorer_www/
+main
+save.json
+.vscode/

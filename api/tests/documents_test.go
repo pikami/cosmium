@@ -3,10 +3,14 @@ package tests_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/repositories"
@@ -49,7 +53,7 @@ func testCosmosQuery(t *testing.T,
 	}
 }
 
-func Test_Documents(t *testing.T) {
+func documents_InitializeDb(t *testing.T) (*httptest.Server, *azcosmos.ContainerClient) {
 	repositories.CreateDatabase(repositorymodels.Database{ID: testDatabaseName})
 	repositories.CreateCollection(testDatabaseName, repositorymodels.Collection{
 		ID: testCollectionName,
@@ -65,7 +69,6 @@ func Test_Documents(t *testing.T) {
 	repositories.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "67890", "pk": "456", "isCool": true})
 
 	ts := runTestServer()
-	defer ts.Close()
 
 	client, err := azcosmos.NewClientFromConnectionString(
 		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.Config.AccountKey),
@@ -75,6 +78,13 @@ func Test_Documents(t *testing.T) {
 
 	collectionClient, err := client.NewContainer(testDatabaseName, testCollectionName)
 	assert.Nil(t, err)
+
+	return ts, collectionClient
+}
+
+func Test_Documents(t *testing.T) {
+	ts, collectionClient := documents_InitializeDb(t)
+	defer ts.Close()
 
 	t.Run("Should query document", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
@@ -135,5 +145,63 @@ func Test_Documents(t *testing.T) {
 				map[string]interface{}{"id": "67890"},
 			},
 		)
+	})
+}
+
+func Test_Documents_Patch(t *testing.T) {
+	ts, collectionClient := documents_InitializeDb(t)
+	defer ts.Close()
+
+	t.Run("Should PATCH document", func(t *testing.T) {
+		context := context.TODO()
+		expectedData := map[string]interface{}{"id": "67890", "pk": "456", "newField": "newValue"}
+
+		patch := azcosmos.PatchOperations{}
+		patch.AppendAdd("/newField", "newValue")
+		patch.AppendRemove("/isCool")
+
+		itemResponse, err := collectionClient.PatchItem(
+			context,
+			azcosmos.PartitionKey{},
+			"67890",
+			patch,
+			&azcosmos.ItemOptions{
+				EnableContentResponseOnWrite: false,
+			},
+		)
+		assert.Nil(t, err)
+
+		var itemResponseBody map[string]string
+		json.Unmarshal(itemResponse.Value, &itemResponseBody)
+
+		assert.Equal(t, expectedData["id"], itemResponseBody["id"])
+		assert.Equal(t, expectedData["pk"], itemResponseBody["pk"])
+		assert.Empty(t, itemResponseBody["isCool"])
+		assert.Equal(t, expectedData["newField"], itemResponseBody["newField"])
+	})
+
+	t.Run("Should not allow to PATCH document ID", func(t *testing.T) {
+		context := context.TODO()
+
+		patch := azcosmos.PatchOperations{}
+		patch.AppendReplace("/id", "newValue")
+
+		_, err := collectionClient.PatchItem(
+			context,
+			azcosmos.PartitionKey{},
+			"67890",
+			patch,
+			&azcosmos.ItemOptions{
+				EnableContentResponseOnWrite: false,
+			},
+		)
+		assert.NotNil(t, err)
+
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) {
+			assert.Equal(t, http.StatusUnprocessableEntity, respErr.StatusCode)
+		} else {
+			panic(err)
+		}
 	})
 }

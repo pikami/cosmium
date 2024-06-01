@@ -27,6 +27,7 @@ func CreateRouter() *gin.Engine {
 	router.GET("/dbs/:databaseId/colls/:collId/docs", handlers.GetAllDocuments)
 	router.GET("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.GetDocument)
 	router.PUT("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.ReplaceDocument)
+	router.PATCH("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.PatchDocument)
 	router.DELETE("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.DeleteDocument)
 
 	router.POST("/dbs/:databaseId/colls", handlers.CreateCollection)

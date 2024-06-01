@@ -32,4 +32,9 @@ func Test_GenerateSignature(t *testing.T) {
 		signature := authentication.GenerateSignature("GET", "pkranges", "m4d+xG08uVM=", testDate, config.DefaultAccountKey)
 		assert.Equal(t, "6S5ceZsl2EXWB3Jo5bJcK7zv8NxXnsxWPWD9TH3nNMo=", signature)
 	})
+
+	t.Run("Should generate PATCH signature", func(t *testing.T) {
+		signature := authentication.GenerateSignature("PATCH", "docs", "dbs/test-db/colls/test-coll/docs/67890", testDate, config.DefaultAccountKey)
+		assert.Equal(t, "VR1ddfxKBXnoaT+b3WkhyYVc9JmGNpTnaRmyDM44398=", signature)
+	})
 }
