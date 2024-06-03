@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/pikami/cosmium/internal/logger"
@@ -303,9 +304,18 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 
 	if len(field.Path) > 1 {
 		for _, pathSegment := range field.Path[1:] {
-			if nestedValue, ok := value.(map[string]interface{}); ok {
+
+			switch nestedValue := value.(type) {
+			case map[string]interface{}:
 				value = nestedValue[pathSegment]
-			} else {
+			case []int, []string, []interface{}:
+				slice := reflect.ValueOf(nestedValue)
+				if arrayIndex, err := strconv.Atoi(pathSegment); err == nil && slice.Len() > arrayIndex {
+					value = slice.Index(arrayIndex).Interface()
+				} else {
+					return nil
+				}
+			default:
 				return nil
 			}
 		}

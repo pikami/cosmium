@@ -251,9 +251,8 @@ DotFieldAccess <- "." id:Identifier {
     return id, nil
 }
 
-ArrayFieldAccess <- "[\"" id:Identifier "\"]" {
-    return id, nil
-}
+ArrayFieldAccess <- "[\"" id:Identifier "\"]" { return id, nil }
+  / "[" id:Integer "]" { return strconv.Itoa(id.(int)), nil }
 
 Identifier <- [a-zA-Z_][a-zA-Z0-9_]* {
     return string(c.text), nil

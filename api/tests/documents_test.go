@@ -65,8 +65,8 @@ func documents_InitializeDb(t *testing.T) (*httptest.Server, *azcosmos.Container
 			Paths: []string{"/pk"},
 		},
 	})
-	repositories.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "12345", "pk": "123", "isCool": false})
-	repositories.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "67890", "pk": "456", "isCool": true})
+	repositories.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}})
+	repositories.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "67890", "pk": "456", "isCool": true, "arr": []int{6, 7, 8}})
 
 	ts := runTestServer()
 
@@ -143,6 +143,22 @@ func Test_Documents(t *testing.T) {
 			},
 			[]interface{}{
 				map[string]interface{}{"id": "67890"},
+			},
+		)
+	})
+
+	t.Run("Should query array accessor", func(t *testing.T) {
+		testCosmosQuery(t, collectionClient,
+			`SELECT c.id,
+				c["arr"][0] AS arr0,
+				c["arr"][1] AS arr1,
+				c["arr"][2] AS arr2,
+				c["arr"][3] AS arr3
+			FROM c ORDER BY c.id`,
+			nil,
+			[]interface{}{
+				map[string]interface{}{"id": "12345", "arr0": 1.0, "arr1": 2.0, "arr2": 3.0, "arr3": nil},
+				map[string]interface{}{"id": "67890", "arr0": 6.0, "arr1": 7.0, "arr2": 8.0, "arr3": nil},
 			},
 		)
 	})
