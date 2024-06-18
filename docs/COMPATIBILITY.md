@@ -15,8 +15,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 ## Compatibility Matrix
 
 ### Features
+
 | Feature                       | Implemented |
-|-------------------------------|-------------|
+| ----------------------------- | ----------- |
 | Subqueries                    | No          |
 | Joins                         | No          |
 | Computed properties           | No          |
@@ -29,8 +30,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | User-defined functions (UDFs) | No          |
 
 ### Clauses
+
 | Clause       | Implemented |
-|--------------|-------------|
+| ------------ | ----------- |
 | SELECT       | Yes         |
 | FROM         | Yes         |
 | WHERE        | Yes         |
@@ -39,8 +41,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | OFFSET LIMIT | Yes         |
 
 ### Keywords
+
 | Keyword  | Implemented |
-|----------|-------------|
+| -------- | ----------- |
 | BETWEEN  | No          |
 | DISTINCT | Yes         |
 | LIKE     | No          |
@@ -48,8 +51,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | TOP      | Yes         |
 
 ### Aggregate Functions
+
 | Function | Implemented |
-|----------|-------------|
+| -------- | ----------- |
 | AVG      | Yes         |
 | COUNT    | Yes         |
 | MAX      | Yes         |
@@ -57,8 +61,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | SUM      | Yes         |
 
 ### Array Functions
+
 | Function       | Implemented |
-|----------------|-------------|
+| -------------- | ----------- |
 | ARRAY_CONCAT   | Yes         |
 | ARRAY_CONTAINS | No          |
 | ARRAY_LENGTH   | Yes         |
@@ -69,13 +74,15 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | SetUnion       | Yes         |
 
 ### Conditional Functions
+
 | Function | Implemented |
-|----------|-------------|
+| -------- | ----------- |
 | IIF      | No          |
 
 ### Date and time Functions
+
 | Function                  | Implemented |
-|---------------------------|-------------|
+| ------------------------- | ----------- |
 | DateTimeAdd               | No          |
 | DateTimeBin               | No          |
 | DateTimeDiff              | No          |
@@ -93,53 +100,56 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | TimestampToDateTime       | No          |
 
 ### Item Functions
+
 | Function   | Implemented |
-|------------|-------------|
+| ---------- | ----------- |
 | DocumentId | No          |
 
 ### Mathematical Functions
+
 | Function         | Implemented |
-|------------------|-------------|
-| ABS              | No          |
-| ACOS             | No          |
-| ASIN             | No          |
-| ATAN             | No          |
-| ATN2             | No          |
-| CEILING          | No          |
-| COS              | No          |
-| COT              | No          |
-| DEGREES          | No          |
-| EXP              | No          |
-| FLOOR            | No          |
-| IntAdd           | No          |
-| IntBitAnd        | No          |
-| IntBitLeftShift  | No          |
-| IntBitNot        | No          |
-| IntBitOr         | No          |
-| IntBitRightShift | No          |
-| IntBitXor        | No          |
-| IntDiv           | No          |
-| IntMod           | No          |
-| IntMul           | No          |
-| IntSub           | No          |
-| LOG              | No          |
-| LOG10            | No          |
-| NumberBin        | No          |
-| PI               | No          |
-| POWER            | No          |
-| RADIANS          | No          |
-| RAND             | No          |
-| ROUND            | No          |
-| SIGN             | No          |
-| SIN              | No          |
-| SQRT             | No          |
-| SQUARE           | No          |
-| TAN              | No          |
-| TRUNC            | No          |
+| ---------------- | ----------- |
+| ABS              | Yes         |
+| ACOS             | Yes         |
+| ASIN             | Yes         |
+| ATAN             | Yes         |
+| ATN2             | Yes         |
+| CEILING          | Yes         |
+| COS              | Yes         |
+| COT              | Yes         |
+| DEGREES          | Yes         |
+| EXP              | Yes         |
+| FLOOR            | Yes         |
+| IntAdd           | Yes         |
+| IntBitAnd        | Yes         |
+| IntBitLeftShift  | Yes         |
+| IntBitNot        | Yes         |
+| IntBitOr         | Yes         |
+| IntBitRightShift | Yes         |
+| IntBitXor        | Yes         |
+| IntDiv           | Yes         |
+| IntMod           | Yes         |
+| IntMul           | Yes         |
+| IntSub           | Yes         |
+| LOG              | Yes         |
+| LOG10            | Yes         |
+| NumberBin        | Yes         |
+| PI               | Yes         |
+| POWER            | Yes         |
+| RADIANS          | Yes         |
+| RAND             | Yes         |
+| ROUND            | Yes         |
+| SIGN             | Yes         |
+| SIN              | Yes         |
+| SQRT             | Yes         |
+| SQUARE           | Yes         |
+| TAN              | Yes         |
+| TRUNC            | Yes         |
 
 ### Spatial Functions
+
 | Function           | Implemented |
-|--------------------|-------------|
+| ------------------ | ----------- |
 | ST_AREA            | No          |
 | ST_DISTANCE        | No          |
 | ST_WITHIN          | No          |
@@ -148,8 +158,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | ST_ISVALIDDETAILED | No          |
 
 ### String Functions
+
 | Function        | Implemented |
-|-----------------|-------------|
+| --------------- | ----------- |
 | CONCAT          | Yes         |
 | CONTAINS        | Yes         |
 | ENDSWITH        | Yes         |
@@ -177,8 +188,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | UPPER           | Yes         |
 
 ### Type checking Functions
+
 | Function         | Implemented |
-|------------------|-------------|
+| ---------------- | ----------- |
 | IS_ARRAY         | Yes         |
 | IS_BOOL          | Yes         |
 | IS_DEFINED       | Yes         |

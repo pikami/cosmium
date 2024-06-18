@@ -284,6 +284,79 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 		case parsers.FunctionCallSetUnion:
 			return c.set_Union(typedValue.Arguments, rowValue)
 
+		case parsers.FunctionCallMathAbs:
+			return c.math_Abs(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathAcos:
+			return c.math_Acos(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathAsin:
+			return c.math_Asin(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathAtan:
+			return c.math_Atan(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathCeiling:
+			return c.math_Ceiling(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathCos:
+			return c.math_Cos(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathCot:
+			return c.math_Cot(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathDegrees:
+			return c.math_Degrees(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathExp:
+			return c.math_Exp(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathFloor:
+			return c.math_Floor(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntBitNot:
+			return c.math_IntBitNot(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathLog10:
+			return c.math_Log10(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathRadians:
+			return c.math_Radians(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathRound:
+			return c.math_Round(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathSign:
+			return c.math_Sign(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathSin:
+			return c.math_Sin(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathSqrt:
+			return c.math_Sqrt(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathSquare:
+			return c.math_Square(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathTan:
+			return c.math_Tan(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathTrunc:
+			return c.math_Trunc(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathAtn2:
+			return c.math_Atn2(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntAdd:
+			return c.math_IntAdd(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntBitAnd:
+			return c.math_IntBitAnd(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntBitLeftShift:
+			return c.math_IntBitLeftShift(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntBitOr:
+			return c.math_IntBitOr(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntBitRightShift:
+			return c.math_IntBitRightShift(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntBitXor:
+			return c.math_IntBitXor(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntDiv:
+			return c.math_IntDiv(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntMod:
+			return c.math_IntMod(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntMul:
+			return c.math_IntMul(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathIntSub:
+			return c.math_IntSub(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathPower:
+			return c.math_Power(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathLog:
+			return c.math_Log(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathNumberBin:
+			return c.math_NumberBin(typedValue.Arguments, rowValue)
+		case parsers.FunctionCallMathPi:
+			return c.math_Pi()
+		case parsers.FunctionCallMathRand:
+			return c.math_Rand()
+
 		case parsers.FunctionCallAggregateAvg:
 			return c.aggregate_Avg(typedValue.Arguments, row)
 		case parsers.FunctionCallAggregateCount:

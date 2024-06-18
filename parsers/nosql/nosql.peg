@@ -343,6 +343,7 @@ FunctionCall <- StringFunctions
     / ArrayFunctions
     / InFunction
     / AggregateFunctions
+    / MathFunctions
 
 StringFunctions <- StringEqualsExpression
     / ToStringExpression
@@ -383,6 +384,43 @@ ArrayFunctions <- ArrayConcatExpression
     / ArraySliceExpression
     / SetIntersectExpression
     / SetUnionExpression
+
+MathFunctions <- MathAbsExpression
+    / MathAcosExpression
+    / MathAsinExpression
+    / MathAtanExpression
+    / MathCeilingExpression
+    / MathCosExpression
+    / MathCotExpression
+    / MathDegreesExpression
+    / MathExpExpression
+    / MathFloorExpression
+    / MathIntBitNotExpression
+    / MathLog10Expression
+    / MathRadiansExpression
+    / MathRoundExpression
+    / MathSignExpression
+    / MathSinExpression
+    / MathSqrtExpression
+    / MathSquareExpression
+    / MathTanExpression
+    / MathTruncExpression
+    / MathAtn2Expression
+    / MathIntAddExpression
+    / MathIntBitAndExpression
+    / MathIntBitLeftShiftExpression
+    / MathIntBitOrExpression
+    / MathIntBitRightShiftExpression
+    / MathIntBitXorExpression
+    / MathIntDivExpression
+    / MathIntModExpression
+    / MathIntMulExpression
+    / MathIntSubExpression
+    / MathPowerExpression
+    / MathLogExpression
+    / MathNumberBinExpression
+    / MathPiExpression
+    / MathRandExpression
 
 UpperExpression <- "UPPER"i ws "(" ex:SelectItem ")" {
     return createFunctionCall(parsers.FunctionCallUpper, []interface{}{ex})
@@ -526,6 +564,49 @@ SetIntersectExpression <- "SetIntersect"i ws "(" ws set1:SelectItem ws "," ws se
 SetUnionExpression <- "SetUnion"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" {
     return createFunctionCall(parsers.FunctionCallSetUnion, []interface{}{set1, set2})
 }
+
+MathAbsExpression <- "ABS"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathAbs, []interface{}{ex}) }
+MathAcosExpression <- "ACOS"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathAcos, []interface{}{ex}) }
+MathAsinExpression <- "ASIN"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathAsin, []interface{}{ex}) }
+MathAtanExpression <- "ATAN"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathAtan, []interface{}{ex}) }
+MathCeilingExpression <- "CEILING"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathCeiling, []interface{}{ex}) }
+MathCosExpression <- "COS"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathCos, []interface{}{ex}) }
+MathCotExpression <- "COT"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathCot, []interface{}{ex}) }
+MathDegreesExpression <- "DEGREES"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathDegrees, []interface{}{ex}) }
+MathExpExpression <- "EXP"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathExp, []interface{}{ex}) }
+MathFloorExpression <- "FLOOR"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathFloor, []interface{}{ex}) }
+MathIntBitNotExpression <- "IntBitNot"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntBitNot, []interface{}{ex}) }
+MathLog10Expression <- "LOG10"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathLog10, []interface{}{ex}) }
+MathRadiansExpression <- "RADIANS"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathRadians, []interface{}{ex}) }
+MathRoundExpression <- "ROUND"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathRound, []interface{}{ex}) }
+MathSignExpression <- "SIGN"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathSign, []interface{}{ex}) }
+MathSinExpression <- "SIN"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathSin, []interface{}{ex}) }
+MathSqrtExpression <- "SQRT"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathSqrt, []interface{}{ex}) }
+MathSquareExpression <- "SQUARE"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathSquare, []interface{}{ex}) }
+MathTanExpression <- "TAN"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathTan, []interface{}{ex}) }
+MathTruncExpression <- "TRUNC"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathTrunc, []interface{}{ex}) }
+
+MathAtn2Expression <- "ATN2"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathAtn2, []interface{}{set1, set2}) }
+MathIntAddExpression <- "IntAdd"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntAdd, []interface{}{set1, set2}) }
+MathIntBitAndExpression <- "IntBitAnd"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntBitAnd, []interface{}{set1, set2}) }
+MathIntBitLeftShiftExpression <- "IntBitLeftShift"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntBitLeftShift, []interface{}{set1, set2}) }
+MathIntBitOrExpression <- "IntBitOr"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntBitOr, []interface{}{set1, set2}) }
+MathIntBitRightShiftExpression <- "IntBitRightShift"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntBitRightShift, []interface{}{set1, set2}) }
+MathIntBitXorExpression <- "IntBitXor"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntBitXor, []interface{}{set1, set2}) }
+MathIntDivExpression <- "IntDiv"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntDiv, []interface{}{set1, set2}) }
+MathIntModExpression <- "IntMod"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntMod, []interface{}{set1, set2}) }
+MathIntMulExpression <- "IntMul"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntMul, []interface{}{set1, set2}) }
+MathIntSubExpression <- "IntSub"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathIntSub, []interface{}{set1, set2}) }
+MathPowerExpression <- "POWER"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathPower, []interface{}{set1, set2}) }
+
+MathLogExpression <- "LOG"i ws "(" ws ex1:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
+    return createFunctionCall(parsers.FunctionCallMathLog, append([]interface{}{ex1}, others.([]interface{})...))
+}
+MathNumberBinExpression <- "NumberBin"i ws "(" ws ex1:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
+    return createFunctionCall(parsers.FunctionCallMathNumberBin, append([]interface{}{ex1}, others.([]interface{})...))
+}
+MathPiExpression <- "PI"i ws "(" ws ")" { return createFunctionCall(parsers.FunctionCallMathPi, []interface{}{}) }
+MathRandExpression <- "RAND"i ws "(" ws ")" { return createFunctionCall(parsers.FunctionCallMathRand, []interface{}{}) }
 
 InFunction <- ex1:SelectProperty ws "IN"i ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
     return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))

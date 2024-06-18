@@ -1,6 +1,6 @@
 # Cosmium
 
-Cosmium is a lightweight Cosmos DB emulator designed to facilitate local development and testing. While it aims to provide developers with a solution for running a local database during development, it's important to note that it's not 100% compatible with Cosmos DB. However, it serves as a convenient tool for E2E or integration tests during the CI/CD pipeline. Read more about compatibility [here](./docs/compatibility.md).
+Cosmium is a lightweight Cosmos DB emulator designed to facilitate local development and testing. While it aims to provide developers with a solution for running a local database during development, it's important to note that it's not 100% compatible with Cosmos DB. However, it serves as a convenient tool for E2E or integration tests during the CI/CD pipeline. Read more about compatibility [here](./docs/COMPATIBILITY.md).
 
 One of Cosmium's notable features is its ability to save and load state to a single JSON file. This feature makes it easy to load different test cases or share state with other developers, enhancing collaboration and efficiency in development workflows.
 
