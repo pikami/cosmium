@@ -11,7 +11,7 @@ func (c memoryExecutorContext) aggregate_Avg(arguments []interface{}, row RowTyp
 	sum := 0.0
 	count := 0
 
-	if array, isArray := row.([]RowType); isArray {
+	if array, isArray := row.([]RowWithJoins); isArray {
 		for _, item := range array {
 			value := c.getFieldValue(selectExpression, item)
 			if numericValue, ok := value.(float64); ok {
@@ -35,7 +35,7 @@ func (c memoryExecutorContext) aggregate_Count(arguments []interface{}, row RowT
 	selectExpression := arguments[0].(parsers.SelectItem)
 	count := 0
 
-	if array, isArray := row.([]RowType); isArray {
+	if array, isArray := row.([]RowWithJoins); isArray {
 		for _, item := range array {
 			value := c.getFieldValue(selectExpression, item)
 			if value != nil {
@@ -52,7 +52,7 @@ func (c memoryExecutorContext) aggregate_Max(arguments []interface{}, row RowTyp
 	max := 0.0
 	count := 0
 
-	if array, isArray := row.([]RowType); isArray {
+	if array, isArray := row.([]RowWithJoins); isArray {
 		for _, item := range array {
 			value := c.getFieldValue(selectExpression, item)
 			if numericValue, ok := value.(float64); ok {
@@ -81,7 +81,7 @@ func (c memoryExecutorContext) aggregate_Min(arguments []interface{}, row RowTyp
 	min := math.MaxFloat64
 	count := 0
 
-	if array, isArray := row.([]RowType); isArray {
+	if array, isArray := row.([]RowWithJoins); isArray {
 		for _, item := range array {
 			value := c.getFieldValue(selectExpression, item)
 			if numericValue, ok := value.(float64); ok {
@@ -110,7 +110,7 @@ func (c memoryExecutorContext) aggregate_Sum(arguments []interface{}, row RowTyp
 	sum := 0.0
 	count := 0
 
-	if array, isArray := row.([]RowType); isArray {
+	if array, isArray := row.([]RowWithJoins); isArray {
 		for _, item := range array {
 			value := c.getFieldValue(selectExpression, item)
 			if numericValue, ok := value.(float64); ok {

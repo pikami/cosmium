@@ -13,6 +13,7 @@ import (
 )
 
 type RowType interface{}
+type RowWithJoins map[string]RowType
 type ExpressionType interface{}
 
 type memoryExecutorContext struct {
@@ -24,24 +25,52 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 		parameters: query.Parameters,
 	}
 
-	result := make([]RowType, 0)
-
-	// Apply Filter
+	joinedRows := make([]RowWithJoins, 0)
 	for _, row := range data {
-		if ctx.evaluateFilters(query.Filters, row) {
-			result = append(result, row)
+		// Perform joins
+		dataTables := map[string][]RowType{}
+
+		for _, join := range query.JoinItems {
+			joinedData := ctx.getFieldValue(join.SelectItem, row)
+			if joinedDataArray, isArray := joinedData.([]map[string]interface{}); isArray {
+				var rows []RowType
+				for _, m := range joinedDataArray {
+					rows = append(rows, RowType(m))
+				}
+				dataTables[join.Table.Value] = rows
+			}
 		}
+
+		// Generate flat rows
+		flatRows := []RowWithJoins{
+			{query.Table.Value: row},
+		}
+		for joinedTableName, joinedTable := range dataTables {
+			flatRows = zipRows(flatRows, joinedTableName, joinedTable)
+		}
+
+		// Apply filters
+		filteredRows := []RowWithJoins{}
+		for _, rowWithJoins := range flatRows {
+			if ctx.evaluateFilters(query.Filters, rowWithJoins) {
+				filteredRows = append(filteredRows, rowWithJoins)
+			}
+		}
+
+		joinedRows = append(joinedRows, filteredRows...)
 	}
 
 	// Apply order
 	if query.OrderExpressions != nil && len(query.OrderExpressions) > 0 {
-		ctx.orderBy(query.OrderExpressions, result)
+		ctx.orderBy(query.OrderExpressions, joinedRows)
 	}
+
+	result := make([]RowType, 0)
 
 	// Apply group
 	isGroupSelect := query.GroupBy != nil && len(query.GroupBy) > 0
 	if isGroupSelect {
-		result = ctx.groupBy(query, result)
+		result = ctx.groupBy(query, joinedRows)
 	}
 
 	// Apply select
@@ -50,9 +79,9 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 		if hasAggregateFunctions(query.SelectItems) {
 			// When can have aggregate functions without GROUP BY clause,
 			// we should aggregate all rows in that case
-			selectedData = append(selectedData, ctx.selectRow(query.SelectItems, result))
+			selectedData = append(selectedData, ctx.selectRow(query.SelectItems, joinedRows))
 		} else {
-			for _, row := range result {
+			for _, row := range joinedRows {
 				selectedData = append(selectedData, ctx.selectRow(query.SelectItems, row))
 			}
 		}
@@ -79,7 +108,7 @@ func Execute(query parsers.SelectStmt, data []RowType) []RowType {
 	return result
 }
 
-func (c memoryExecutorContext) selectRow(selectItems []parsers.SelectItem, row RowType) interface{} {
+func (c memoryExecutorContext) selectRow(selectItems []parsers.SelectItem, row interface{}) interface{} {
 	// When the first value is top level, select it instead
 	if len(selectItems) > 0 && selectItems[0].IsTopLevel {
 		return c.getFieldValue(selectItems[0], row)
@@ -103,7 +132,7 @@ func (c memoryExecutorContext) selectRow(selectItems []parsers.SelectItem, row R
 	return newRow
 }
 
-func (c memoryExecutorContext) evaluateFilters(expr ExpressionType, row RowType) bool {
+func (c memoryExecutorContext) evaluateFilters(expr ExpressionType, row RowWithJoins) bool {
 	if expr == nil {
 		return true
 	}
@@ -164,7 +193,7 @@ func (c memoryExecutorContext) evaluateFilters(expr ExpressionType, row RowType)
 	return false
 }
 
-func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowType) interface{} {
+func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row interface{}) interface{} {
 	if field.Type == parsers.SelectItemTypeArray {
 		arrayValue := make([]interface{}, 0)
 		for _, selectItem := range field.SelectItems {
@@ -200,7 +229,8 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 	}
 
 	rowValue := row
-	if array, isArray := row.([]RowType); isArray {
+	// Used for aggregates
+	if array, isArray := row.([]RowWithJoins); isArray {
 		rowValue = array[0]
 	}
 
@@ -374,12 +404,17 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 	}
 
 	value := rowValue
+	if joinedRow, isRowWithJoins := value.(RowWithJoins); isRowWithJoins {
+		value = joinedRow[field.Path[0]]
+	}
 
 	if len(field.Path) > 1 {
 		for _, pathSegment := range field.Path[1:] {
 
 			switch nestedValue := value.(type) {
 			case map[string]interface{}:
+				value = nestedValue[pathSegment]
+			case RowWithJoins:
 				value = nestedValue[pathSegment]
 			case []int, []string, []interface{}:
 				slice := reflect.ValueOf(nestedValue)
@@ -398,7 +433,7 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row RowTy
 
 func (c memoryExecutorContext) getExpressionParameterValue(
 	parameter interface{},
-	row RowType,
+	row RowWithJoins,
 ) interface{} {
 	switch typedParameter := parameter.(type) {
 	case parsers.SelectItem:
@@ -410,7 +445,7 @@ func (c memoryExecutorContext) getExpressionParameterValue(
 	return nil
 }
 
-func (c memoryExecutorContext) orderBy(orderBy []parsers.OrderExpression, data []RowType) {
+func (c memoryExecutorContext) orderBy(orderBy []parsers.OrderExpression, data []RowWithJoins) {
 	less := func(i, j int) bool {
 		for _, order := range orderBy {
 			val1 := c.getFieldValue(order.SelectItem, data[i])
@@ -430,8 +465,8 @@ func (c memoryExecutorContext) orderBy(orderBy []parsers.OrderExpression, data [
 	sort.SliceStable(data, less)
 }
 
-func (c memoryExecutorContext) groupBy(selectStmt parsers.SelectStmt, data []RowType) []RowType {
-	groupedRows := make(map[string][]RowType)
+func (c memoryExecutorContext) groupBy(selectStmt parsers.SelectStmt, data []RowWithJoins) []RowType {
+	groupedRows := make(map[string][]RowWithJoins)
 	groupedKeys := make([]string, 0)
 
 	// Group rows by group by columns
@@ -454,7 +489,7 @@ func (c memoryExecutorContext) groupBy(selectStmt parsers.SelectStmt, data []Row
 	return aggregatedRows
 }
 
-func (c memoryExecutorContext) generateGroupKey(groupByFields []parsers.SelectItem, row RowType) string {
+func (c memoryExecutorContext) generateGroupKey(groupByFields []parsers.SelectItem, row RowWithJoins) string {
 	var keyBuilder strings.Builder
 	for _, column := range groupByFields {
 		fieldValue := c.getFieldValue(column, row)
@@ -465,7 +500,7 @@ func (c memoryExecutorContext) generateGroupKey(groupByFields []parsers.SelectIt
 	return keyBuilder.String()
 }
 
-func (c memoryExecutorContext) aggregateGroup(selectStmt parsers.SelectStmt, groupRows []RowType) RowType {
+func (c memoryExecutorContext) aggregateGroup(selectStmt parsers.SelectStmt, groupRows []RowWithJoins) RowType {
 	aggregatedRow := c.selectRow(selectStmt.SelectItems, groupRows)
 
 	return aggregatedRow
@@ -552,4 +587,28 @@ func hasAggregateFunctions(selectItems []parsers.SelectItem) bool {
 	}
 
 	return false
+}
+
+func zipRows(current []RowWithJoins, joinedTableName string, rowsToZip []RowType) []RowWithJoins {
+	resultMap := make([]RowWithJoins, 0)
+
+	for _, currentRow := range current {
+		for _, rowToZip := range rowsToZip {
+			newRow := copyMap(currentRow)
+			newRow[joinedTableName] = rowToZip
+			resultMap = append(resultMap, newRow)
+		}
+	}
+
+	return resultMap
+}
+
+func copyMap(originalMap map[string]RowType) map[string]RowType {
+	targetMap := make(map[string]RowType)
+
+	for k, v := range originalMap {
+		targetMap[k] = v
+	}
+
+	return targetMap
 }

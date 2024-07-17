@@ -4,7 +4,7 @@ package nosql
 import "github.com/pikami/cosmium/parsers"
 
 func makeSelectStmt(
-	columns, table,
+	columns, table, joinItems,
 	whereClause interface{}, distinctClause interface{},
 	count interface{}, groupByClause interface{}, orderList interface{},
 	offsetClause interface{},
@@ -12,6 +12,13 @@ func makeSelectStmt(
 	selectStmt := parsers.SelectStmt{
 		SelectItems: columns.([]parsers.SelectItem),
 		Table:       table.(parsers.Table),
+	}
+
+    if joinItemsArray, ok := joinItems.([]interface{}); ok && len(joinItemsArray) > 0 {
+		selectStmt.JoinItems = make([]parsers.JoinItem, len(joinItemsArray))
+		for i, joinItem := range joinItemsArray {
+			selectStmt.JoinItems[i] = joinItem.(parsers.JoinItem)
+		}
 	}
 
 	switch v := whereClause.(type) {
@@ -46,6 +53,13 @@ func makeSelectStmt(
 	}
 
 	return selectStmt, nil
+}
+
+func makeJoin(table interface{}, column interface{}) (parsers.JoinItem, error) {
+    return parsers.JoinItem{
+        Table:      table.(parsers.Table),
+        SelectItem: column.(parsers.SelectItem),
+    }, nil
 }
 
 func makeSelectItem(name interface{}, path interface{}, selectItemType parsers.SelectItemType) (parsers.SelectItem, error) {
@@ -161,13 +175,15 @@ Input <- selectStmt:SelectStmt {
 
 SelectStmt <- Select ws
     distinctClause:DistinctClause? ws
-    topClause:TopClause? ws columns:Selection ws
+    topClause:TopClause? ws
+    columns:Selection ws
     From ws table:TableName ws
+    joinClauses:JoinClause* ws
     whereClause:(ws Where ws condition:Condition { return condition, nil })?
     groupByClause:(ws GroupBy ws columns:ColumnList { return columns, nil })?
     orderByClause:OrderByClause?
     offsetClause:OffsetClause? {
-    return makeSelectStmt(columns, table, whereClause,
+    return makeSelectStmt(columns, table, joinClauses, whereClause,
         distinctClause, topClause, groupByClause, orderByClause, offsetClause)
 }
 
@@ -175,6 +191,10 @@ DistinctClause <- "DISTINCT"i
 
 TopClause <- Top ws count:Integer {
     return count, nil
+}
+
+JoinClause <- Join ws table:TableName ws "IN"i ws column:SelectItem {
+    return makeJoin(table, column)
 }
 
 OffsetClause <- "OFFSET"i ws offset:IntegerLiteral ws "LIMIT"i ws limit:IntegerLiteral {
@@ -299,6 +319,8 @@ Top <- "TOP"i
 As <- "AS"i
 
 From <- "FROM"i
+
+Join <- "JOIN"i
 
 Where <- "WHERE"i
 

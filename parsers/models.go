@@ -3,6 +3,7 @@ package parsers
 type SelectStmt struct {
 	SelectItems      []SelectItem
 	Table            Table
+	JoinItems        []JoinItem
 	Filters          interface{}
 	Distinct         bool
 	Count            int
@@ -14,6 +15,11 @@ type SelectStmt struct {
 
 type Table struct {
 	Value string
+}
+
+type JoinItem struct {
+	Table      Table
+	SelectItem SelectItem
 }
 
 type SelectItemType int
