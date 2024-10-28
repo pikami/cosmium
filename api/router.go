@@ -13,15 +13,15 @@ import (
 )
 
 func CreateRouter() *gin.Engine {
-
 	router := gin.Default(func(e *gin.Engine) {
-		e.RemoveExtraSlash = true
+		e.RedirectTrailingSlash = false
 	})
 
 	if config.Config.Debug {
 		router.Use(middleware.RequestLogger())
 	}
 
+	router.Use(middleware.StripTrailingSlashes(router))
 	router.Use(middleware.Authentication())
 
 	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
@@ -52,28 +52,9 @@ func CreateRouter() *gin.Engine {
 
 	router.GET("/cosmium/export", handlers.CosmiumExport)
 
-	addRoutesForTrailingSlashes(router)
-
 	handlers.RegisterExplorerHandlers(router)
 
 	return router
-}
-
-func addRoutesForTrailingSlashes(router *gin.Engine) {
-	trailingSlashGroup := router.Group("/")
-	//prepend, so slash is stripped before authentication middleware reads path
-	trailingSlashGroup.Handlers = prepend(trailingSlashGroup.Handlers, middleware.TrailingSlashStripper())
-
-	for _, route := range router.Routes() {
-		if route.Path != "/" { //don't append slash to root path, already handled by RemoveExtraSlash
-			trailingSlashGroup.Handle(route.Method, route.Path+"/", route.HandlerFunc)
-		}
-	}
-}
-
-func prepend[T any](a []T, e T) []T {
-	a = append([]T{e}, a...)
-	return a
 }
 
 func StartAPI() {

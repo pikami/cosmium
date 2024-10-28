@@ -27,10 +27,15 @@ func Test_Documents_Read_Trailing_Slash(t *testing.T) {
 		req, _ := http.NewRequest("GET", testUrl, nil)
 		req.Header.Add("x-ms-date", date)
 		req.Header.Add("authorization", "sig="+url.QueryEscape(signature))
-		_, err := httpClient.Do(req)
+		res, err := httpClient.Do(req)
 
 		assert.Nil(t, err)
 
+		if res != nil {
+			defer res.Body.Close()
+			assert.Equal(t, http.StatusOK, res.StatusCode, "Expected HTTP status 200 OK")
+		} else {
+			t.FailNow()
+		}
 	})
-
 }
