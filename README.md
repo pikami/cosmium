@@ -56,7 +56,7 @@ If you wan to run the application using docker, configure it using environment v
 
 ```sh
 docker run --rm \
-  -e Persist=/save.json \
+  -e COSMIUM_PERSIST=/save.json \
   -v ./save.json:/save.json \
   -p 8081:8081 \
   ghcr.io/pikami/cosmium
