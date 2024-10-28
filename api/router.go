@@ -13,7 +13,10 @@ import (
 )
 
 func CreateRouter() *gin.Engine {
-	router := gin.Default()
+
+	router := gin.Default(func(e *gin.Engine) {
+		e.RemoveExtraSlash = true
+	})
 
 	if config.Config.Debug {
 		router.Use(middleware.RequestLogger())
@@ -22,36 +25,49 @@ func CreateRouter() *gin.Engine {
 	router.Use(middleware.Authentication())
 
 	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
-
 	router.POST("/dbs/:databaseId/colls/:collId/docs", handlers.DocumentsPost)
 	router.GET("/dbs/:databaseId/colls/:collId/docs", handlers.GetAllDocuments)
 	router.GET("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.GetDocument)
 	router.PUT("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.ReplaceDocument)
 	router.PATCH("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.PatchDocument)
 	router.DELETE("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.DeleteDocument)
-
 	router.POST("/dbs/:databaseId/colls", handlers.CreateCollection)
 	router.GET("/dbs/:databaseId/colls", handlers.GetAllCollections)
 	router.GET("/dbs/:databaseId/colls/:collId", handlers.GetCollection)
 	router.DELETE("/dbs/:databaseId/colls/:collId", handlers.DeleteCollection)
-
 	router.POST("/dbs", handlers.CreateDatabase)
 	router.GET("/dbs", handlers.GetAllDatabases)
 	router.GET("/dbs/:databaseId", handlers.GetDatabase)
 	router.DELETE("/dbs/:databaseId", handlers.DeleteDatabase)
-
 	router.GET("/dbs/:databaseId/colls/:collId/udfs", handlers.GetAllUserDefinedFunctions)
 	router.GET("/dbs/:databaseId/colls/:collId/sprocs", handlers.GetAllStoredProcedures)
 	router.GET("/dbs/:databaseId/colls/:collId/triggers", handlers.GetAllTriggers)
-
 	router.GET("/offers", handlers.GetOffers)
 	router.GET("/", handlers.GetServerInfo)
-
 	router.GET("/cosmium/export", handlers.CosmiumExport)
+
+	addRoutesForTrailingSlashes(router)
 
 	handlers.RegisterExplorerHandlers(router)
 
 	return router
+}
+
+func addRoutesForTrailingSlashes(router *gin.Engine) {
+	trailingSlashGroup := router.Group("/")
+	//prepend, so slash is stripped before authentication middleware reads path
+	trailingSlashGroup.Handlers = prepend(trailingSlashGroup.Handlers, middleware.TrailingSlashStripper())
+
+	for _, route := range router.Routes() {
+		if route.Path != "/" { //don't append slash to root path, already handled by RemoveExtraSlash
+			trailingSlashGroup.Handle(route.Method, route.Path+"/", route.HandlerFunc)
+		}
+	}
+}
+
+func prepend[T any](a []T, e T) []T {
+	a = append([]T{e}, a...)
+	return a
 }
 
 func StartAPI() {
