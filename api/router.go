@@ -13,12 +13,15 @@ import (
 )
 
 func CreateRouter() *gin.Engine {
-	router := gin.Default()
+	router := gin.Default(func(e *gin.Engine) {
+		e.RedirectTrailingSlash = false
+	})
 
 	if config.Config.Debug {
 		router.Use(middleware.RequestLogger())
 	}
 
+	router.Use(middleware.StripTrailingSlashes(router))
 	router.Use(middleware.Authentication())
 
 	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
