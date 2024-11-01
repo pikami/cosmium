@@ -242,7 +242,6 @@ func Test_Documents_Patch(t *testing.T) {
 		)
 		assert.NotNil(t, r)
 		assert.Nil(t, err2)
-
 	})
 
 	t.Run("CreateItem that already exists", func(t *testing.T) {
@@ -252,7 +251,7 @@ func Test_Documents_Patch(t *testing.T) {
 		bytes, err := json.Marshal(item)
 		assert.Nil(t, err)
 
-		r, err2 := collectionClient.CreateItem(
+		r, err := collectionClient.CreateItem(
 			context,
 			azcosmos.PartitionKey{},
 			bytes,
@@ -261,8 +260,14 @@ func Test_Documents_Patch(t *testing.T) {
 			},
 		)
 		assert.NotNil(t, r)
-		assert.NotNil(t, err2)
+		assert.NotNil(t, err)
 
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) {
+			assert.Equal(t, http.StatusConflict, respErr.StatusCode)
+		} else {
+			panic(err)
+		}
 	})
 
 	t.Run("UpsertItem new", func(t *testing.T) {
@@ -282,7 +287,6 @@ func Test_Documents_Patch(t *testing.T) {
 		)
 		assert.NotNil(t, r)
 		assert.Nil(t, err2)
-
 	})
 
 	t.Run("UpsertItem that already exists", func(t *testing.T) {
@@ -302,7 +306,6 @@ func Test_Documents_Patch(t *testing.T) {
 		)
 		assert.NotNil(t, r)
 		assert.Nil(t, err2)
-
 	})
 
 }
