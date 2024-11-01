@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/gin-gonic/gin"
@@ -221,6 +222,11 @@ func DocumentsPost(c *gin.Context) {
 	if requestBody["id"] == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
 		return
+	}
+
+	isUpsert, _ := strconv.ParseBool(c.GetHeader("x-ms-documentdb-is-upsert"))
+	if isUpsert {
+		repositories.DeleteDocument(databaseId, collectionId, requestBody["id"].(string))
 	}
 
 	createdDocument, status := repositories.CreateDocument(databaseId, collectionId, requestBody)

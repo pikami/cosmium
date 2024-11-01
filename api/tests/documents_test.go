@@ -220,4 +220,92 @@ func Test_Documents_Patch(t *testing.T) {
 			panic(err)
 		}
 	})
+
+	t.Run("CreateItem", func(t *testing.T) {
+		context := context.TODO()
+
+		item := map[string]interface{}{
+			"Id":       "6789011",
+			"pk":       "456",
+			"newField": "newValue2",
+		}
+		bytes, err := json.Marshal(item)
+		assert.Nil(t, err)
+
+		r, err2 := collectionClient.CreateItem(
+			context,
+			azcosmos.PartitionKey{},
+			bytes,
+			&azcosmos.ItemOptions{
+				EnableContentResponseOnWrite: false,
+			},
+		)
+		assert.NotNil(t, r)
+		assert.Nil(t, err2)
+	})
+
+	t.Run("CreateItem that already exists", func(t *testing.T) {
+		context := context.TODO()
+
+		item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}}
+		bytes, err := json.Marshal(item)
+		assert.Nil(t, err)
+
+		r, err := collectionClient.CreateItem(
+			context,
+			azcosmos.PartitionKey{},
+			bytes,
+			&azcosmos.ItemOptions{
+				EnableContentResponseOnWrite: false,
+			},
+		)
+		assert.NotNil(t, r)
+		assert.NotNil(t, err)
+
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) {
+			assert.Equal(t, http.StatusConflict, respErr.StatusCode)
+		} else {
+			panic(err)
+		}
+	})
+
+	t.Run("UpsertItem new", func(t *testing.T) {
+		context := context.TODO()
+
+		item := map[string]interface{}{"id": "123456", "pk": "1234", "isCool": false, "arr": []int{1, 2, 3}}
+		bytes, err := json.Marshal(item)
+		assert.Nil(t, err)
+
+		r, err2 := collectionClient.UpsertItem(
+			context,
+			azcosmos.PartitionKey{},
+			bytes,
+			&azcosmos.ItemOptions{
+				EnableContentResponseOnWrite: false,
+			},
+		)
+		assert.NotNil(t, r)
+		assert.Nil(t, err2)
+	})
+
+	t.Run("UpsertItem that already exists", func(t *testing.T) {
+		context := context.TODO()
+
+		item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3, 4}}
+		bytes, err := json.Marshal(item)
+		assert.Nil(t, err)
+
+		r, err2 := collectionClient.UpsertItem(
+			context,
+			azcosmos.PartitionKey{},
+			bytes,
+			&azcosmos.ItemOptions{
+				EnableContentResponseOnWrite: false,
+			},
+		)
+		assert.NotNil(t, r)
+		assert.Nil(t, err2)
+	})
+
 }
