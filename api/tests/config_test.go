@@ -10,6 +10,7 @@ import (
 func runTestServer() *httptest.Server {
 	config.Config.AccountKey = config.DefaultAccountKey
 	config.Config.ExplorerPath = "/tmp/nothing"
+	config.Config.ExplorerBaseUrlLocation = config.ExplorerBaseUrlLocation
 
 	return httptest.NewServer(api.CreateRouter())
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func RegisterExplorerHandlers(router *gin.Engine) {
-	explorer := router.Group("/_explorer")
+	explorer := router.Group(config.Config.ExplorerBaseUrlLocation)
 	{
 		explorer.Use(func(ctx *gin.Context) {
 			if ctx.Param("filepath") == "/config.json" {

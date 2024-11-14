@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	DefaultAccountKey = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
-	EnvPrefix         = "COSMIUM_"
+	DefaultAccountKey       = "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw=="
+	EnvPrefix               = "COSMIUM_"
+	ExplorerBaseUrlLocation = "/_explorer"
 )
 
 var Config = ServerConfig{}
@@ -45,6 +46,7 @@ func ParseFlags() {
 	Config.DatabaseDomain = Config.Host
 	Config.DatabaseEndpoint = fmt.Sprintf("https://%s:%d/", Config.Host, Config.Port)
 	Config.AccountKey = *accountKey
+	Config.ExplorerBaseUrlLocation = ExplorerBaseUrlLocation
 }
 
 func setFlagsFromEnvironment() (err error) {
