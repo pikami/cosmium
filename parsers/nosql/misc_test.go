@@ -122,4 +122,25 @@ func Test_Parse(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse IN selector", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id FROM c IN c.tags`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "id"},
+						Type: parsers.SelectItemTypeField,
+					},
+				},
+				Table: parsers.Table{
+					Value: "c",
+					SelectItem: parsers.SelectItem{
+						Path: []string{"c", "tags"},
+					},
+				},
+			},
+		)
+	})
 }

@@ -5,6 +5,7 @@ type SelectStmt struct {
 	Table            Table
 	JoinItems        []JoinItem
 	Filters          interface{}
+	Exists           bool
 	Distinct         bool
 	Count            int
 	Offset           int
@@ -14,7 +15,8 @@ type SelectStmt struct {
 }
 
 type Table struct {
-	Value string
+	Value      string
+	SelectItem SelectItem
 }
 
 type JoinItem struct {
@@ -30,6 +32,7 @@ const (
 	SelectItemTypeArray
 	SelectItemTypeConstant
 	SelectItemTypeFunctionCall
+	SelectItemTypeSubQuery
 )
 
 type SelectItem struct {

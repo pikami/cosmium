@@ -8,9 +8,9 @@ import (
 	"github.com/pikami/cosmium/parsers"
 )
 
-func (c memoryExecutorContext) math_Abs(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Abs(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch val := ex.(type) {
 	case float64:
@@ -26,9 +26,9 @@ func (c memoryExecutorContext) math_Abs(arguments []interface{}, row RowType) in
 	}
 }
 
-func (c memoryExecutorContext) math_Acos(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Acos(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -44,9 +44,9 @@ func (c memoryExecutorContext) math_Acos(arguments []interface{}, row RowType) i
 	return math.Acos(val) * 180 / math.Pi
 }
 
-func (c memoryExecutorContext) math_Asin(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Asin(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -62,9 +62,9 @@ func (c memoryExecutorContext) math_Asin(arguments []interface{}, row RowType) i
 	return math.Asin(val) * 180 / math.Pi
 }
 
-func (c memoryExecutorContext) math_Atan(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Atan(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -75,9 +75,9 @@ func (c memoryExecutorContext) math_Atan(arguments []interface{}, row RowType) i
 	return math.Atan(val) * 180 / math.Pi
 }
 
-func (c memoryExecutorContext) math_Ceiling(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Ceiling(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch val := ex.(type) {
 	case float64:
@@ -90,9 +90,9 @@ func (c memoryExecutorContext) math_Ceiling(arguments []interface{}, row RowType
 	}
 }
 
-func (c memoryExecutorContext) math_Cos(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Cos(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -103,9 +103,9 @@ func (c memoryExecutorContext) math_Cos(arguments []interface{}, row RowType) in
 	return math.Cos(val)
 }
 
-func (c memoryExecutorContext) math_Cot(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Cot(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -121,9 +121,9 @@ func (c memoryExecutorContext) math_Cot(arguments []interface{}, row RowType) in
 	return 1 / math.Tan(val)
 }
 
-func (c memoryExecutorContext) math_Degrees(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Degrees(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -134,9 +134,9 @@ func (c memoryExecutorContext) math_Degrees(arguments []interface{}, row RowType
 	return val * (180 / math.Pi)
 }
 
-func (c memoryExecutorContext) math_Exp(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Exp(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -147,9 +147,9 @@ func (c memoryExecutorContext) math_Exp(arguments []interface{}, row RowType) in
 	return math.Exp(val)
 }
 
-func (c memoryExecutorContext) math_Floor(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Floor(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch val := ex.(type) {
 	case float64:
@@ -162,9 +162,9 @@ func (c memoryExecutorContext) math_Floor(arguments []interface{}, row RowType) 
 	}
 }
 
-func (c memoryExecutorContext) math_IntBitNot(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntBitNot(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch val := ex.(type) {
 	case int:
@@ -175,9 +175,9 @@ func (c memoryExecutorContext) math_IntBitNot(arguments []interface{}, row RowTy
 	}
 }
 
-func (c memoryExecutorContext) math_Log10(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Log10(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -193,9 +193,9 @@ func (c memoryExecutorContext) math_Log10(arguments []interface{}, row RowType) 
 	return math.Log10(val)
 }
 
-func (c memoryExecutorContext) math_Radians(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Radians(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -206,9 +206,9 @@ func (c memoryExecutorContext) math_Radians(arguments []interface{}, row RowType
 	return val * (math.Pi / 180.0)
 }
 
-func (c memoryExecutorContext) math_Round(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Round(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch val := ex.(type) {
 	case float64:
@@ -221,9 +221,9 @@ func (c memoryExecutorContext) math_Round(arguments []interface{}, row RowType) 
 	}
 }
 
-func (c memoryExecutorContext) math_Sign(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Sign(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch val := ex.(type) {
 	case float64:
@@ -248,9 +248,9 @@ func (c memoryExecutorContext) math_Sign(arguments []interface{}, row RowType) i
 	}
 }
 
-func (c memoryExecutorContext) math_Sin(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Sin(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -261,9 +261,9 @@ func (c memoryExecutorContext) math_Sin(arguments []interface{}, row RowType) in
 	return math.Sin(val)
 }
 
-func (c memoryExecutorContext) math_Sqrt(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Sqrt(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -274,9 +274,9 @@ func (c memoryExecutorContext) math_Sqrt(arguments []interface{}, row RowType) i
 	return math.Sqrt(val)
 }
 
-func (c memoryExecutorContext) math_Square(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Square(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -287,9 +287,9 @@ func (c memoryExecutorContext) math_Square(arguments []interface{}, row RowType)
 	return math.Pow(val, 2)
 }
 
-func (c memoryExecutorContext) math_Tan(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Tan(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
@@ -300,9 +300,9 @@ func (c memoryExecutorContext) math_Tan(arguments []interface{}, row RowType) in
 	return math.Tan(val)
 }
 
-func (c memoryExecutorContext) math_Trunc(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Trunc(arguments []interface{}) interface{} {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch val := ex.(type) {
 	case float64:
@@ -315,11 +315,11 @@ func (c memoryExecutorContext) math_Trunc(arguments []interface{}, row RowType) 
 	}
 }
 
-func (c memoryExecutorContext) math_Atn2(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Atn2(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	y, yIsNumber := numToFloat64(ex1)
 	x, xIsNumber := numToFloat64(ex2)
@@ -332,11 +332,11 @@ func (c memoryExecutorContext) math_Atn2(arguments []interface{}, row RowType) i
 	return math.Atan2(y, x)
 }
 
-func (c memoryExecutorContext) math_IntAdd(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntAdd(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	ex1Number, ex1IsNumber := numToInt(ex1)
 	ex2Number, ex2IsNumber := numToInt(ex2)
@@ -349,11 +349,11 @@ func (c memoryExecutorContext) math_IntAdd(arguments []interface{}, row RowType)
 	return ex1Number + ex2Number
 }
 
-func (c memoryExecutorContext) math_IntBitAnd(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntBitAnd(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	ex1Int, ex1IsInt := numToInt(ex1)
 	ex2Int, ex2IsInt := numToInt(ex2)
@@ -366,11 +366,11 @@ func (c memoryExecutorContext) math_IntBitAnd(arguments []interface{}, row RowTy
 	return ex1Int & ex2Int
 }
 
-func (c memoryExecutorContext) math_IntBitLeftShift(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntBitLeftShift(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := numToInt(ex1)
 	num2, num2IsInt := numToInt(ex2)
@@ -383,11 +383,11 @@ func (c memoryExecutorContext) math_IntBitLeftShift(arguments []interface{}, row
 	return num1 << uint(num2)
 }
 
-func (c memoryExecutorContext) math_IntBitOr(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntBitOr(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := ex1.(int)
 	num2, num2IsInt := ex2.(int)
@@ -400,11 +400,11 @@ func (c memoryExecutorContext) math_IntBitOr(arguments []interface{}, row RowTyp
 	return num1 | num2
 }
 
-func (c memoryExecutorContext) math_IntBitRightShift(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntBitRightShift(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := numToInt(ex1)
 	num2, num2IsInt := numToInt(ex2)
@@ -417,11 +417,11 @@ func (c memoryExecutorContext) math_IntBitRightShift(arguments []interface{}, ro
 	return num1 >> uint(num2)
 }
 
-func (c memoryExecutorContext) math_IntBitXor(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntBitXor(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := ex1.(int)
 	num2, num2IsInt := ex2.(int)
@@ -434,11 +434,11 @@ func (c memoryExecutorContext) math_IntBitXor(arguments []interface{}, row RowTy
 	return num1 ^ num2
 }
 
-func (c memoryExecutorContext) math_IntDiv(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntDiv(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := ex1.(int)
 	num2, num2IsInt := ex2.(int)
@@ -451,11 +451,11 @@ func (c memoryExecutorContext) math_IntDiv(arguments []interface{}, row RowType)
 	return num1 / num2
 }
 
-func (c memoryExecutorContext) math_IntMul(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntMul(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := ex1.(int)
 	num2, num2IsInt := ex2.(int)
@@ -468,11 +468,11 @@ func (c memoryExecutorContext) math_IntMul(arguments []interface{}, row RowType)
 	return num1 * num2
 }
 
-func (c memoryExecutorContext) math_IntSub(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntSub(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := ex1.(int)
 	num2, num2IsInt := ex2.(int)
@@ -485,11 +485,11 @@ func (c memoryExecutorContext) math_IntSub(arguments []interface{}, row RowType)
 	return num1 - num2
 }
 
-func (c memoryExecutorContext) math_IntMod(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_IntMod(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	num1, num1IsInt := ex1.(int)
 	num2, num2IsInt := ex2.(int)
@@ -502,11 +502,11 @@ func (c memoryExecutorContext) math_IntMod(arguments []interface{}, row RowType)
 	return num1 % num2
 }
 
-func (c memoryExecutorContext) math_Power(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Power(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
 	exItem2 := arguments[1].(parsers.SelectItem)
-	ex1 := c.getFieldValue(exItem1, row)
-	ex2 := c.getFieldValue(exItem2, row)
+	ex1 := r.resolveSelectItem(exItem1)
+	ex2 := r.resolveSelectItem(exItem2)
 
 	base, baseIsNumber := numToFloat64(ex1)
 	exponent, exponentIsNumber := numToFloat64(ex2)
@@ -519,14 +519,14 @@ func (c memoryExecutorContext) math_Power(arguments []interface{}, row RowType) 
 	return math.Pow(base, exponent)
 }
 
-func (c memoryExecutorContext) math_Log(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_Log(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem1, row)
+	ex := r.resolveSelectItem(exItem1)
 
 	var base float64 = math.E
 	if len(arguments) > 1 {
 		exItem2 := arguments[1].(parsers.SelectItem)
-		baseValueObject := c.getFieldValue(exItem2, row)
+		baseValueObject := r.resolveSelectItem(exItem2)
 		baseValue, baseValueIsNumber := numToFloat64(baseValueObject)
 
 		if !baseValueIsNumber {
@@ -551,15 +551,15 @@ func (c memoryExecutorContext) math_Log(arguments []interface{}, row RowType) in
 	return math.Log(num) / math.Log(base)
 }
 
-func (c memoryExecutorContext) math_NumberBin(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) math_NumberBin(arguments []interface{}) interface{} {
 	exItem1 := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem1, row)
+	ex := r.resolveSelectItem(exItem1)
 
 	binSize := 1.0
 
 	if len(arguments) > 1 {
 		exItem2 := arguments[1].(parsers.SelectItem)
-		binSizeValueObject := c.getFieldValue(exItem2, row)
+		binSizeValueObject := r.resolveSelectItem(exItem2)
 		binSizeValue, binSizeValueIsNumber := numToFloat64(binSizeValueObject)
 
 		if !binSizeValueIsNumber {
@@ -584,11 +584,11 @@ func (c memoryExecutorContext) math_NumberBin(arguments []interface{}, row RowTy
 	return math.Floor(num/binSize) * binSize
 }
 
-func (c memoryExecutorContext) math_Pi() interface{} {
+func (r rowContext) math_Pi() interface{} {
 	return math.Pi
 }
 
-func (c memoryExecutorContext) math_Rand() interface{} {
+func (r rowContext) math_Rand() interface{} {
 	return rand.Float64()
 }
 

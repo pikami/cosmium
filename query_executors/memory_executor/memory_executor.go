@@ -13,408 +13,570 @@ import (
 )
 
 type RowType interface{}
-type RowWithJoins map[string]RowType
-type ExpressionType interface{}
-
-type memoryExecutorContext struct {
-	parameters map[string]interface{}
+type rowContext struct {
+	tables       map[string]RowType
+	parameters   map[string]interface{}
+	grouppedRows []rowContext
 }
 
-func Execute(query parsers.SelectStmt, data []RowType) []RowType {
-	ctx := memoryExecutorContext{
-		parameters: query.Parameters,
+func ExecuteQuery(query parsers.SelectStmt, documents []RowType) []RowType {
+	currentDocuments := make([]rowContext, 0)
+	for _, doc := range documents {
+		currentDocuments = append(currentDocuments, resolveFrom(query, doc)...)
 	}
 
-	joinedRows := make([]RowWithJoins, 0)
-	for _, row := range data {
-		// Perform joins
-		dataTables := map[string][]RowType{}
-
-		for _, join := range query.JoinItems {
-			joinedData := ctx.getFieldValue(join.SelectItem, row)
-			if joinedDataArray, isArray := joinedData.([]map[string]interface{}); isArray {
-				var rows []RowType
-				for _, m := range joinedDataArray {
-					rows = append(rows, RowType(m))
-				}
-				dataTables[join.Table.Value] = rows
-			}
-		}
-
-		// Generate flat rows
-		flatRows := []RowWithJoins{
-			{query.Table.Value: row},
-		}
-		for joinedTableName, joinedTable := range dataTables {
-			flatRows = zipRows(flatRows, joinedTableName, joinedTable)
-		}
-
-		// Apply filters
-		filteredRows := []RowWithJoins{}
-		for _, rowWithJoins := range flatRows {
-			if ctx.evaluateFilters(query.Filters, rowWithJoins) {
-				filteredRows = append(filteredRows, rowWithJoins)
-			}
-		}
-
-		joinedRows = append(joinedRows, filteredRows...)
+	// Handle JOINS
+	nextDocuments := make([]rowContext, 0)
+	for _, currentDocument := range currentDocuments {
+		rowContexts := currentDocument.handleJoin(query)
+		nextDocuments = append(nextDocuments, rowContexts...)
 	}
+	currentDocuments = nextDocuments
+
+	// Apply filters
+	nextDocuments = make([]rowContext, 0)
+	for _, currentDocument := range currentDocuments {
+		if currentDocument.applyFilters(query.Filters) {
+			nextDocuments = append(nextDocuments, currentDocument)
+		}
+	}
+	currentDocuments = nextDocuments
 
 	// Apply order
-	if query.OrderExpressions != nil && len(query.OrderExpressions) > 0 {
-		ctx.orderBy(query.OrderExpressions, joinedRows)
+	if len(query.OrderExpressions) > 0 {
+		applyOrder(currentDocuments, query.OrderExpressions)
 	}
 
-	result := make([]RowType, 0)
-
-	// Apply group
-	isGroupSelect := query.GroupBy != nil && len(query.GroupBy) > 0
-	if isGroupSelect {
-		result = ctx.groupBy(query, joinedRows)
+	// Apply group by
+	if len(query.GroupBy) > 0 {
+		currentDocuments = applyGroupBy(currentDocuments, query.GroupBy)
 	}
 
 	// Apply select
-	if !isGroupSelect {
-		selectedData := make([]RowType, 0)
-		if hasAggregateFunctions(query.SelectItems) {
-			// When can have aggregate functions without GROUP BY clause,
-			// we should aggregate all rows in that case
-			selectedData = append(selectedData, ctx.selectRow(query.SelectItems, joinedRows))
-		} else {
-			for _, row := range joinedRows {
-				selectedData = append(selectedData, ctx.selectRow(query.SelectItems, row))
-			}
-		}
-
-		result = selectedData
-	}
+	projectedDocuments := applyProjection(currentDocuments, query.SelectItems, query.GroupBy)
 
 	// Apply distinct
 	if query.Distinct {
-		result = deduplicate(result)
+		projectedDocuments = deduplicate(projectedDocuments)
 	}
 
 	// Apply result limit
-	if query.Count > 0 {
-		count := func() int {
-			if len(result) < query.Count {
-				return len(result)
-			}
-			return query.Count
-		}()
-		result = result[:count]
+	if query.Count > 0 && len(projectedDocuments) > query.Count {
+		projectedDocuments = projectedDocuments[:query.Count]
 	}
 
+	return projectedDocuments
+}
+
+func resolveFrom(query parsers.SelectStmt, doc RowType) []rowContext {
+	initialRow, gotParentContext := doc.(rowContext)
+	if !gotParentContext {
+		var initialTableName string
+		if query.Table.SelectItem.Type == parsers.SelectItemTypeSubQuery {
+			initialTableName = query.Table.SelectItem.Value.(parsers.SelectStmt).Table.Value
+		}
+
+		if initialTableName == "" {
+			initialTableName = query.Table.Value
+		}
+
+		initialRow = rowContext{
+			parameters: query.Parameters,
+			tables: map[string]RowType{
+				initialTableName: doc,
+			},
+		}
+	}
+
+	if query.Table.SelectItem.Path != nil || query.Table.SelectItem.Type == parsers.SelectItemTypeSubQuery {
+		destinationTableName := query.Table.SelectItem.Alias
+		if destinationTableName == "" {
+			destinationTableName = query.Table.Value
+		}
+
+		selectValue := initialRow.parseArray(query.Table.SelectItem)
+		rowContexts := make([]rowContext, len(selectValue))
+		for i, newRowData := range selectValue {
+			rowContexts[i].parameters = initialRow.parameters
+			rowContexts[i].tables = copyMap(initialRow.tables)
+			rowContexts[i].tables[destinationTableName] = newRowData
+		}
+		return rowContexts
+	}
+
+	return []rowContext{initialRow}
+}
+
+func (r rowContext) handleJoin(query parsers.SelectStmt) []rowContext {
+	currentDocuments := []rowContext{r}
+
+	for _, joinItem := range query.JoinItems {
+		nextDocuments := make([]rowContext, 0)
+		for _, currentDocument := range currentDocuments {
+			joinedItems := currentDocument.resolveJoinItemSelect(joinItem.SelectItem)
+			for _, joinedItem := range joinedItems {
+				tablesCopy := copyMap(currentDocument.tables)
+				tablesCopy[joinItem.Table.Value] = joinedItem
+				nextDocuments = append(nextDocuments, rowContext{
+					parameters: currentDocument.parameters,
+					tables:     tablesCopy,
+				})
+			}
+		}
+		currentDocuments = nextDocuments
+	}
+
+	return currentDocuments
+}
+
+func (r rowContext) resolveJoinItemSelect(selectItem parsers.SelectItem) []RowType {
+	if selectItem.Path != nil || selectItem.Type == parsers.SelectItemTypeSubQuery {
+		selectValue := r.parseArray(selectItem)
+		documents := make([]RowType, len(selectValue))
+		for i, newRowData := range selectValue {
+			documents[i] = newRowData
+		}
+		return documents
+	}
+
+	return []RowType{}
+}
+
+func (r rowContext) applyFilters(filters interface{}) bool {
+	if filters == nil {
+		return true
+	}
+
+	switch typedFilters := filters.(type) {
+	case parsers.ComparisonExpression:
+		return r.filters_ComparisonExpression(typedFilters)
+	case parsers.LogicalExpression:
+		return r.filters_LogicalExpression(typedFilters)
+	case parsers.Constant:
+		if value, ok := typedFilters.Value.(bool); ok {
+			return value
+		}
+		return false
+	case parsers.SelectItem:
+		resolvedValue := r.resolveSelectItem(typedFilters)
+		if value, ok := resolvedValue.(bool); ok {
+			return value
+		}
+	}
+
+	return false
+}
+
+func (r rowContext) filters_ComparisonExpression(expression parsers.ComparisonExpression) bool {
+	leftExpression, leftExpressionOk := expression.Left.(parsers.SelectItem)
+	rightExpression, rightExpressionOk := expression.Right.(parsers.SelectItem)
+
+	if !leftExpressionOk || !rightExpressionOk {
+		logger.Error("ComparisonExpression has incorrect Left or Right type")
+		return false
+	}
+
+	leftValue := r.resolveSelectItem(leftExpression)
+	rightValue := r.resolveSelectItem(rightExpression)
+
+	cmp := compareValues(leftValue, rightValue)
+	switch expression.Operation {
+	case "=":
+		return cmp == 0
+	case "!=":
+		return cmp != 0
+	case "<":
+		return cmp < 0
+	case ">":
+		return cmp > 0
+	case "<=":
+		return cmp <= 0
+	case ">=":
+		return cmp >= 0
+	}
+
+	return false
+}
+
+func (r rowContext) filters_LogicalExpression(expression parsers.LogicalExpression) bool {
+	var result bool
+	for i, subExpression := range expression.Expressions {
+		expressionResult := r.applyFilters(subExpression)
+		if i == 0 {
+			result = expressionResult
+		}
+
+		switch expression.Operation {
+		case parsers.LogicalExpressionTypeAnd:
+			result = result && expressionResult
+			if !result {
+				return false
+			}
+		case parsers.LogicalExpressionTypeOr:
+			result = result || expressionResult
+			if result {
+				return true
+			}
+		}
+	}
 	return result
 }
 
-func (c memoryExecutorContext) selectRow(selectItems []parsers.SelectItem, row interface{}) interface{} {
+func applyOrder(documents []rowContext, orderExpressions []parsers.OrderExpression) {
+	less := func(i, j int) bool {
+		for _, order := range orderExpressions {
+			val1 := documents[i].resolveSelectItem(order.SelectItem)
+			val2 := documents[j].resolveSelectItem(order.SelectItem)
+
+			cmp := compareValues(val1, val2)
+			if cmp != 0 {
+				if order.Direction == parsers.OrderDirectionDesc {
+					return cmp > 0
+				}
+				return cmp < 0
+			}
+		}
+		return i < j
+	}
+
+	sort.SliceStable(documents, less)
+}
+
+func applyGroupBy(documents []rowContext, groupBy []parsers.SelectItem) []rowContext {
+	groupedRows := make(map[string][]rowContext)
+	groupedKeys := make([]string, 0)
+
+	for _, row := range documents {
+		key := row.generateGroupByKey(groupBy)
+		if _, ok := groupedRows[key]; !ok {
+			groupedKeys = append(groupedKeys, key)
+		}
+		groupedRows[key] = append(groupedRows[key], row)
+	}
+
+	grouppedRows := make([]rowContext, 0)
+	for _, key := range groupedKeys {
+		grouppedRowContext := rowContext{
+			tables:       groupedRows[key][0].tables,
+			parameters:   groupedRows[key][0].parameters,
+			grouppedRows: groupedRows[key],
+		}
+		grouppedRows = append(grouppedRows, grouppedRowContext)
+	}
+
+	return grouppedRows
+}
+
+func (r rowContext) generateGroupByKey(groupBy []parsers.SelectItem) string {
+	var keyBuilder strings.Builder
+	for _, selectItem := range groupBy {
+		value := r.resolveSelectItem(selectItem)
+		keyBuilder.WriteString(fmt.Sprintf("%v", value))
+		keyBuilder.WriteString(":")
+	}
+	return keyBuilder.String()
+}
+
+func applyProjection(documents []rowContext, selectItems []parsers.SelectItem, groupBy []parsers.SelectItem) []RowType {
+	if len(documents) == 0 {
+		return []RowType{}
+	}
+
+	if hasAggregateFunctions(selectItems) && len(groupBy) == 0 {
+		// When can have aggregate functions without GROUP BY clause,
+		// we should aggregate all rows in that case
+		rowContext := rowContext{
+			tables:       documents[0].tables,
+			parameters:   documents[0].parameters,
+			grouppedRows: documents,
+		}
+		return []RowType{rowContext.applyProjection(selectItems)}
+	}
+
+	projectedDocuments := make([]RowType, len(documents))
+	for index, row := range documents {
+		projectedDocuments[index] = row.applyProjection(selectItems)
+	}
+
+	return projectedDocuments
+}
+
+func (r rowContext) applyProjection(selectItems []parsers.SelectItem) RowType {
 	// When the first value is top level, select it instead
 	if len(selectItems) > 0 && selectItems[0].IsTopLevel {
-		return c.getFieldValue(selectItems[0], row)
+		return r.resolveSelectItem(selectItems[0])
 	}
 
 	// Construct a new row based on the selected columns
-	newRow := make(map[string]interface{})
-	for index, column := range selectItems {
-		destinationName := column.Alias
+	row := make(map[string]interface{})
+	for index, selectItem := range selectItems {
+		destinationName := selectItem.Alias
 		if destinationName == "" {
-			if len(column.Path) > 0 {
-				destinationName = column.Path[len(column.Path)-1]
+			if len(selectItem.Path) > 0 {
+				destinationName = selectItem.Path[len(selectItem.Path)-1]
 			} else {
 				destinationName = fmt.Sprintf("$%d", index+1)
 			}
 		}
 
-		newRow[destinationName] = c.getFieldValue(column, row)
+		row[destinationName] = r.resolveSelectItem(selectItem)
 	}
 
-	return newRow
+	return row
 }
 
-func (c memoryExecutorContext) evaluateFilters(expr ExpressionType, row RowWithJoins) bool {
-	if expr == nil {
-		return true
+func (r rowContext) resolveSelectItem(selectItem parsers.SelectItem) interface{} {
+	if selectItem.Type == parsers.SelectItemTypeArray {
+		return r.selectItem_SelectItemTypeArray(selectItem)
 	}
 
-	switch typedValue := expr.(type) {
-	case parsers.ComparisonExpression:
-		leftValue := c.getExpressionParameterValue(typedValue.Left, row)
-		rightValue := c.getExpressionParameterValue(typedValue.Right, row)
-
-		cmp := compareValues(leftValue, rightValue)
-		switch typedValue.Operation {
-		case "=":
-			return cmp == 0
-		case "!=":
-			return cmp != 0
-		case "<":
-			return cmp < 0
-		case ">":
-			return cmp > 0
-		case "<=":
-			return cmp <= 0
-		case ">=":
-			return cmp >= 0
-		}
-	case parsers.LogicalExpression:
-		var result bool
-		for i, expression := range typedValue.Expressions {
-			expressionResult := c.evaluateFilters(expression, row)
-			if i == 0 {
-				result = expressionResult
-			}
-
-			switch typedValue.Operation {
-			case parsers.LogicalExpressionTypeAnd:
-				result = result && expressionResult
-				if !result {
-					return false
-				}
-			case parsers.LogicalExpressionTypeOr:
-				result = result || expressionResult
-				if result {
-					return true
-				}
-			}
-		}
-		return result
-	case parsers.Constant:
-		if value, ok := typedValue.Value.(bool); ok {
-			return value
-		}
-		return false
-	case parsers.SelectItem:
-		resolvedValue := c.getFieldValue(typedValue, row)
-		if value, ok := resolvedValue.(bool); ok {
-			return value
-		}
+	if selectItem.Type == parsers.SelectItemTypeObject {
+		return r.selectItem_SelectItemTypeObject(selectItem)
 	}
-	return false
+
+	if selectItem.Type == parsers.SelectItemTypeConstant {
+		return r.selectItem_SelectItemTypeConstant(selectItem)
+	}
+
+	if selectItem.Type == parsers.SelectItemTypeSubQuery {
+		return r.selectItem_SelectItemTypeSubQuery(selectItem)
+	}
+
+	if selectItem.Type == parsers.SelectItemTypeFunctionCall {
+		if typedFunctionCall, ok := selectItem.Value.(parsers.FunctionCall); ok {
+			return r.selectItem_SelectItemTypeFunctionCall(typedFunctionCall)
+		}
+
+		logger.Error("parsers.SelectItem has incorrect Value type (expected parsers.FunctionCall)")
+		return nil
+	}
+
+	return r.selectItem_SelectItemTypeField(selectItem)
 }
 
-func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row interface{}) interface{} {
-	if field.Type == parsers.SelectItemTypeArray {
-		arrayValue := make([]interface{}, 0)
-		for _, selectItem := range field.SelectItems {
-			arrayValue = append(arrayValue, c.getFieldValue(selectItem, row))
-		}
-		return arrayValue
+func (r rowContext) selectItem_SelectItemTypeArray(selectItem parsers.SelectItem) interface{} {
+	arrayValue := make([]interface{}, 0)
+	for _, subSelectItem := range selectItem.SelectItems {
+		arrayValue = append(arrayValue, r.resolveSelectItem(subSelectItem))
+	}
+	return arrayValue
+}
+
+func (r rowContext) selectItem_SelectItemTypeObject(selectItem parsers.SelectItem) interface{} {
+	objectValue := make(map[string]interface{})
+	for _, subSelectItem := range selectItem.SelectItems {
+		objectValue[subSelectItem.Alias] = r.resolveSelectItem(subSelectItem)
+	}
+	return objectValue
+}
+
+func (r rowContext) selectItem_SelectItemTypeConstant(selectItem parsers.SelectItem) interface{} {
+	var typedValue parsers.Constant
+	var ok bool
+	if typedValue, ok = selectItem.Value.(parsers.Constant); !ok {
+		// TODO: Handle error
+		logger.Error("parsers.Constant has incorrect Value type")
 	}
 
-	if field.Type == parsers.SelectItemTypeObject {
-		objectValue := make(map[string]interface{})
-		for _, selectItem := range field.SelectItems {
-			objectValue[selectItem.Alias] = c.getFieldValue(selectItem, row)
-		}
-		return objectValue
-	}
-
-	if field.Type == parsers.SelectItemTypeConstant {
-		var typedValue parsers.Constant
-		var ok bool
-		if typedValue, ok = field.Value.(parsers.Constant); !ok {
-			// TODO: Handle error
-			logger.Error("parsers.Constant has incorrect Value type")
-		}
-
-		if typedValue.Type == parsers.ConstantTypeParameterConstant &&
-			c.parameters != nil {
-			if key, ok := typedValue.Value.(string); ok {
-				return c.parameters[key]
-			}
-		}
-
-		return typedValue.Value
-	}
-
-	rowValue := row
-	// Used for aggregates
-	if array, isArray := row.([]RowWithJoins); isArray {
-		rowValue = array[0]
-	}
-
-	if field.Type == parsers.SelectItemTypeFunctionCall {
-		var typedValue parsers.FunctionCall
-		var ok bool
-		if typedValue, ok = field.Value.(parsers.FunctionCall); !ok {
-			// TODO: Handle error
-			logger.Error("parsers.Constant has incorrect Value type")
-		}
-
-		switch typedValue.Type {
-		case parsers.FunctionCallStringEquals:
-			return c.strings_StringEquals(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallContains:
-			return c.strings_Contains(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallEndsWith:
-			return c.strings_EndsWith(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallStartsWith:
-			return c.strings_StartsWith(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallConcat:
-			return c.strings_Concat(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIndexOf:
-			return c.strings_IndexOf(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallToString:
-			return c.strings_ToString(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallUpper:
-			return c.strings_Upper(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallLower:
-			return c.strings_Lower(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallLeft:
-			return c.strings_Left(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallLength:
-			return c.strings_Length(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallLTrim:
-			return c.strings_LTrim(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallReplace:
-			return c.strings_Replace(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallReplicate:
-			return c.strings_Replicate(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallReverse:
-			return c.strings_Reverse(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallRight:
-			return c.strings_Right(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallRTrim:
-			return c.strings_RTrim(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallSubstring:
-			return c.strings_Substring(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallTrim:
-			return c.strings_Trim(typedValue.Arguments, rowValue)
-
-		case parsers.FunctionCallIsDefined:
-			return c.typeChecking_IsDefined(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsArray:
-			return c.typeChecking_IsArray(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsBool:
-			return c.typeChecking_IsBool(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsFiniteNumber:
-			return c.typeChecking_IsFiniteNumber(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsInteger:
-			return c.typeChecking_IsInteger(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsNull:
-			return c.typeChecking_IsNull(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsNumber:
-			return c.typeChecking_IsNumber(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsObject:
-			return c.typeChecking_IsObject(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsPrimitive:
-			return c.typeChecking_IsPrimitive(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallIsString:
-			return c.typeChecking_IsString(typedValue.Arguments, rowValue)
-
-		case parsers.FunctionCallArrayConcat:
-			return c.array_Concat(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallArrayLength:
-			return c.array_Length(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallArraySlice:
-			return c.array_Slice(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallSetIntersect:
-			return c.set_Intersect(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallSetUnion:
-			return c.set_Union(typedValue.Arguments, rowValue)
-
-		case parsers.FunctionCallMathAbs:
-			return c.math_Abs(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathAcos:
-			return c.math_Acos(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathAsin:
-			return c.math_Asin(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathAtan:
-			return c.math_Atan(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathCeiling:
-			return c.math_Ceiling(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathCos:
-			return c.math_Cos(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathCot:
-			return c.math_Cot(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathDegrees:
-			return c.math_Degrees(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathExp:
-			return c.math_Exp(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathFloor:
-			return c.math_Floor(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntBitNot:
-			return c.math_IntBitNot(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathLog10:
-			return c.math_Log10(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathRadians:
-			return c.math_Radians(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathRound:
-			return c.math_Round(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathSign:
-			return c.math_Sign(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathSin:
-			return c.math_Sin(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathSqrt:
-			return c.math_Sqrt(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathSquare:
-			return c.math_Square(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathTan:
-			return c.math_Tan(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathTrunc:
-			return c.math_Trunc(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathAtn2:
-			return c.math_Atn2(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntAdd:
-			return c.math_IntAdd(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntBitAnd:
-			return c.math_IntBitAnd(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntBitLeftShift:
-			return c.math_IntBitLeftShift(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntBitOr:
-			return c.math_IntBitOr(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntBitRightShift:
-			return c.math_IntBitRightShift(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntBitXor:
-			return c.math_IntBitXor(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntDiv:
-			return c.math_IntDiv(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntMod:
-			return c.math_IntMod(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntMul:
-			return c.math_IntMul(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathIntSub:
-			return c.math_IntSub(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathPower:
-			return c.math_Power(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathLog:
-			return c.math_Log(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathNumberBin:
-			return c.math_NumberBin(typedValue.Arguments, rowValue)
-		case parsers.FunctionCallMathPi:
-			return c.math_Pi()
-		case parsers.FunctionCallMathRand:
-			return c.math_Rand()
-
-		case parsers.FunctionCallAggregateAvg:
-			return c.aggregate_Avg(typedValue.Arguments, row)
-		case parsers.FunctionCallAggregateCount:
-			return c.aggregate_Count(typedValue.Arguments, row)
-		case parsers.FunctionCallAggregateMax:
-			return c.aggregate_Max(typedValue.Arguments, row)
-		case parsers.FunctionCallAggregateMin:
-			return c.aggregate_Min(typedValue.Arguments, row)
-		case parsers.FunctionCallAggregateSum:
-			return c.aggregate_Sum(typedValue.Arguments, row)
-
-		case parsers.FunctionCallIn:
-			return c.misc_In(typedValue.Arguments, rowValue)
+	if typedValue.Type == parsers.ConstantTypeParameterConstant &&
+		r.parameters != nil {
+		if key, ok := typedValue.Value.(string); ok {
+			return r.parameters[key]
 		}
 	}
 
-	value := rowValue
-	if joinedRow, isRowWithJoins := value.(RowWithJoins); isRowWithJoins {
-		value = joinedRow[field.Path[0]]
+	return typedValue.Value
+}
+
+func (r rowContext) selectItem_SelectItemTypeSubQuery(selectItem parsers.SelectItem) interface{} {
+	subQuery := selectItem.Value.(parsers.SelectStmt)
+	subQueryResult := ExecuteQuery(
+		subQuery,
+		[]RowType{r},
+	)
+
+	if subQuery.Exists {
+		return len(subQueryResult) > 0
 	}
 
-	if len(field.Path) > 1 {
-		for _, pathSegment := range field.Path[1:] {
+	return subQueryResult
+}
+
+func (r rowContext) selectItem_SelectItemTypeFunctionCall(functionCall parsers.FunctionCall) interface{} {
+	switch functionCall.Type {
+	case parsers.FunctionCallStringEquals:
+		return r.strings_StringEquals(functionCall.Arguments)
+	case parsers.FunctionCallContains:
+		return r.strings_Contains(functionCall.Arguments)
+	case parsers.FunctionCallEndsWith:
+		return r.strings_EndsWith(functionCall.Arguments)
+	case parsers.FunctionCallStartsWith:
+		return r.strings_StartsWith(functionCall.Arguments)
+	case parsers.FunctionCallConcat:
+		return r.strings_Concat(functionCall.Arguments)
+	case parsers.FunctionCallIndexOf:
+		return r.strings_IndexOf(functionCall.Arguments)
+	case parsers.FunctionCallToString:
+		return r.strings_ToString(functionCall.Arguments)
+	case parsers.FunctionCallUpper:
+		return r.strings_Upper(functionCall.Arguments)
+	case parsers.FunctionCallLower:
+		return r.strings_Lower(functionCall.Arguments)
+	case parsers.FunctionCallLeft:
+		return r.strings_Left(functionCall.Arguments)
+	case parsers.FunctionCallLength:
+		return r.strings_Length(functionCall.Arguments)
+	case parsers.FunctionCallLTrim:
+		return r.strings_LTrim(functionCall.Arguments)
+	case parsers.FunctionCallReplace:
+		return r.strings_Replace(functionCall.Arguments)
+	case parsers.FunctionCallReplicate:
+		return r.strings_Replicate(functionCall.Arguments)
+	case parsers.FunctionCallReverse:
+		return r.strings_Reverse(functionCall.Arguments)
+	case parsers.FunctionCallRight:
+		return r.strings_Right(functionCall.Arguments)
+	case parsers.FunctionCallRTrim:
+		return r.strings_RTrim(functionCall.Arguments)
+	case parsers.FunctionCallSubstring:
+		return r.strings_Substring(functionCall.Arguments)
+	case parsers.FunctionCallTrim:
+		return r.strings_Trim(functionCall.Arguments)
+
+	case parsers.FunctionCallIsDefined:
+		return r.typeChecking_IsDefined(functionCall.Arguments)
+	case parsers.FunctionCallIsArray:
+		return r.typeChecking_IsArray(functionCall.Arguments)
+	case parsers.FunctionCallIsBool:
+		return r.typeChecking_IsBool(functionCall.Arguments)
+	case parsers.FunctionCallIsFiniteNumber:
+		return r.typeChecking_IsFiniteNumber(functionCall.Arguments)
+	case parsers.FunctionCallIsInteger:
+		return r.typeChecking_IsInteger(functionCall.Arguments)
+	case parsers.FunctionCallIsNull:
+		return r.typeChecking_IsNull(functionCall.Arguments)
+	case parsers.FunctionCallIsNumber:
+		return r.typeChecking_IsNumber(functionCall.Arguments)
+	case parsers.FunctionCallIsObject:
+		return r.typeChecking_IsObject(functionCall.Arguments)
+	case parsers.FunctionCallIsPrimitive:
+		return r.typeChecking_IsPrimitive(functionCall.Arguments)
+	case parsers.FunctionCallIsString:
+		return r.typeChecking_IsString(functionCall.Arguments)
+
+	case parsers.FunctionCallArrayConcat:
+		return r.array_Concat(functionCall.Arguments)
+	case parsers.FunctionCallArrayLength:
+		return r.array_Length(functionCall.Arguments)
+	case parsers.FunctionCallArraySlice:
+		return r.array_Slice(functionCall.Arguments)
+	case parsers.FunctionCallSetIntersect:
+		return r.set_Intersect(functionCall.Arguments)
+	case parsers.FunctionCallSetUnion:
+		return r.set_Union(functionCall.Arguments)
+
+	case parsers.FunctionCallMathAbs:
+		return r.math_Abs(functionCall.Arguments)
+	case parsers.FunctionCallMathAcos:
+		return r.math_Acos(functionCall.Arguments)
+	case parsers.FunctionCallMathAsin:
+		return r.math_Asin(functionCall.Arguments)
+	case parsers.FunctionCallMathAtan:
+		return r.math_Atan(functionCall.Arguments)
+	case parsers.FunctionCallMathCeiling:
+		return r.math_Ceiling(functionCall.Arguments)
+	case parsers.FunctionCallMathCos:
+		return r.math_Cos(functionCall.Arguments)
+	case parsers.FunctionCallMathCot:
+		return r.math_Cot(functionCall.Arguments)
+	case parsers.FunctionCallMathDegrees:
+		return r.math_Degrees(functionCall.Arguments)
+	case parsers.FunctionCallMathExp:
+		return r.math_Exp(functionCall.Arguments)
+	case parsers.FunctionCallMathFloor:
+		return r.math_Floor(functionCall.Arguments)
+	case parsers.FunctionCallMathIntBitNot:
+		return r.math_IntBitNot(functionCall.Arguments)
+	case parsers.FunctionCallMathLog10:
+		return r.math_Log10(functionCall.Arguments)
+	case parsers.FunctionCallMathRadians:
+		return r.math_Radians(functionCall.Arguments)
+	case parsers.FunctionCallMathRound:
+		return r.math_Round(functionCall.Arguments)
+	case parsers.FunctionCallMathSign:
+		return r.math_Sign(functionCall.Arguments)
+	case parsers.FunctionCallMathSin:
+		return r.math_Sin(functionCall.Arguments)
+	case parsers.FunctionCallMathSqrt:
+		return r.math_Sqrt(functionCall.Arguments)
+	case parsers.FunctionCallMathSquare:
+		return r.math_Square(functionCall.Arguments)
+	case parsers.FunctionCallMathTan:
+		return r.math_Tan(functionCall.Arguments)
+	case parsers.FunctionCallMathTrunc:
+		return r.math_Trunc(functionCall.Arguments)
+	case parsers.FunctionCallMathAtn2:
+		return r.math_Atn2(functionCall.Arguments)
+	case parsers.FunctionCallMathIntAdd:
+		return r.math_IntAdd(functionCall.Arguments)
+	case parsers.FunctionCallMathIntBitAnd:
+		return r.math_IntBitAnd(functionCall.Arguments)
+	case parsers.FunctionCallMathIntBitLeftShift:
+		return r.math_IntBitLeftShift(functionCall.Arguments)
+	case parsers.FunctionCallMathIntBitOr:
+		return r.math_IntBitOr(functionCall.Arguments)
+	case parsers.FunctionCallMathIntBitRightShift:
+		return r.math_IntBitRightShift(functionCall.Arguments)
+	case parsers.FunctionCallMathIntBitXor:
+		return r.math_IntBitXor(functionCall.Arguments)
+	case parsers.FunctionCallMathIntDiv:
+		return r.math_IntDiv(functionCall.Arguments)
+	case parsers.FunctionCallMathIntMod:
+		return r.math_IntMod(functionCall.Arguments)
+	case parsers.FunctionCallMathIntMul:
+		return r.math_IntMul(functionCall.Arguments)
+	case parsers.FunctionCallMathIntSub:
+		return r.math_IntSub(functionCall.Arguments)
+	case parsers.FunctionCallMathPower:
+		return r.math_Power(functionCall.Arguments)
+	case parsers.FunctionCallMathLog:
+		return r.math_Log(functionCall.Arguments)
+	case parsers.FunctionCallMathNumberBin:
+		return r.math_NumberBin(functionCall.Arguments)
+	case parsers.FunctionCallMathPi:
+		return r.math_Pi()
+	case parsers.FunctionCallMathRand:
+		return r.math_Rand()
+
+	case parsers.FunctionCallAggregateAvg:
+		return r.aggregate_Avg(functionCall.Arguments)
+	case parsers.FunctionCallAggregateCount:
+		return r.aggregate_Count(functionCall.Arguments)
+	case parsers.FunctionCallAggregateMax:
+		return r.aggregate_Max(functionCall.Arguments)
+	case parsers.FunctionCallAggregateMin:
+		return r.aggregate_Min(functionCall.Arguments)
+	case parsers.FunctionCallAggregateSum:
+		return r.aggregate_Sum(functionCall.Arguments)
+
+	case parsers.FunctionCallIn:
+		return r.misc_In(functionCall.Arguments)
+	}
+
+	logger.Errorf("Unknown function call type: %v", functionCall.Type)
+	return nil
+}
+
+func (r rowContext) selectItem_SelectItemTypeField(selectItem parsers.SelectItem) interface{} {
+	value := r.tables[selectItem.Path[0]]
+
+	if len(selectItem.Path) > 1 {
+		for _, pathSegment := range selectItem.Path[1:] {
 
 			switch nestedValue := value.(type) {
 			case map[string]interface{}:
 				value = nestedValue[pathSegment]
-			case RowWithJoins:
+			case map[string]RowType:
 				value = nestedValue[pathSegment]
 			case []int, []string, []interface{}:
 				slice := reflect.ValueOf(nestedValue)
@@ -428,82 +590,28 @@ func (c memoryExecutorContext) getFieldValue(field parsers.SelectItem, row inter
 			}
 		}
 	}
+
 	return value
 }
 
-func (c memoryExecutorContext) getExpressionParameterValue(
-	parameter interface{},
-	row RowWithJoins,
-) interface{} {
-	switch typedParameter := parameter.(type) {
-	case parsers.SelectItem:
-		return c.getFieldValue(typedParameter, row)
+func hasAggregateFunctions(selectItems []parsers.SelectItem) bool {
+	if selectItems == nil {
+		return false
 	}
 
-	logger.Error("getExpressionParameterValue - got incorrect parameter type")
-
-	return nil
-}
-
-func (c memoryExecutorContext) orderBy(orderBy []parsers.OrderExpression, data []RowWithJoins) {
-	less := func(i, j int) bool {
-		for _, order := range orderBy {
-			val1 := c.getFieldValue(order.SelectItem, data[i])
-			val2 := c.getFieldValue(order.SelectItem, data[j])
-
-			cmp := compareValues(val1, val2)
-			if cmp != 0 {
-				if order.Direction == parsers.OrderDirectionDesc {
-					return cmp > 0
-				}
-				return cmp < 0
+	for _, selectItem := range selectItems {
+		if selectItem.Type == parsers.SelectItemTypeFunctionCall {
+			if typedValue, ok := selectItem.Value.(parsers.FunctionCall); ok && slices.Contains[[]parsers.FunctionCallType](parsers.AggregateFunctions, typedValue.Type) {
+				return true
 			}
 		}
-		return i < j
-	}
 
-	sort.SliceStable(data, less)
-}
-
-func (c memoryExecutorContext) groupBy(selectStmt parsers.SelectStmt, data []RowWithJoins) []RowType {
-	groupedRows := make(map[string][]RowWithJoins)
-	groupedKeys := make([]string, 0)
-
-	// Group rows by group by columns
-	for _, row := range data {
-		key := c.generateGroupKey(selectStmt.GroupBy, row)
-		if _, ok := groupedRows[key]; !ok {
-			groupedKeys = append(groupedKeys, key)
+		if hasAggregateFunctions(selectItem.SelectItems) {
+			return true
 		}
-		groupedRows[key] = append(groupedRows[key], row)
 	}
 
-	// Aggregate each group
-	aggregatedRows := make([]RowType, 0)
-	for _, key := range groupedKeys {
-		groupRows := groupedRows[key]
-		aggregatedRow := c.aggregateGroup(selectStmt, groupRows)
-		aggregatedRows = append(aggregatedRows, aggregatedRow)
-	}
-
-	return aggregatedRows
-}
-
-func (c memoryExecutorContext) generateGroupKey(groupByFields []parsers.SelectItem, row RowWithJoins) string {
-	var keyBuilder strings.Builder
-	for _, column := range groupByFields {
-		fieldValue := c.getFieldValue(column, row)
-		keyBuilder.WriteString(fmt.Sprintf("%v", fieldValue))
-		keyBuilder.WriteString(":")
-	}
-
-	return keyBuilder.String()
-}
-
-func (c memoryExecutorContext) aggregateGroup(selectStmt parsers.SelectStmt, groupRows []RowWithJoins) RowType {
-	aggregatedRow := c.selectRow(selectStmt.SelectItems, groupRows)
-
-	return aggregatedRow
+	return false
 }
 
 func compareValues(val1, val2 interface{}) int {
@@ -549,8 +657,8 @@ func compareValues(val1, val2 interface{}) int {
 	}
 }
 
-func deduplicate(slice []RowType) []RowType {
-	var result []RowType
+func deduplicate[T RowType | interface{}](slice []T) []T {
+	var result []T
 
 	for i := 0; i < len(slice); i++ {
 		unique := true
@@ -569,42 +677,8 @@ func deduplicate(slice []RowType) []RowType {
 	return result
 }
 
-func hasAggregateFunctions(selectItems []parsers.SelectItem) bool {
-	if selectItems == nil {
-		return false
-	}
-
-	for _, selectItem := range selectItems {
-		if selectItem.Type == parsers.SelectItemTypeFunctionCall {
-			if typedValue, ok := selectItem.Value.(parsers.FunctionCall); ok && slices.Contains[[]parsers.FunctionCallType](parsers.AggregateFunctions, typedValue.Type) {
-				return true
-			}
-		}
-
-		if hasAggregateFunctions(selectItem.SelectItems) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func zipRows(current []RowWithJoins, joinedTableName string, rowsToZip []RowType) []RowWithJoins {
-	resultMap := make([]RowWithJoins, 0)
-
-	for _, currentRow := range current {
-		for _, rowToZip := range rowsToZip {
-			newRow := copyMap(currentRow)
-			newRow[joinedTableName] = rowToZip
-			resultMap = append(resultMap, newRow)
-		}
-	}
-
-	return resultMap
-}
-
-func copyMap(originalMap map[string]RowType) map[string]RowType {
-	targetMap := make(map[string]RowType)
+func copyMap[T RowType | []RowType](originalMap map[string]T) map[string]T {
+	targetMap := make(map[string]T)
 
 	for k, v := range originalMap {
 		targetMap[k] = v

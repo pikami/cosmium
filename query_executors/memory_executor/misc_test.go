@@ -14,7 +14,7 @@ func testQueryExecute(
 	data []memoryexecutor.RowType,
 	expectedData []memoryexecutor.RowType,
 ) {
-	result := memoryexecutor.Execute(query, data)
+	result := memoryexecutor.ExecuteQuery(query, data)
 
 	if !reflect.DeepEqual(result, expectedData) {
 		t.Errorf("execution result does not match expected data.\nExpected: %+v\nGot: %+v", expectedData, result)
@@ -25,8 +25,20 @@ func Test_Execute(t *testing.T) {
 	mockData := []memoryexecutor.RowType{
 		map[string]interface{}{"id": "12345", "pk": 123, "_self": "self1", "_rid": "rid1", "_ts": 123456, "isCool": false},
 		map[string]interface{}{"id": "67890", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
-		map[string]interface{}{"id": "456", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
-		map[string]interface{}{"id": "123", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
+		map[string]interface{}{
+			"id": "456", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true,
+			"tags": []map[string]interface{}{
+				{"name": "tag-a"},
+				{"name": "tag-b"},
+			},
+		},
+		map[string]interface{}{
+			"id": "123", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true,
+			"tags": []map[string]interface{}{
+				{"name": "tag-b"},
+				{"name": "tag-c"},
+			},
+		},
 	}
 
 	t.Run("Should execute SELECT with ORDER BY", func(t *testing.T) {
@@ -121,6 +133,33 @@ func Test_Execute(t *testing.T) {
 			[]memoryexecutor.RowType{
 				map[string]interface{}{"id": "456"},
 				map[string]interface{}{"id": "123"},
+			},
+		)
+	})
+
+	t.Run("Should execute IN selector", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "name"},
+						Type: parsers.SelectItemTypeField,
+					},
+				},
+				Table: parsers.Table{
+					Value: "c",
+					SelectItem: parsers.SelectItem{
+						Path: []string{"c", "tags"},
+					},
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"name": "tag-a"},
+				map[string]interface{}{"name": "tag-b"},
+				map[string]interface{}{"name": "tag-b"},
+				map[string]interface{}{"name": "tag-c"},
 			},
 		)
 	})

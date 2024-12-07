@@ -6,32 +6,32 @@ import (
 	"github.com/pikami/cosmium/parsers"
 )
 
-func (c memoryExecutorContext) typeChecking_IsDefined(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsDefined(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	return ex != nil
 }
 
-func (c memoryExecutorContext) typeChecking_IsArray(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsArray(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	_, isArray := ex.([]interface{})
 	return isArray
 }
 
-func (c memoryExecutorContext) typeChecking_IsBool(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsBool(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	_, isBool := ex.(bool)
 	return isBool
 }
 
-func (c memoryExecutorContext) typeChecking_IsFiniteNumber(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsFiniteNumber(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch num := ex.(type) {
 	case int:
@@ -43,41 +43,41 @@ func (c memoryExecutorContext) typeChecking_IsFiniteNumber(arguments []interface
 	}
 }
 
-func (c memoryExecutorContext) typeChecking_IsInteger(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsInteger(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	_, isInt := ex.(int)
 	return isInt
 }
 
-func (c memoryExecutorContext) typeChecking_IsNull(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsNull(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	return ex == nil
 }
 
-func (c memoryExecutorContext) typeChecking_IsNumber(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsNumber(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	_, isFloat := ex.(float64)
 	_, isInt := ex.(int)
 	return isFloat || isInt
 }
 
-func (c memoryExecutorContext) typeChecking_IsObject(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsObject(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	_, isObject := ex.(map[string]interface{})
 	return isObject
 }
 
-func (c memoryExecutorContext) typeChecking_IsPrimitive(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsPrimitive(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	switch ex.(type) {
 	case bool, string, float64, int, nil:
@@ -87,9 +87,9 @@ func (c memoryExecutorContext) typeChecking_IsPrimitive(arguments []interface{},
 	}
 }
 
-func (c memoryExecutorContext) typeChecking_IsString(arguments []interface{}, row RowType) bool {
+func (r rowContext) typeChecking_IsString(arguments []interface{}) bool {
 	exItem := arguments[0].(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	_, isStr := ex.(string)
 	return isStr

@@ -111,7 +111,7 @@ func ExecuteQueryDocuments(databaseId string, collectionId string, query string,
 
 	if typedQuery, ok := parsedQuery.(parsers.SelectStmt); ok {
 		typedQuery.Parameters = queryParameters
-		return memoryexecutor.Execute(typedQuery, covDocs), repositorymodels.StatusOk
+		return memoryexecutor.ExecuteQuery(typedQuery, covDocs), repositorymodels.StatusOk
 	}
 
 	return nil, repositorymodels.BadRequest

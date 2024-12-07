@@ -6,21 +6,19 @@ import (
 	"github.com/pikami/cosmium/parsers"
 )
 
-func (c memoryExecutorContext) aggregate_Avg(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) aggregate_Avg(arguments []interface{}) interface{} {
 	selectExpression := arguments[0].(parsers.SelectItem)
 	sum := 0.0
 	count := 0
 
-	if array, isArray := row.([]RowWithJoins); isArray {
-		for _, item := range array {
-			value := c.getFieldValue(selectExpression, item)
-			if numericValue, ok := value.(float64); ok {
-				sum += numericValue
-				count++
-			} else if numericValue, ok := value.(int); ok {
-				sum += float64(numericValue)
-				count++
-			}
+	for _, item := range r.grouppedRows {
+		value := item.resolveSelectItem(selectExpression)
+		if numericValue, ok := value.(float64); ok {
+			sum += numericValue
+			count++
+		} else if numericValue, ok := value.(int); ok {
+			sum += float64(numericValue)
+			count++
 		}
 	}
 
@@ -31,41 +29,37 @@ func (c memoryExecutorContext) aggregate_Avg(arguments []interface{}, row RowTyp
 	}
 }
 
-func (c memoryExecutorContext) aggregate_Count(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) aggregate_Count(arguments []interface{}) interface{} {
 	selectExpression := arguments[0].(parsers.SelectItem)
 	count := 0
 
-	if array, isArray := row.([]RowWithJoins); isArray {
-		for _, item := range array {
-			value := c.getFieldValue(selectExpression, item)
-			if value != nil {
-				count++
-			}
+	for _, item := range r.grouppedRows {
+		value := item.resolveSelectItem(selectExpression)
+		if value != nil {
+			count++
 		}
 	}
 
 	return count
 }
 
-func (c memoryExecutorContext) aggregate_Max(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) aggregate_Max(arguments []interface{}) interface{} {
 	selectExpression := arguments[0].(parsers.SelectItem)
 	max := 0.0
 	count := 0
 
-	if array, isArray := row.([]RowWithJoins); isArray {
-		for _, item := range array {
-			value := c.getFieldValue(selectExpression, item)
-			if numericValue, ok := value.(float64); ok {
-				if numericValue > max {
-					max = numericValue
-				}
-				count++
-			} else if numericValue, ok := value.(int); ok {
-				if float64(numericValue) > max {
-					max = float64(numericValue)
-				}
-				count++
+	for _, item := range r.grouppedRows {
+		value := item.resolveSelectItem(selectExpression)
+		if numericValue, ok := value.(float64); ok {
+			if numericValue > max {
+				max = numericValue
 			}
+			count++
+		} else if numericValue, ok := value.(int); ok {
+			if float64(numericValue) > max {
+				max = float64(numericValue)
+			}
+			count++
 		}
 	}
 
@@ -76,25 +70,23 @@ func (c memoryExecutorContext) aggregate_Max(arguments []interface{}, row RowTyp
 	}
 }
 
-func (c memoryExecutorContext) aggregate_Min(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) aggregate_Min(arguments []interface{}) interface{} {
 	selectExpression := arguments[0].(parsers.SelectItem)
 	min := math.MaxFloat64
 	count := 0
 
-	if array, isArray := row.([]RowWithJoins); isArray {
-		for _, item := range array {
-			value := c.getFieldValue(selectExpression, item)
-			if numericValue, ok := value.(float64); ok {
-				if numericValue < min {
-					min = numericValue
-				}
-				count++
-			} else if numericValue, ok := value.(int); ok {
-				if float64(numericValue) < min {
-					min = float64(numericValue)
-				}
-				count++
+	for _, item := range r.grouppedRows {
+		value := item.resolveSelectItem(selectExpression)
+		if numericValue, ok := value.(float64); ok {
+			if numericValue < min {
+				min = numericValue
 			}
+			count++
+		} else if numericValue, ok := value.(int); ok {
+			if float64(numericValue) < min {
+				min = float64(numericValue)
+			}
+			count++
 		}
 	}
 
@@ -105,21 +97,19 @@ func (c memoryExecutorContext) aggregate_Min(arguments []interface{}, row RowTyp
 	}
 }
 
-func (c memoryExecutorContext) aggregate_Sum(arguments []interface{}, row RowType) interface{} {
+func (r rowContext) aggregate_Sum(arguments []interface{}) interface{} {
 	selectExpression := arguments[0].(parsers.SelectItem)
 	sum := 0.0
 	count := 0
 
-	if array, isArray := row.([]RowWithJoins); isArray {
-		for _, item := range array {
-			value := c.getFieldValue(selectExpression, item)
-			if numericValue, ok := value.(float64); ok {
-				sum += numericValue
-				count++
-			} else if numericValue, ok := value.(int); ok {
-				sum += float64(numericValue)
-				count++
-			}
+	for _, item := range r.grouppedRows {
+		value := item.resolveSelectItem(selectExpression)
+		if numericValue, ok := value.(float64); ok {
+			sum += numericValue
+			count++
+		} else if numericValue, ok := value.(int); ok {
+			sum += float64(numericValue)
+			count++
 		}
 	}
 

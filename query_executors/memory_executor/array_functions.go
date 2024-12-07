@@ -7,17 +7,17 @@ import (
 	"github.com/pikami/cosmium/parsers"
 )
 
-func (c memoryExecutorContext) array_Concat(arguments []interface{}, row RowType) []interface{} {
+func (r rowContext) array_Concat(arguments []interface{}) []interface{} {
 	var result []interface{}
 	for _, arg := range arguments {
-		array := c.parseArray(arg, row)
+		array := r.parseArray(arg)
 		result = append(result, array...)
 	}
 	return result
 }
 
-func (c memoryExecutorContext) array_Length(arguments []interface{}, row RowType) int {
-	array := c.parseArray(arguments[0], row)
+func (r rowContext) array_Length(arguments []interface{}) int {
+	array := r.parseArray(arguments[0])
 	if array == nil {
 		return 0
 	}
@@ -25,15 +25,15 @@ func (c memoryExecutorContext) array_Length(arguments []interface{}, row RowType
 	return len(array)
 }
 
-func (c memoryExecutorContext) array_Slice(arguments []interface{}, row RowType) []interface{} {
+func (r rowContext) array_Slice(arguments []interface{}) []interface{} {
 	var ok bool
 	var start int
 	var length int
-	array := c.parseArray(arguments[0], row)
-	startEx := c.getFieldValue(arguments[1].(parsers.SelectItem), row)
+	array := r.parseArray(arguments[0])
+	startEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
 
 	if arguments[2] != nil {
-		lengthEx := c.getFieldValue(arguments[2].(parsers.SelectItem), row)
+		lengthEx := r.resolveSelectItem(arguments[2].(parsers.SelectItem))
 
 		if length, ok = lengthEx.(int); !ok {
 			logger.Error("array_Slice - got length parameters of wrong type")
@@ -65,9 +65,9 @@ func (c memoryExecutorContext) array_Slice(arguments []interface{}, row RowType)
 	return array[start:end]
 }
 
-func (c memoryExecutorContext) set_Intersect(arguments []interface{}, row RowType) []interface{} {
-	set1 := c.parseArray(arguments[0], row)
-	set2 := c.parseArray(arguments[1], row)
+func (r rowContext) set_Intersect(arguments []interface{}) []interface{} {
+	set1 := r.parseArray(arguments[0])
+	set2 := r.parseArray(arguments[1])
 
 	intersection := make(map[interface{}]struct{})
 	if set1 == nil || set2 == nil {
@@ -88,9 +88,9 @@ func (c memoryExecutorContext) set_Intersect(arguments []interface{}, row RowTyp
 	return result
 }
 
-func (c memoryExecutorContext) set_Union(arguments []interface{}, row RowType) []interface{} {
-	set1 := c.parseArray(arguments[0], row)
-	set2 := c.parseArray(arguments[1], row)
+func (r rowContext) set_Union(arguments []interface{}) []interface{} {
+	set1 := r.parseArray(arguments[0])
+	set2 := r.parseArray(arguments[1])
 
 	var result []interface{}
 	union := make(map[interface{}]struct{})
@@ -111,9 +111,9 @@ func (c memoryExecutorContext) set_Union(arguments []interface{}, row RowType) [
 	return result
 }
 
-func (c memoryExecutorContext) parseArray(argument interface{}, row RowType) []interface{} {
+func (r rowContext) parseArray(argument interface{}) []interface{} {
 	exItem := argument.(parsers.SelectItem)
-	ex := c.getFieldValue(exItem, row)
+	ex := r.resolveSelectItem(exItem)
 
 	arrValue := reflect.ValueOf(ex)
 	if arrValue.Kind() != reflect.Slice {
