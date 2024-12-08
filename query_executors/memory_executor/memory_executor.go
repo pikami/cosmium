@@ -659,6 +659,7 @@ func compareValues(val1, val2 interface{}) int {
 
 func deduplicate[T RowType | interface{}](slice []T) []T {
 	var result []T
+	result = make([]T, 0)
 
 	for i := 0; i < len(slice); i++ {
 		unique := true

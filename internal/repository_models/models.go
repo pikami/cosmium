@@ -1,5 +1,7 @@
 package repositorymodels
 
+import "sync"
+
 type Database struct {
 	ID         string `json:"id"`
 	TimeStamp  int64  `json:"_ts"`
@@ -101,6 +103,8 @@ type PartitionKeyRange struct {
 }
 
 type State struct {
+	sync.RWMutex
+
 	// Map databaseId -> Database
 	Databases map[string]Database `json:"databases"`
 

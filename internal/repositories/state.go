@@ -66,6 +66,9 @@ func LoadStateFS(filePath string) {
 }
 
 func SaveStateFS(filePath string) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	data, err := json.MarshalIndent(storeState, "", "\t")
 	if err != nil {
 		logger.Errorf("Failed to save state: %v\n", err)
@@ -80,8 +83,17 @@ func SaveStateFS(filePath string) {
 	logger.Infof("Documents: %d\n", getLength(storeState.Documents))
 }
 
-func GetState() repositorymodels.State {
-	return storeState
+func GetState() (string, error) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
+	data, err := json.MarshalIndent(storeState, "", "\t")
+	if err != nil {
+		logger.Errorf("Failed to serialize state: %v\n", err)
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 func getLength(v interface{}) int {

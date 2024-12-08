@@ -11,10 +11,16 @@ import (
 )
 
 func GetAllDatabases() ([]repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	return maps.Values(storeState.Databases), repositorymodels.StatusOk
 }
 
 func GetDatabase(id string) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	if database, ok := storeState.Databases[id]; ok {
 		return database, repositorymodels.StatusOk
 	}
@@ -23,6 +29,9 @@ func GetDatabase(id string) (repositorymodels.Database, repositorymodels.Reposit
 }
 
 func DeleteDatabase(id string) repositorymodels.RepositoryStatus {
+	storeState.Lock()
+	defer storeState.Unlock()
+
 	if _, ok := storeState.Databases[id]; !ok {
 		return repositorymodels.StatusNotFound
 	}
@@ -33,6 +42,9 @@ func DeleteDatabase(id string) repositorymodels.RepositoryStatus {
 }
 
 func CreateDatabase(newDatabase repositorymodels.Database) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	storeState.Lock()
+	defer storeState.Unlock()
+
 	if _, ok := storeState.Databases[newDatabase.ID]; ok {
 		return repositorymodels.Database{}, repositorymodels.Conflict
 	}

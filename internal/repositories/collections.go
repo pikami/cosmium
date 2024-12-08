@@ -12,6 +12,9 @@ import (
 )
 
 func GetAllCollections(databaseId string) ([]repositorymodels.Collection, repositorymodels.RepositoryStatus) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	if _, ok := storeState.Databases[databaseId]; !ok {
 		return make([]repositorymodels.Collection, 0), repositorymodels.StatusNotFound
 	}
@@ -20,6 +23,9 @@ func GetAllCollections(databaseId string) ([]repositorymodels.Collection, reposi
 }
 
 func GetCollection(databaseId string, collectionId string) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	if _, ok := storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
 	}
@@ -32,6 +38,9 @@ func GetCollection(databaseId string, collectionId string) (repositorymodels.Col
 }
 
 func DeleteCollection(databaseId string, collectionId string) repositorymodels.RepositoryStatus {
+	storeState.Lock()
+	defer storeState.Unlock()
+
 	if _, ok := storeState.Databases[databaseId]; !ok {
 		return repositorymodels.StatusNotFound
 	}
@@ -46,6 +55,9 @@ func DeleteCollection(databaseId string, collectionId string) repositorymodels.R
 }
 
 func CreateCollection(databaseId string, newCollection repositorymodels.Collection) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
+	storeState.Lock()
+	defer storeState.Unlock()
+
 	var ok bool
 	var database repositorymodels.Database
 	if database, ok = storeState.Databases[databaseId]; !ok {

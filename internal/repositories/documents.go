@@ -15,6 +15,9 @@ import (
 )
 
 func GetAllDocuments(databaseId string, collectionId string) ([]repositorymodels.Document, repositorymodels.RepositoryStatus) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	if _, ok := storeState.Databases[databaseId]; !ok {
 		return make([]repositorymodels.Document, 0), repositorymodels.StatusNotFound
 	}
@@ -27,6 +30,9 @@ func GetAllDocuments(databaseId string, collectionId string) ([]repositorymodels
 }
 
 func GetDocument(databaseId string, collectionId string, documentId string) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	if _, ok := storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
@@ -43,6 +49,9 @@ func GetDocument(databaseId string, collectionId string, documentId string) (rep
 }
 
 func DeleteDocument(databaseId string, collectionId string, documentId string) repositorymodels.RepositoryStatus {
+	storeState.Lock()
+	defer storeState.Unlock()
+
 	if _, ok := storeState.Databases[databaseId]; !ok {
 		return repositorymodels.StatusNotFound
 	}
@@ -61,6 +70,9 @@ func DeleteDocument(databaseId string, collectionId string, documentId string) r
 }
 
 func CreateDocument(databaseId string, collectionId string, document map[string]interface{}) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
+	storeState.Lock()
+	defer storeState.Unlock()
+
 	var ok bool
 	var documentId string
 	var database repositorymodels.Database

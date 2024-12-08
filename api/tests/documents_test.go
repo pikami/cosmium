@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
@@ -161,6 +163,56 @@ func Test_Documents(t *testing.T) {
 				map[string]interface{}{"id": "67890", "arr0": 6.0, "arr1": 7.0, "arr2": 8.0, "arr3": nil},
 			},
 		)
+	})
+
+	t.Run("Should handle parallel writes", func(t *testing.T) {
+		var wg sync.WaitGroup
+		rutineCount := 100
+		results := make(chan error, rutineCount)
+
+		createCall := func(i int) {
+			defer wg.Done()
+			item := map[string]interface{}{
+				"id":  fmt.Sprintf("id-%d", i),
+				"pk":  fmt.Sprintf("pk-%d", i),
+				"val": i,
+			}
+			bytes, err := json.Marshal(item)
+			if err != nil {
+				results <- err
+				return
+			}
+
+			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+			defer cancel()
+
+			_, err = collectionClient.CreateItem(
+				ctx,
+				azcosmos.PartitionKey{},
+				bytes,
+				&azcosmos.ItemOptions{
+					EnableContentResponseOnWrite: false,
+				},
+			)
+			results <- err
+
+			collectionClient.ReadItem(ctx, azcosmos.PartitionKey{}, fmt.Sprintf("id-%d", i), nil)
+			collectionClient.DeleteItem(ctx, azcosmos.PartitionKey{}, fmt.Sprintf("id-%d", i), nil)
+		}
+
+		for i := 0; i < rutineCount; i++ {
+			wg.Add(1)
+			go createCall(i)
+		}
+
+		wg.Wait()
+		close(results)
+
+		for err := range results {
+			if err != nil {
+				t.Errorf("Error creating item: %v", err)
+			}
+		}
 	})
 }
 

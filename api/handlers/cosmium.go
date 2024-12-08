@@ -8,5 +8,11 @@ import (
 )
 
 func CosmiumExport(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, repositories.GetState())
+	repositoryState, err := repositories.GetState()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Data(http.StatusOK, "application/json", []byte(repositoryState))
 }

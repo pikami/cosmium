@@ -10,6 +10,9 @@ import (
 
 // I have no idea what this is tbh
 func GetPartitionKeyRanges(databaseId string, collectionId string) ([]repositorymodels.PartitionKeyRange, repositorymodels.RepositoryStatus) {
+	storeState.RLock()
+	defer storeState.RUnlock()
+
 	databaseRid := databaseId
 	collectionRid := collectionId
 	var timestamp int64 = 0
