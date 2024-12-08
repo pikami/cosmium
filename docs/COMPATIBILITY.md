@@ -18,8 +18,8 @@ Cosmium strives to support the core features of Cosmos DB, including:
 
 | Feature                       | Implemented |
 | ----------------------------- | ----------- |
-| Subqueries                    | No          |
-| Joins                         | No          |
+| Subqueries                    | Yes         |
+| Joins                         | Yes         |
 | Computed properties           | No          |
 | Coalesce operators            | No          |
 | Bitwise operators             | No          |
@@ -62,16 +62,18 @@ Cosmium strives to support the core features of Cosmos DB, including:
 
 ### Array Functions
 
-| Function       | Implemented |
-| -------------- | ----------- |
-| ARRAY_CONCAT   | Yes         |
-| ARRAY_CONTAINS | No          |
-| ARRAY_LENGTH   | Yes         |
-| ARRAY_SLICE    | Yes         |
-| CHOOSE         | No          |
-| ObjectToArray  | No          |
-| SetIntersect   | Yes         |
-| SetUnion       | Yes         |
+| Function           | Implemented |
+| ------------------ | ----------- |
+| ARRAY_CONCAT       | Yes         |
+| ARRAY_CONTAINS     | No          |
+| ARRAY_CONTAINS_ANY | No          |
+| ARRAY_CONTAINS_ALL | No          |
+| ARRAY_LENGTH       | Yes         |
+| ARRAY_SLICE        | Yes         |
+| CHOOSE             | No          |
+| ObjectToArray      | No          |
+| SetIntersect       | Yes         |
+| SetUnion           | Yes         |
 
 ### Conditional Functions
 
