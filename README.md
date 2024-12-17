@@ -26,9 +26,11 @@ You can download the latest version of Cosmium from the [GitHub Releases page](h
 Cosmium is available for the following platforms:
 
 - **Linux**: cosmium-linux-amd64
+- **Linux on ARM**: cosmium-linux-arm64
 - **macOS**: cosmium-darwin-amd64
 - **macOS on Apple Silicon**: cosmium-darwin-arm64
 - **Windows**: cosmium-windows-amd64.exe
+- **Windows on ARM**: cosmium-windows-arm64.exe
 
 ### Running Cosmium
 

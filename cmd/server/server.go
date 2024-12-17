@@ -15,17 +15,20 @@ func main() {
 
 	repositories.InitializeRepository()
 
-	go api.StartAPI()
+	server := api.StartAPI()
 
-	waitForExit()
+	waitForExit(server)
 }
 
-func waitForExit() {
+func waitForExit(server *api.Server) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	// Block until a exit signal is received
 	<-sigs
+
+	// Stop the server
+	server.StopServer <- true
 
 	if config.Config.PersistDataFilePath != "" {
 		repositories.SaveStateFS(config.Config.PersistDataFilePath)

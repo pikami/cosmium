@@ -1,5 +1,6 @@
 builds:
   - binary: cosmium
+    main: ./cmd/server
     goos:
       - darwin
       - linux

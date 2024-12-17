@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -11,6 +12,10 @@ import (
 	"github.com/pikami/cosmium/internal/logger"
 	tlsprovider "github.com/pikami/cosmium/internal/tls_provider"
 )
+
+type Server struct {
+	StopServer chan interface{}
+}
 
 func CreateRouter() *gin.Engine {
 	router := gin.Default(func(e *gin.Engine) {
@@ -57,42 +62,60 @@ func CreateRouter() *gin.Engine {
 	return router
 }
 
-func StartAPI() {
+func StartAPI() *Server {
 	if !config.Config.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	router := CreateRouter()
 	listenAddress := fmt.Sprintf(":%d", config.Config.Port)
+	stopChan := make(chan interface{})
 
-	if config.Config.TLS_CertificatePath != "" && config.Config.TLS_CertificateKey != "" {
-		err := router.RunTLS(
-			listenAddress,
-			config.Config.TLS_CertificatePath,
-			config.Config.TLS_CertificateKey)
+	server := &http.Server{
+		Addr:    listenAddress,
+		Handler: router.Handler(),
+	}
+
+	go func() {
+		<-stopChan
+		logger.Info("Shutting down server...")
+		err := server.Shutdown(context.TODO())
 		if err != nil {
-			logger.Error("Failed to start HTTPS server:", err)
+			logger.Error("Failed to shutdown server:", err)
+		}
+	}()
+
+	go func() {
+		if config.Config.DisableTls {
+			logger.Infof("Listening and serving HTTP on %s\n", server.Addr)
+			err := server.ListenAndServe()
+			if err != nil {
+				logger.Error("Failed to start HTTP server:", err)
+			}
+			return
 		}
 
-		return
-	}
+		if config.Config.TLS_CertificatePath != "" && config.Config.TLS_CertificateKey != "" {
+			logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
+			err := server.ListenAndServeTLS(
+				config.Config.TLS_CertificatePath,
+				config.Config.TLS_CertificateKey)
+			if err != nil {
+				logger.Error("Failed to start HTTPS server:", err)
+			}
+			return
+		} else {
+			tlsConfig := tlsprovider.GetDefaultTlsConfig()
+			server.TLSConfig = tlsConfig
 
-	if config.Config.DisableTls {
-		router.Run(listenAddress)
-	}
+			logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
+			err := server.ListenAndServeTLS("", "")
+			if err != nil {
+				logger.Error("Failed to start HTTPS server:", err)
+			}
+			return
+		}
+	}()
 
-	tlsConfig := tlsprovider.GetDefaultTlsConfig()
-	server := &http.Server{
-		Addr:      listenAddress,
-		Handler:   router.Handler(),
-		TLSConfig: tlsConfig,
-	}
-
-	logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
-	err := server.ListenAndServeTLS("", "")
-	if err != nil {
-		logger.Error("Failed to start HTTPS server:", err)
-	}
-
-	router.Run()
+	return &Server{StopServer: stopChan}
 }
