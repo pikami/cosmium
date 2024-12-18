@@ -26,16 +26,19 @@ const (
 
 //export CreateServerInstance
 func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
+	configStr := C.GoString(configurationJSON)
+	serverNameStr := C.GoString(serverName)
+
 	if serverInstances == nil {
 		serverInstances = make(map[string]*ServerInstance)
 	}
 
-	if _, ok := serverInstances[C.GoString(serverName)]; ok {
+	if _, ok := serverInstances[serverNameStr]; ok {
 		return ResponseServerInstanceAlreadyExists
 	}
 
 	var configuration config.ServerConfig
-	err := json.Unmarshal([]byte(C.GoString(configurationJSON)), &configuration)
+	err := json.Unmarshal([]byte(configStr), &configuration)
 	if err != nil {
 		return ResponseFailedToParseConfiguration
 	}
@@ -50,7 +53,7 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 	server := api.NewApiServer(repository, configuration)
 	server.Start()
 
-	serverInstances[C.GoString(serverName)] = &ServerInstance{
+	serverInstances[serverNameStr] = &ServerInstance{
 		server:     server,
 		repository: repository,
 	}

@@ -16,6 +16,10 @@ import (
 func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
 	routeHandlers := handlers.NewHandlers(repository, s.config)
 
+	if !s.config.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	router := gin.Default(func(e *gin.Engine) {
 		e.RedirectTrailingSlash = false
 	})
@@ -61,10 +65,6 @@ func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
 }
 
 func (s *ApiServer) Start() {
-	if !s.config.Debug {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
 	listenAddress := fmt.Sprintf(":%d", s.config.Port)
 	s.isActive = true
 
