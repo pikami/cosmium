@@ -10,17 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/logger"
-	"github.com/pikami/cosmium/internal/repositories"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
-func GetAllDocuments(c *gin.Context) {
+func (h *Handlers) GetAllDocuments(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
-	documents, status := repositories.GetAllDocuments(databaseId, collectionId)
+	documents, status := h.repository.GetAllDocuments(databaseId, collectionId)
 	if status == repositorymodels.StatusOk {
-		collection, _ := repositories.GetCollection(databaseId, collectionId)
+		collection, _ := h.repository.GetCollection(databaseId, collectionId)
 
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(documents)))
 		c.IndentedJSON(http.StatusOK, gin.H{
@@ -34,12 +33,12 @@ func GetAllDocuments(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func GetDocument(c *gin.Context) {
+func (h *Handlers) GetDocument(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
 
-	document, status := repositories.GetDocument(databaseId, collectionId, documentId)
+	document, status := h.repository.GetDocument(databaseId, collectionId, documentId)
 	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, document)
 		return
@@ -53,12 +52,12 @@ func GetDocument(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func DeleteDocument(c *gin.Context) {
+func (h *Handlers) DeleteDocument(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
 
-	status := repositories.DeleteDocument(databaseId, collectionId, documentId)
+	status := h.repository.DeleteDocument(databaseId, collectionId, documentId)
 	if status == repositorymodels.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
@@ -73,7 +72,7 @@ func DeleteDocument(c *gin.Context) {
 }
 
 // TODO: Maybe move "replace" logic to repository
-func ReplaceDocument(c *gin.Context) {
+func (h *Handlers) ReplaceDocument(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
@@ -84,13 +83,13 @@ func ReplaceDocument(c *gin.Context) {
 		return
 	}
 
-	status := repositories.DeleteDocument(databaseId, collectionId, documentId)
+	status := h.repository.DeleteDocument(databaseId, collectionId, documentId)
 	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
 
-	createdDocument, status := repositories.CreateDocument(databaseId, collectionId, requestBody)
+	createdDocument, status := h.repository.CreateDocument(databaseId, collectionId, requestBody)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
@@ -104,12 +103,12 @@ func ReplaceDocument(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func PatchDocument(c *gin.Context) {
+func (h *Handlers) PatchDocument(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
 
-	document, status := repositories.GetDocument(databaseId, collectionId, documentId)
+	document, status := h.repository.GetDocument(databaseId, collectionId, documentId)
 	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
@@ -160,13 +159,13 @@ func PatchDocument(c *gin.Context) {
 		return
 	}
 
-	status = repositories.DeleteDocument(databaseId, collectionId, documentId)
+	status = h.repository.DeleteDocument(databaseId, collectionId, documentId)
 	if status == repositorymodels.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
 
-	createdDocument, status := repositories.CreateDocument(databaseId, collectionId, modifiedDocument)
+	createdDocument, status := h.repository.CreateDocument(databaseId, collectionId, modifiedDocument)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
@@ -180,7 +179,7 @@ func PatchDocument(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func DocumentsPost(c *gin.Context) {
+func (h *Handlers) DocumentsPost(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
@@ -202,14 +201,14 @@ func DocumentsPost(c *gin.Context) {
 			queryParameters = parametersToMap(paramsArray)
 		}
 
-		docs, status := repositories.ExecuteQueryDocuments(databaseId, collectionId, query.(string), queryParameters)
+		docs, status := h.repository.ExecuteQueryDocuments(databaseId, collectionId, query.(string), queryParameters)
 		if status != repositorymodels.StatusOk {
 			// TODO: Currently we return everything if the query fails
-			GetAllDocuments(c)
+			h.GetAllDocuments(c)
 			return
 		}
 
-		collection, _ := repositories.GetCollection(databaseId, collectionId)
+		collection, _ := h.repository.GetCollection(databaseId, collectionId)
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(docs)))
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":      collection.ResourceID,
@@ -226,10 +225,10 @@ func DocumentsPost(c *gin.Context) {
 
 	isUpsert, _ := strconv.ParseBool(c.GetHeader("x-ms-documentdb-is-upsert"))
 	if isUpsert {
-		repositories.DeleteDocument(databaseId, collectionId, requestBody["id"].(string))
+		h.repository.DeleteDocument(databaseId, collectionId, requestBody["id"].(string))
 	}
 
-	createdDocument, status := repositories.CreateDocument(databaseId, collectionId, requestBody)
+	createdDocument, status := h.repository.CreateDocument(databaseId, collectionId, requestBody)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return

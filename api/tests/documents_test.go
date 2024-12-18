@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"reflect"
 	"sync"
 	"testing"
@@ -15,7 +14,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/api/config"
-	"github.com/pikami/cosmium/internal/repositories"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 	"github.com/stretchr/testify/assert"
 )
@@ -55,9 +53,11 @@ func testCosmosQuery(t *testing.T,
 	}
 }
 
-func documents_InitializeDb(t *testing.T) (*httptest.Server, *azcosmos.ContainerClient) {
-	repositories.CreateDatabase(repositorymodels.Database{ID: testDatabaseName})
-	repositories.CreateCollection(testDatabaseName, repositorymodels.Collection{
+func documents_InitializeDb(t *testing.T) (*TestServer, *azcosmos.ContainerClient) {
+	ts := runTestServer()
+
+	ts.Repository.CreateDatabase(repositorymodels.Database{ID: testDatabaseName})
+	ts.Repository.CreateCollection(testDatabaseName, repositorymodels.Collection{
 		ID: testCollectionName,
 		PartitionKey: struct {
 			Paths   []string "json:\"paths\""
@@ -67,13 +67,11 @@ func documents_InitializeDb(t *testing.T) (*httptest.Server, *azcosmos.Container
 			Paths: []string{"/pk"},
 		},
 	})
-	repositories.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}})
-	repositories.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "67890", "pk": "456", "isCool": true, "arr": []int{6, 7, 8}})
-
-	ts := runTestServer()
+	ts.Repository.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}})
+	ts.Repository.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "67890", "pk": "456", "isCool": true, "arr": []int{6, 7, 8}})
 
 	client, err := azcosmos.NewClientFromConnectionString(
-		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.Config.AccountKey),
+		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.DefaultAccountKey),
 		&azcosmos.ClientOptions{},
 	)
 	assert.Nil(t, err)
@@ -86,7 +84,7 @@ func documents_InitializeDb(t *testing.T) (*httptest.Server, *azcosmos.Container
 
 func Test_Documents(t *testing.T) {
 	ts, collectionClient := documents_InitializeDb(t)
-	defer ts.Close()
+	defer ts.Server.Close()
 
 	t.Run("Should query document", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
@@ -218,7 +216,7 @@ func Test_Documents(t *testing.T) {
 
 func Test_Documents_Patch(t *testing.T) {
 	ts, collectionClient := documents_InitializeDb(t)
-	defer ts.Close()
+	defer ts.Server.Close()
 
 	t.Run("Should PATCH document", func(t *testing.T) {
 		context := context.TODO()

@@ -6,78 +6,75 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/api/handlers"
 	"github.com/pikami/cosmium/api/handlers/middleware"
 	"github.com/pikami/cosmium/internal/logger"
+	"github.com/pikami/cosmium/internal/repositories"
 	tlsprovider "github.com/pikami/cosmium/internal/tls_provider"
 )
 
-type Server struct {
-	StopServer chan interface{}
-}
+func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
+	routeHandlers := handlers.NewHandlers(repository, s.config)
 
-func CreateRouter() *gin.Engine {
 	router := gin.Default(func(e *gin.Engine) {
 		e.RedirectTrailingSlash = false
 	})
 
-	if config.Config.Debug {
+	if s.config.Debug {
 		router.Use(middleware.RequestLogger())
 	}
 
-	router.Use(middleware.StripTrailingSlashes(router))
-	router.Use(middleware.Authentication())
+	router.Use(middleware.StripTrailingSlashes(router, s.config))
+	router.Use(middleware.Authentication(s.config))
 
-	router.GET("/dbs/:databaseId/colls/:collId/pkranges", handlers.GetPartitionKeyRanges)
+	router.GET("/dbs/:databaseId/colls/:collId/pkranges", routeHandlers.GetPartitionKeyRanges)
 
-	router.POST("/dbs/:databaseId/colls/:collId/docs", handlers.DocumentsPost)
-	router.GET("/dbs/:databaseId/colls/:collId/docs", handlers.GetAllDocuments)
-	router.GET("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.GetDocument)
-	router.PUT("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.ReplaceDocument)
-	router.PATCH("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.PatchDocument)
-	router.DELETE("/dbs/:databaseId/colls/:collId/docs/:docId", handlers.DeleteDocument)
+	router.POST("/dbs/:databaseId/colls/:collId/docs", routeHandlers.DocumentsPost)
+	router.GET("/dbs/:databaseId/colls/:collId/docs", routeHandlers.GetAllDocuments)
+	router.GET("/dbs/:databaseId/colls/:collId/docs/:docId", routeHandlers.GetDocument)
+	router.PUT("/dbs/:databaseId/colls/:collId/docs/:docId", routeHandlers.ReplaceDocument)
+	router.PATCH("/dbs/:databaseId/colls/:collId/docs/:docId", routeHandlers.PatchDocument)
+	router.DELETE("/dbs/:databaseId/colls/:collId/docs/:docId", routeHandlers.DeleteDocument)
 
-	router.POST("/dbs/:databaseId/colls", handlers.CreateCollection)
-	router.GET("/dbs/:databaseId/colls", handlers.GetAllCollections)
-	router.GET("/dbs/:databaseId/colls/:collId", handlers.GetCollection)
-	router.DELETE("/dbs/:databaseId/colls/:collId", handlers.DeleteCollection)
+	router.POST("/dbs/:databaseId/colls", routeHandlers.CreateCollection)
+	router.GET("/dbs/:databaseId/colls", routeHandlers.GetAllCollections)
+	router.GET("/dbs/:databaseId/colls/:collId", routeHandlers.GetCollection)
+	router.DELETE("/dbs/:databaseId/colls/:collId", routeHandlers.DeleteCollection)
 
-	router.POST("/dbs", handlers.CreateDatabase)
-	router.GET("/dbs", handlers.GetAllDatabases)
-	router.GET("/dbs/:databaseId", handlers.GetDatabase)
-	router.DELETE("/dbs/:databaseId", handlers.DeleteDatabase)
+	router.POST("/dbs", routeHandlers.CreateDatabase)
+	router.GET("/dbs", routeHandlers.GetAllDatabases)
+	router.GET("/dbs/:databaseId", routeHandlers.GetDatabase)
+	router.DELETE("/dbs/:databaseId", routeHandlers.DeleteDatabase)
 
-	router.GET("/dbs/:databaseId/colls/:collId/udfs", handlers.GetAllUserDefinedFunctions)
-	router.GET("/dbs/:databaseId/colls/:collId/sprocs", handlers.GetAllStoredProcedures)
-	router.GET("/dbs/:databaseId/colls/:collId/triggers", handlers.GetAllTriggers)
+	router.GET("/dbs/:databaseId/colls/:collId/udfs", routeHandlers.GetAllUserDefinedFunctions)
+	router.GET("/dbs/:databaseId/colls/:collId/sprocs", routeHandlers.GetAllStoredProcedures)
+	router.GET("/dbs/:databaseId/colls/:collId/triggers", routeHandlers.GetAllTriggers)
 
 	router.GET("/offers", handlers.GetOffers)
-	router.GET("/", handlers.GetServerInfo)
+	router.GET("/", routeHandlers.GetServerInfo)
 
-	router.GET("/cosmium/export", handlers.CosmiumExport)
+	router.GET("/cosmium/export", routeHandlers.CosmiumExport)
 
-	handlers.RegisterExplorerHandlers(router)
+	routeHandlers.RegisterExplorerHandlers(router)
 
-	return router
+	s.router = router
 }
 
-func StartAPI() *Server {
-	if !config.Config.Debug {
+func (s *ApiServer) Start() {
+	if !s.config.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	router := CreateRouter()
-	listenAddress := fmt.Sprintf(":%d", config.Config.Port)
-	stopChan := make(chan interface{})
+	listenAddress := fmt.Sprintf(":%d", s.config.Port)
+	s.isActive = true
 
 	server := &http.Server{
 		Addr:    listenAddress,
-		Handler: router.Handler(),
+		Handler: s.router.Handler(),
 	}
 
 	go func() {
-		<-stopChan
+		<-s.stopServer
 		logger.Info("Shutting down server...")
 		err := server.Shutdown(context.TODO())
 		if err != nil {
@@ -86,24 +83,22 @@ func StartAPI() *Server {
 	}()
 
 	go func() {
-		if config.Config.DisableTls {
+		if s.config.DisableTls {
 			logger.Infof("Listening and serving HTTP on %s\n", server.Addr)
 			err := server.ListenAndServe()
 			if err != nil {
 				logger.Error("Failed to start HTTP server:", err)
 			}
-			return
-		}
-
-		if config.Config.TLS_CertificatePath != "" && config.Config.TLS_CertificateKey != "" {
+			s.isActive = false
+		} else if s.config.TLS_CertificatePath != "" && s.config.TLS_CertificateKey != "" {
 			logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
 			err := server.ListenAndServeTLS(
-				config.Config.TLS_CertificatePath,
-				config.Config.TLS_CertificateKey)
+				s.config.TLS_CertificatePath,
+				s.config.TLS_CertificateKey)
 			if err != nil {
 				logger.Error("Failed to start HTTPS server:", err)
 			}
-			return
+			s.isActive = false
 		} else {
 			tlsConfig := tlsprovider.GetDefaultTlsConfig()
 			server.TLSConfig = tlsConfig
@@ -113,9 +108,7 @@ func StartAPI() *Server {
 			if err != nil {
 				logger.Error("Failed to start HTTPS server:", err)
 			}
-			return
+			s.isActive = false
 		}
 	}()
-
-	return &Server{StopServer: stopChan}
 }

@@ -10,11 +10,11 @@ import (
 	"github.com/pikami/cosmium/internal/logger"
 )
 
-func Authentication() gin.HandlerFunc {
+func Authentication(config config.ServerConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestUrl := c.Request.URL.String()
-		if config.Config.DisableAuth ||
-			strings.HasPrefix(requestUrl, config.Config.ExplorerBaseUrlLocation) ||
+		if config.DisableAuth ||
+			strings.HasPrefix(requestUrl, config.ExplorerBaseUrlLocation) ||
 			strings.HasPrefix(requestUrl, "/cosmium") {
 			return
 		}
@@ -25,7 +25,7 @@ func Authentication() gin.HandlerFunc {
 		authHeader := c.Request.Header.Get("authorization")
 		date := c.Request.Header.Get("x-ms-date")
 		expectedSignature := authentication.GenerateSignature(
-			c.Request.Method, resourceType, resourceId, date, config.Config.AccountKey)
+			c.Request.Method, resourceType, resourceId, date, config.AccountKey)
 
 		decoded, _ := url.QueryUnescape(authHeader)
 		params, _ := url.ParseQuery(decoded)

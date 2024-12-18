@@ -4,15 +4,14 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pikami/cosmium/api/config"
 )
 
-func RegisterExplorerHandlers(router *gin.Engine) {
-	explorer := router.Group(config.Config.ExplorerBaseUrlLocation)
+func (h *Handlers) RegisterExplorerHandlers(router *gin.Engine) {
+	explorer := router.Group(h.config.ExplorerBaseUrlLocation)
 	{
 		explorer.Use(func(ctx *gin.Context) {
 			if ctx.Param("filepath") == "/config.json" {
-				endpoint := fmt.Sprintf("https://%s:%d", config.Config.Host, config.Config.Port)
+				endpoint := fmt.Sprintf("https://%s:%d", h.config.Host, h.config.Port)
 				ctx.JSON(200, gin.H{
 					"BACKEND_ENDPOINT":       endpoint,
 					"MONGO_BACKEND_ENDPOINT": endpoint,
@@ -25,8 +24,8 @@ func RegisterExplorerHandlers(router *gin.Engine) {
 			}
 		})
 
-		if config.Config.ExplorerPath != "" {
-			explorer.Static("/", config.Config.ExplorerPath)
+		if h.config.ExplorerPath != "" {
+			explorer.Static("/", h.config.ExplorerPath)
 		}
 	}
 }

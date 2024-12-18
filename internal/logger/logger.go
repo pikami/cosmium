@@ -3,22 +3,22 @@ package logger
 import (
 	"log"
 	"os"
-
-	"github.com/pikami/cosmium/api/config"
 )
+
+var EnableDebugOutput = false
 
 var DebugLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
 var InfoLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 var ErrorLogger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 func Debug(v ...any) {
-	if config.Config.Debug {
+	if EnableDebugOutput {
 		DebugLogger.Println(v...)
 	}
 }
 
 func Debugf(format string, v ...any) {
-	if config.Config.Debug {
+	if EnableDebugOutput {
 		DebugLogger.Printf(format, v...)
 	}
 }

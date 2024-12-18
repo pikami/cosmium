@@ -6,28 +6,18 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/logger"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
-var storedProcedures = []repositorymodels.StoredProcedure{}
-var triggers = []repositorymodels.Trigger{}
-var userDefinedFunctions = []repositorymodels.UserDefinedFunction{}
-var storeState = repositorymodels.State{
-	Databases:   make(map[string]repositorymodels.Database),
-	Collections: make(map[string]map[string]repositorymodels.Collection),
-	Documents:   make(map[string]map[string]map[string]repositorymodels.Document),
-}
-
-func InitializeRepository() {
-	if config.Config.InitialDataFilePath != "" {
-		LoadStateFS(config.Config.InitialDataFilePath)
+func (r *DataRepository) InitializeRepository() {
+	if r.initialDataFilePath != "" {
+		r.LoadStateFS(r.initialDataFilePath)
 		return
 	}
 
-	if config.Config.PersistDataFilePath != "" {
-		stat, err := os.Stat(config.Config.PersistDataFilePath)
+	if r.persistDataFilePath != "" {
+		stat, err := os.Stat(r.persistDataFilePath)
 		if err != nil {
 			return
 		}
@@ -37,12 +27,12 @@ func InitializeRepository() {
 			os.Exit(1)
 		}
 
-		LoadStateFS(config.Config.PersistDataFilePath)
+		r.LoadStateFS(r.persistDataFilePath)
 		return
 	}
 }
 
-func LoadStateFS(filePath string) {
+func (r *DataRepository) LoadStateFS(filePath string) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Error reading state JSON file: %v", err)
@@ -60,16 +50,16 @@ func LoadStateFS(filePath string) {
 	logger.Infof("Collections: %d\n", getLength(state.Collections))
 	logger.Infof("Documents: %d\n", getLength(state.Documents))
 
-	storeState = state
+	r.storeState = state
 
-	ensureStoreStateNoNullReferences()
+	r.ensureStoreStateNoNullReferences()
 }
 
-func SaveStateFS(filePath string) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) SaveStateFS(filePath string) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	data, err := json.MarshalIndent(storeState, "", "\t")
+	data, err := json.MarshalIndent(r.storeState, "", "\t")
 	if err != nil {
 		logger.Errorf("Failed to save state: %v\n", err)
 		return
@@ -78,16 +68,16 @@ func SaveStateFS(filePath string) {
 	os.WriteFile(filePath, data, os.ModePerm)
 
 	logger.Info("Saved state:")
-	logger.Infof("Databases: %d\n", getLength(storeState.Databases))
-	logger.Infof("Collections: %d\n", getLength(storeState.Collections))
-	logger.Infof("Documents: %d\n", getLength(storeState.Documents))
+	logger.Infof("Databases: %d\n", getLength(r.storeState.Databases))
+	logger.Infof("Collections: %d\n", getLength(r.storeState.Collections))
+	logger.Infof("Documents: %d\n", getLength(r.storeState.Documents))
 }
 
-func GetState() (string, error) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetState() (string, error) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	data, err := json.MarshalIndent(storeState, "", "\t")
+	data, err := json.MarshalIndent(r.storeState, "", "\t")
 	if err != nil {
 		logger.Errorf("Failed to serialize state: %v\n", err)
 		return "", err
@@ -121,36 +111,36 @@ func getLength(v interface{}) int {
 	return count
 }
 
-func ensureStoreStateNoNullReferences() {
-	if storeState.Databases == nil {
-		storeState.Databases = make(map[string]repositorymodels.Database)
+func (r *DataRepository) ensureStoreStateNoNullReferences() {
+	if r.storeState.Databases == nil {
+		r.storeState.Databases = make(map[string]repositorymodels.Database)
 	}
 
-	if storeState.Collections == nil {
-		storeState.Collections = make(map[string]map[string]repositorymodels.Collection)
+	if r.storeState.Collections == nil {
+		r.storeState.Collections = make(map[string]map[string]repositorymodels.Collection)
 	}
 
-	if storeState.Documents == nil {
-		storeState.Documents = make(map[string]map[string]map[string]repositorymodels.Document)
+	if r.storeState.Documents == nil {
+		r.storeState.Documents = make(map[string]map[string]map[string]repositorymodels.Document)
 	}
 
-	for database := range storeState.Databases {
-		if storeState.Collections[database] == nil {
-			storeState.Collections[database] = make(map[string]repositorymodels.Collection)
+	for database := range r.storeState.Databases {
+		if r.storeState.Collections[database] == nil {
+			r.storeState.Collections[database] = make(map[string]repositorymodels.Collection)
 		}
 
-		if storeState.Documents[database] == nil {
-			storeState.Documents[database] = make(map[string]map[string]repositorymodels.Document)
+		if r.storeState.Documents[database] == nil {
+			r.storeState.Documents[database] = make(map[string]map[string]repositorymodels.Document)
 		}
 
-		for collection := range storeState.Collections[database] {
-			if storeState.Documents[database][collection] == nil {
-				storeState.Documents[database][collection] = make(map[string]repositorymodels.Document)
+		for collection := range r.storeState.Collections[database] {
+			if r.storeState.Documents[database][collection] == nil {
+				r.storeState.Documents[database][collection] = make(map[string]repositorymodels.Document)
 			}
 
-			for document := range storeState.Documents[database][collection] {
-				if storeState.Documents[database][collection][document] == nil {
-					delete(storeState.Documents[database][collection], document)
+			for document := range r.storeState.Documents[database][collection] {
+				if r.storeState.Documents[database][collection][document] == nil {
+					delete(r.storeState.Documents[database][collection], document)
 				}
 			}
 		}

@@ -14,64 +14,64 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func GetAllDocuments(databaseId string, collectionId string) ([]repositorymodels.Document, repositorymodels.RepositoryStatus) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetAllDocuments(databaseId string, collectionId string) ([]repositorymodels.Document, repositorymodels.RepositoryStatus) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	if _, ok := r.storeState.Databases[databaseId]; !ok {
 		return make([]repositorymodels.Document, 0), repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Collections[databaseId][collectionId]; !ok {
+	if _, ok := r.storeState.Collections[databaseId][collectionId]; !ok {
 		return make([]repositorymodels.Document, 0), repositorymodels.StatusNotFound
 	}
 
-	return maps.Values(storeState.Documents[databaseId][collectionId]), repositorymodels.StatusOk
+	return maps.Values(r.storeState.Documents[databaseId][collectionId]), repositorymodels.StatusOk
 }
 
-func GetDocument(databaseId string, collectionId string, documentId string) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetDocument(databaseId string, collectionId string, documentId string) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	if _, ok := r.storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Collections[databaseId][collectionId]; !ok {
+	if _, ok := r.storeState.Collections[databaseId][collectionId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Documents[databaseId][collectionId][documentId]; !ok {
+	if _, ok := r.storeState.Documents[databaseId][collectionId][documentId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
 
-	return storeState.Documents[databaseId][collectionId][documentId], repositorymodels.StatusOk
+	return r.storeState.Documents[databaseId][collectionId][documentId], repositorymodels.StatusOk
 }
 
-func DeleteDocument(databaseId string, collectionId string, documentId string) repositorymodels.RepositoryStatus {
-	storeState.Lock()
-	defer storeState.Unlock()
+func (r *DataRepository) DeleteDocument(databaseId string, collectionId string, documentId string) repositorymodels.RepositoryStatus {
+	r.storeState.Lock()
+	defer r.storeState.Unlock()
 
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	if _, ok := r.storeState.Databases[databaseId]; !ok {
 		return repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Collections[databaseId][collectionId]; !ok {
+	if _, ok := r.storeState.Collections[databaseId][collectionId]; !ok {
 		return repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Documents[databaseId][collectionId][documentId]; !ok {
+	if _, ok := r.storeState.Documents[databaseId][collectionId][documentId]; !ok {
 		return repositorymodels.StatusNotFound
 	}
 
-	delete(storeState.Documents[databaseId][collectionId], documentId)
+	delete(r.storeState.Documents[databaseId][collectionId], documentId)
 
 	return repositorymodels.StatusOk
 }
 
-func CreateDocument(databaseId string, collectionId string, document map[string]interface{}) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
-	storeState.Lock()
-	defer storeState.Unlock()
+func (r *DataRepository) CreateDocument(databaseId string, collectionId string, document map[string]interface{}) (repositorymodels.Document, repositorymodels.RepositoryStatus) {
+	r.storeState.Lock()
+	defer r.storeState.Unlock()
 
 	var ok bool
 	var documentId string
@@ -82,15 +82,15 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 		document["id"] = documentId
 	}
 
-	if database, ok = storeState.Databases[databaseId]; !ok {
+	if database, ok = r.storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
 
-	if collection, ok = storeState.Collections[databaseId][collectionId]; !ok {
+	if collection, ok = r.storeState.Collections[databaseId][collectionId]; !ok {
 		return repositorymodels.Document{}, repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Documents[databaseId][collectionId][documentId]; ok {
+	if _, ok := r.storeState.Documents[databaseId][collectionId][documentId]; ok {
 		return repositorymodels.Document{}, repositorymodels.Conflict
 	}
 
@@ -99,19 +99,19 @@ func CreateDocument(databaseId string, collectionId string, document map[string]
 	document["_etag"] = fmt.Sprintf("\"%s\"", uuid.New())
 	document["_self"] = fmt.Sprintf("dbs/%s/colls/%s/docs/%s/", database.ResourceID, collection.ResourceID, document["_rid"])
 
-	storeState.Documents[databaseId][collectionId][documentId] = document
+	r.storeState.Documents[databaseId][collectionId][documentId] = document
 
 	return document, repositorymodels.StatusOk
 }
 
-func ExecuteQueryDocuments(databaseId string, collectionId string, query string, queryParameters map[string]interface{}) ([]memoryexecutor.RowType, repositorymodels.RepositoryStatus) {
+func (r *DataRepository) ExecuteQueryDocuments(databaseId string, collectionId string, query string, queryParameters map[string]interface{}) ([]memoryexecutor.RowType, repositorymodels.RepositoryStatus) {
 	parsedQuery, err := nosql.Parse("", []byte(query))
 	if err != nil {
 		log.Printf("Failed to parse query: %s\nerr: %v", query, err)
 		return nil, repositorymodels.BadRequest
 	}
 
-	collectionDocuments, status := GetAllDocuments(databaseId, collectionId)
+	collectionDocuments, status := r.GetAllDocuments(databaseId, collectionId)
 	if status != repositorymodels.StatusOk {
 		return nil, status
 	}

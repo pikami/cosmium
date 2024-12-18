@@ -11,16 +11,20 @@ import (
 )
 
 func main() {
-	config.ParseFlags()
+	configuration := config.ParseFlags()
 
-	repositories.InitializeRepository()
+	repository := repositories.NewDataRepository(repositories.RepositoryOptions{
+		InitialDataFilePath: configuration.InitialDataFilePath,
+		PersistDataFilePath: configuration.PersistDataFilePath,
+	})
 
-	server := api.StartAPI()
+	server := api.NewApiServer(repository, configuration)
+	server.Start()
 
-	waitForExit(server)
+	waitForExit(server, repository, configuration)
 }
 
-func waitForExit(server *api.Server) {
+func waitForExit(server *api.ApiServer, repository *repositories.DataRepository, config config.ServerConfig) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
@@ -28,9 +32,9 @@ func waitForExit(server *api.Server) {
 	<-sigs
 
 	// Stop the server
-	server.StopServer <- true
+	server.Stop()
 
-	if config.Config.PersistDataFilePath != "" {
-		repositories.SaveStateFS(config.Config.PersistDataFilePath)
+	if config.PersistDataFilePath != "" {
+		repository.SaveStateFS(config.PersistDataFilePath)
 	}
 }

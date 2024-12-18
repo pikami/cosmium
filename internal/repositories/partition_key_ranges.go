@@ -9,19 +9,19 @@ import (
 )
 
 // I have no idea what this is tbh
-func GetPartitionKeyRanges(databaseId string, collectionId string) ([]repositorymodels.PartitionKeyRange, repositorymodels.RepositoryStatus) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetPartitionKeyRanges(databaseId string, collectionId string) ([]repositorymodels.PartitionKeyRange, repositorymodels.RepositoryStatus) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
 	databaseRid := databaseId
 	collectionRid := collectionId
 	var timestamp int64 = 0
 
-	if database, ok := storeState.Databases[databaseId]; !ok {
+	if database, ok := r.storeState.Databases[databaseId]; !ok {
 		databaseRid = database.ResourceID
 	}
 
-	if collection, ok := storeState.Collections[databaseId][collectionId]; !ok {
+	if collection, ok := r.storeState.Collections[databaseId][collectionId]; !ok {
 		collectionRid = collection.ResourceID
 		timestamp = collection.TimeStamp
 	}

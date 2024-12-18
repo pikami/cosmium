@@ -11,60 +11,60 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func GetAllCollections(databaseId string) ([]repositorymodels.Collection, repositorymodels.RepositoryStatus) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetAllCollections(databaseId string) ([]repositorymodels.Collection, repositorymodels.RepositoryStatus) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	if _, ok := r.storeState.Databases[databaseId]; !ok {
 		return make([]repositorymodels.Collection, 0), repositorymodels.StatusNotFound
 	}
 
-	return maps.Values(storeState.Collections[databaseId]), repositorymodels.StatusOk
+	return maps.Values(r.storeState.Collections[databaseId]), repositorymodels.StatusOk
 }
 
-func GetCollection(databaseId string, collectionId string) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetCollection(databaseId string, collectionId string) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	if _, ok := r.storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Collections[databaseId][collectionId]; !ok {
+	if _, ok := r.storeState.Collections[databaseId][collectionId]; !ok {
 		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
 	}
 
-	return storeState.Collections[databaseId][collectionId], repositorymodels.StatusOk
+	return r.storeState.Collections[databaseId][collectionId], repositorymodels.StatusOk
 }
 
-func DeleteCollection(databaseId string, collectionId string) repositorymodels.RepositoryStatus {
-	storeState.Lock()
-	defer storeState.Unlock()
+func (r *DataRepository) DeleteCollection(databaseId string, collectionId string) repositorymodels.RepositoryStatus {
+	r.storeState.Lock()
+	defer r.storeState.Unlock()
 
-	if _, ok := storeState.Databases[databaseId]; !ok {
+	if _, ok := r.storeState.Databases[databaseId]; !ok {
 		return repositorymodels.StatusNotFound
 	}
 
-	if _, ok := storeState.Collections[databaseId][collectionId]; !ok {
+	if _, ok := r.storeState.Collections[databaseId][collectionId]; !ok {
 		return repositorymodels.StatusNotFound
 	}
 
-	delete(storeState.Collections[databaseId], collectionId)
+	delete(r.storeState.Collections[databaseId], collectionId)
 
 	return repositorymodels.StatusOk
 }
 
-func CreateCollection(databaseId string, newCollection repositorymodels.Collection) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
-	storeState.Lock()
-	defer storeState.Unlock()
+func (r *DataRepository) CreateCollection(databaseId string, newCollection repositorymodels.Collection) (repositorymodels.Collection, repositorymodels.RepositoryStatus) {
+	r.storeState.Lock()
+	defer r.storeState.Unlock()
 
 	var ok bool
 	var database repositorymodels.Database
-	if database, ok = storeState.Databases[databaseId]; !ok {
+	if database, ok = r.storeState.Databases[databaseId]; !ok {
 		return repositorymodels.Collection{}, repositorymodels.StatusNotFound
 	}
 
-	if _, ok = storeState.Collections[databaseId][newCollection.ID]; ok {
+	if _, ok = r.storeState.Collections[databaseId][newCollection.ID]; ok {
 		return repositorymodels.Collection{}, repositorymodels.Conflict
 	}
 
@@ -75,8 +75,8 @@ func CreateCollection(databaseId string, newCollection repositorymodels.Collecti
 	newCollection.ETag = fmt.Sprintf("\"%s\"", uuid.New())
 	newCollection.Self = fmt.Sprintf("dbs/%s/colls/%s/", database.ResourceID, newCollection.ResourceID)
 
-	storeState.Collections[databaseId][newCollection.ID] = newCollection
-	storeState.Documents[databaseId][newCollection.ID] = make(map[string]repositorymodels.Document)
+	r.storeState.Collections[databaseId][newCollection.ID] = newCollection
+	r.storeState.Documents[databaseId][newCollection.ID] = make(map[string]repositorymodels.Document)
 
 	return newCollection, repositorymodels.StatusOk
 }

@@ -9,44 +9,77 @@ import (
 	"github.com/pikami/cosmium/internal/repositories"
 )
 
-var currentServer *api.Server
+type ServerInstance struct {
+	server     *api.ApiServer
+	repository *repositories.DataRepository
+}
 
-//export Configure
-func Configure(configurationJSON *C.char) bool {
+var serverInstances map[string]*ServerInstance
+
+const (
+	ResponseSuccess                     = 0
+	ResponseUnknown                     = 1
+	ResponseServerInstanceAlreadyExists = 2
+	ResponseFailedToParseConfiguration  = 3
+	ResponseServerInstanceNotFound      = 4
+)
+
+//export CreateServerInstance
+func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
+	if serverInstances == nil {
+		serverInstances = make(map[string]*ServerInstance)
+	}
+
+	if _, ok := serverInstances[C.GoString(serverName)]; ok {
+		return ResponseServerInstanceAlreadyExists
+	}
+
 	var configuration config.ServerConfig
 	err := json.Unmarshal([]byte(C.GoString(configurationJSON)), &configuration)
 	if err != nil {
-		return false
+		return ResponseFailedToParseConfiguration
 	}
-	config.Config = configuration
-	return true
-}
 
-//export InitializeRepository
-func InitializeRepository() {
-	repositories.InitializeRepository()
-}
+	configuration.PopulateCalculatedFields()
 
-//export StartAPI
-func StartAPI() {
-	currentServer = api.StartAPI()
-}
+	repository := repositories.NewDataRepository(repositories.RepositoryOptions{
+		InitialDataFilePath: configuration.InitialDataFilePath,
+		PersistDataFilePath: configuration.PersistDataFilePath,
+	})
 
-//export StopAPI
-func StopAPI() {
-	if currentServer == nil {
-		currentServer.StopServer <- true
-		currentServer = nil
+	server := api.NewApiServer(repository, configuration)
+	server.Start()
+
+	serverInstances[C.GoString(serverName)] = &ServerInstance{
+		server:     server,
+		repository: repository,
 	}
+
+	return ResponseSuccess
 }
 
-//export GetState
-func GetState() *C.char {
-	stateJSON, err := repositories.GetState()
-	if err != nil {
-		return nil
+//export StopServerInstance
+func StopServerInstance(serverName *C.char) int {
+	if serverInstance, ok := serverInstances[C.GoString(serverName)]; ok {
+		serverInstance.server.Stop()
+		delete(serverInstances, C.GoString(serverName))
+		return ResponseSuccess
 	}
-	return C.CString(stateJSON)
+
+	return ResponseServerInstanceNotFound
+}
+
+//export GetServerInstanceState
+func GetServerInstanceState(serverName *C.char) *C.char {
+	if serverInstance, ok := serverInstances[C.GoString(serverName)]; ok {
+		stateJSON, err := serverInstance.repository.GetState()
+		if err != nil {
+			return nil
+		}
+		return C.CString(stateJSON)
+	}
+
+	return nil
 }
 
 func main() {}

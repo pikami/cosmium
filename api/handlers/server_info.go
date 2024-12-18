@@ -5,27 +5,26 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pikami/cosmium/api/config"
 )
 
-func GetServerInfo(c *gin.Context) {
+func (h *Handlers) GetServerInfo(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"_self":     "",
-		"id":        config.Config.DatabaseAccount,
-		"_rid":      fmt.Sprintf("%s.%s", config.Config.DatabaseAccount, config.Config.DatabaseDomain),
+		"id":        h.config.DatabaseAccount,
+		"_rid":      fmt.Sprintf("%s.%s", h.config.DatabaseAccount, h.config.DatabaseDomain),
 		"media":     "//media/",
 		"addresses": "//addresses/",
 		"_dbs":      "//dbs/",
 		"writableLocations": []map[string]interface{}{
 			{
 				"name":                    "South Central US",
-				"databaseAccountEndpoint": config.Config.DatabaseEndpoint,
+				"databaseAccountEndpoint": h.config.DatabaseEndpoint,
 			},
 		},
 		"readableLocations": []map[string]interface{}{
 			{
 				"name":                    "South Central US",
-				"databaseAccountEndpoint": config.Config.DatabaseEndpoint,
+				"databaseAccountEndpoint": h.config.DatabaseEndpoint,
 			},
 		},
 		"enableMultipleWriteLocations": false,

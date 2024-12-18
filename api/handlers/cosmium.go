@@ -4,11 +4,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pikami/cosmium/internal/repositories"
 )
 
-func CosmiumExport(c *gin.Context) {
-	repositoryState, err := repositories.GetState()
+func (h *Handlers) CosmiumExport(c *gin.Context) {
+	repositoryState, err := h.repository.GetState()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

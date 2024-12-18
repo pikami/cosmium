@@ -5,16 +5,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pikami/cosmium/internal/repositories"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
-func GetAllCollections(c *gin.Context) {
+func (h *Handlers) GetAllCollections(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 
-	collections, status := repositories.GetAllCollections(databaseId)
+	collections, status := h.repository.GetAllCollections(databaseId)
 	if status == repositorymodels.StatusOk {
-		database, _ := repositories.GetDatabase(databaseId)
+		database, _ := h.repository.GetDatabase(databaseId)
 
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(collections)))
 		c.IndentedJSON(http.StatusOK, gin.H{
@@ -28,11 +27,11 @@ func GetAllCollections(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func GetCollection(c *gin.Context) {
+func (h *Handlers) GetCollection(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	id := c.Param("collId")
 
-	collection, status := repositories.GetCollection(databaseId, id)
+	collection, status := h.repository.GetCollection(databaseId, id)
 	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, collection)
 		return
@@ -46,11 +45,11 @@ func GetCollection(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func DeleteCollection(c *gin.Context) {
+func (h *Handlers) DeleteCollection(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	id := c.Param("collId")
 
-	status := repositories.DeleteCollection(databaseId, id)
+	status := h.repository.DeleteCollection(databaseId, id)
 	if status == repositorymodels.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
@@ -64,7 +63,7 @@ func DeleteCollection(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func CreateCollection(c *gin.Context) {
+func (h *Handlers) CreateCollection(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	var newCollection repositorymodels.Collection
 
@@ -78,7 +77,7 @@ func CreateCollection(c *gin.Context) {
 		return
 	}
 
-	createdCollection, status := repositories.CreateCollection(databaseId, newCollection)
+	createdCollection, status := h.repository.CreateCollection(databaseId, newCollection)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return

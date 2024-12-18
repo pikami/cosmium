@@ -5,11 +5,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pikami/cosmium/internal/repositories"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
-func GetPartitionKeyRanges(c *gin.Context) {
+func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
@@ -18,7 +17,7 @@ func GetPartitionKeyRanges(c *gin.Context) {
 		return
 	}
 
-	partitionKeyRanges, status := repositories.GetPartitionKeyRanges(databaseId, collectionId)
+	partitionKeyRanges, status := h.repository.GetPartitionKeyRanges(databaseId, collectionId)
 	if status == repositorymodels.StatusOk {
 		c.Header("etag", "\"420\"")
 		c.Header("lsn", "420")
@@ -27,7 +26,7 @@ func GetPartitionKeyRanges(c *gin.Context) {
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(partitionKeyRanges)))
 
 		collectionRid := collectionId
-		collection, _ := repositories.GetCollection(databaseId, collectionId)
+		collection, _ := h.repository.GetCollection(databaseId, collectionId)
 		if collection.ResourceID != "" {
 			collectionRid = collection.ResourceID
 		}

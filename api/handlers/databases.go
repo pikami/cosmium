@@ -5,12 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pikami/cosmium/internal/repositories"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
-func GetAllDatabases(c *gin.Context) {
-	databases, status := repositories.GetAllDatabases()
+func (h *Handlers) GetAllDatabases(c *gin.Context) {
+	databases, status := h.repository.GetAllDatabases()
 	if status == repositorymodels.StatusOk {
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(databases)))
 		c.IndentedJSON(http.StatusOK, gin.H{
@@ -24,10 +23,10 @@ func GetAllDatabases(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func GetDatabase(c *gin.Context) {
+func (h *Handlers) GetDatabase(c *gin.Context) {
 	id := c.Param("databaseId")
 
-	database, status := repositories.GetDatabase(id)
+	database, status := h.repository.GetDatabase(id)
 	if status == repositorymodels.StatusOk {
 		c.IndentedJSON(http.StatusOK, database)
 		return
@@ -41,10 +40,10 @@ func GetDatabase(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func DeleteDatabase(c *gin.Context) {
+func (h *Handlers) DeleteDatabase(c *gin.Context) {
 	id := c.Param("databaseId")
 
-	status := repositories.DeleteDatabase(id)
+	status := h.repository.DeleteDatabase(id)
 	if status == repositorymodels.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
@@ -58,7 +57,7 @@ func DeleteDatabase(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-func CreateDatabase(c *gin.Context) {
+func (h *Handlers) CreateDatabase(c *gin.Context) {
 	var newDatabase repositorymodels.Database
 
 	if err := c.BindJSON(&newDatabase); err != nil {
@@ -71,7 +70,7 @@ func CreateDatabase(c *gin.Context) {
 		return
 	}
 
-	createdDatabase, status := repositories.CreateDatabase(newDatabase)
+	createdDatabase, status := h.repository.CreateDatabase(newDatabase)
 	if status == repositorymodels.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return

@@ -10,42 +10,42 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func GetAllDatabases() ([]repositorymodels.Database, repositorymodels.RepositoryStatus) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetAllDatabases() ([]repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	return maps.Values(storeState.Databases), repositorymodels.StatusOk
+	return maps.Values(r.storeState.Databases), repositorymodels.StatusOk
 }
 
-func GetDatabase(id string) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
-	storeState.RLock()
-	defer storeState.RUnlock()
+func (r *DataRepository) GetDatabase(id string) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
 
-	if database, ok := storeState.Databases[id]; ok {
+	if database, ok := r.storeState.Databases[id]; ok {
 		return database, repositorymodels.StatusOk
 	}
 
 	return repositorymodels.Database{}, repositorymodels.StatusNotFound
 }
 
-func DeleteDatabase(id string) repositorymodels.RepositoryStatus {
-	storeState.Lock()
-	defer storeState.Unlock()
+func (r *DataRepository) DeleteDatabase(id string) repositorymodels.RepositoryStatus {
+	r.storeState.Lock()
+	defer r.storeState.Unlock()
 
-	if _, ok := storeState.Databases[id]; !ok {
+	if _, ok := r.storeState.Databases[id]; !ok {
 		return repositorymodels.StatusNotFound
 	}
 
-	delete(storeState.Databases, id)
+	delete(r.storeState.Databases, id)
 
 	return repositorymodels.StatusOk
 }
 
-func CreateDatabase(newDatabase repositorymodels.Database) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
-	storeState.Lock()
-	defer storeState.Unlock()
+func (r *DataRepository) CreateDatabase(newDatabase repositorymodels.Database) (repositorymodels.Database, repositorymodels.RepositoryStatus) {
+	r.storeState.Lock()
+	defer r.storeState.Unlock()
 
-	if _, ok := storeState.Databases[newDatabase.ID]; ok {
+	if _, ok := r.storeState.Databases[newDatabase.ID]; ok {
 		return repositorymodels.Database{}, repositorymodels.Conflict
 	}
 
@@ -54,9 +54,9 @@ func CreateDatabase(newDatabase repositorymodels.Database) (repositorymodels.Dat
 	newDatabase.ETag = fmt.Sprintf("\"%s\"", uuid.New())
 	newDatabase.Self = fmt.Sprintf("dbs/%s/", newDatabase.ResourceID)
 
-	storeState.Databases[newDatabase.ID] = newDatabase
-	storeState.Collections[newDatabase.ID] = make(map[string]repositorymodels.Collection)
-	storeState.Documents[newDatabase.ID] = make(map[string]map[string]repositorymodels.Document)
+	r.storeState.Databases[newDatabase.ID] = newDatabase
+	r.storeState.Collections[newDatabase.ID] = make(map[string]repositorymodels.Collection)
+	r.storeState.Documents[newDatabase.ID] = make(map[string]map[string]repositorymodels.Document)
 
 	return newDatabase, repositorymodels.StatusOk
 }

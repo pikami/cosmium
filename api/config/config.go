@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/pikami/cosmium/internal/logger"
 )
 
 const (
@@ -13,9 +15,7 @@ const (
 	ExplorerBaseUrlLocation = "/_explorer"
 )
 
-var Config = ServerConfig{}
-
-func ParseFlags() {
+func ParseFlags() ServerConfig {
 	host := flag.String("Host", "localhost", "Hostname")
 	port := flag.Int("Port", 8081, "Listen port")
 	explorerPath := flag.String("ExplorerDir", "", "Path to cosmos-explorer files")
@@ -31,22 +31,30 @@ func ParseFlags() {
 	flag.Parse()
 	setFlagsFromEnvironment()
 
-	Config.Host = *host
-	Config.Port = *port
-	Config.ExplorerPath = *explorerPath
-	Config.TLS_CertificatePath = *tlsCertificatePath
-	Config.TLS_CertificateKey = *tlsCertificateKey
-	Config.InitialDataFilePath = *initialDataPath
-	Config.PersistDataFilePath = *persistDataPath
-	Config.DisableAuth = *disableAuthentication
-	Config.DisableTls = *disableTls
-	Config.Debug = *debug
+	config := ServerConfig{}
+	config.Host = *host
+	config.Port = *port
+	config.ExplorerPath = *explorerPath
+	config.TLS_CertificatePath = *tlsCertificatePath
+	config.TLS_CertificateKey = *tlsCertificateKey
+	config.InitialDataFilePath = *initialDataPath
+	config.PersistDataFilePath = *persistDataPath
+	config.DisableAuth = *disableAuthentication
+	config.DisableTls = *disableTls
+	config.Debug = *debug
+	config.AccountKey = *accountKey
 
-	Config.DatabaseAccount = Config.Host
-	Config.DatabaseDomain = Config.Host
-	Config.DatabaseEndpoint = fmt.Sprintf("https://%s:%d/", Config.Host, Config.Port)
-	Config.AccountKey = *accountKey
-	Config.ExplorerBaseUrlLocation = ExplorerBaseUrlLocation
+	config.PopulateCalculatedFields()
+
+	return config
+}
+
+func (c *ServerConfig) PopulateCalculatedFields() {
+	c.DatabaseAccount = c.Host
+	c.DatabaseDomain = c.Host
+	c.DatabaseEndpoint = fmt.Sprintf("https://%s:%d/", c.Host, c.Port)
+	c.ExplorerBaseUrlLocation = ExplorerBaseUrlLocation
+	logger.EnableDebugOutput = c.Debug
 }
 
 func setFlagsFromEnvironment() (err error) {
