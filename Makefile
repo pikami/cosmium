@@ -8,6 +8,8 @@ SERVER_LOCATION=./cmd/server
 
 SHARED_LIB_LOCATION=./sharedlibrary
 SHARED_LIB_OPT=-buildmode=c-shared
+XGO_TARGETS=linux/amd64,linux/arm64,windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
+GOVERSION=1.22.0
 
 DIST_DIR=dist
 
@@ -42,6 +44,11 @@ build-windows-arm64:
 build-sharedlib-linux-amd64:
 	@echo "Building shared library for Linux x64..."
 	@GOOS=linux GOARCH=amd64 $(GOBUILD) $(SHARED_LIB_OPT) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64.so $(SHARED_LIB_LOCATION)
+
+xgo-compile-sharedlib:
+	@echo "Building shared libraries using xgo..."
+	@mkdir -p $(DIST_DIR)
+	@xgo -targets=$(XGO_TARGETS) -go $(GOVERSION) -buildmode=c-shared -dest=$(DIST_DIR) -out=$(BINARY_NAME) -pkg=$(SHARED_LIB_LOCATION) .
 
 generate-parser-nosql:
 	pigeon -o ./parsers/nosql/nosql.go ./parsers/nosql/nosql.peg

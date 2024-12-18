@@ -1,0 +1,30 @@
+name: Cross-Compile Shared Libraries
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Cross-Compile with xgo
+        uses: crazy-max/ghaction-xgo@v3.1.0
+        with:
+          xgo_version: latest
+          go_version: 1.22.0
+          dest: dist
+          pkg: sharedlibrary
+          prefix: cosmium
+          targets: linux/amd64,linux/arm64,windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
+          v: true
+          buildmode: c-shared
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: shared-libraries
+          path: dist/*
