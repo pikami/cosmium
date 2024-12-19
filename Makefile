@@ -13,6 +13,12 @@ GOVERSION=1.22.0
 
 DIST_DIR=dist
 
+SHARED_LIB_TEST_CC=gcc
+SHARED_LIB_TEST_CFLAGS=-Wall -ldl
+SHARED_LIB_TEST_TARGET=$(DIST_DIR)/sharedlibrary_test
+SHARED_LIB_TEST_DIR=./sharedlibrary/tests
+SHARED_LIB_TEST_SOURCES=$(wildcard $(SHARED_LIB_TEST_DIR)/*.c)
+
 all: test build-all
 
 build-all: build-darwin-arm64 build-darwin-amd64 build-linux-amd64 build-linux-arm64 build-windows-amd64 build-windows-arm64
@@ -44,6 +50,14 @@ build-windows-arm64:
 build-sharedlib-linux-amd64:
 	@echo "Building shared library for Linux x64..."
 	@GOOS=linux GOARCH=amd64 $(GOBUILD) $(SHARED_LIB_OPT) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64.so $(SHARED_LIB_LOCATION)
+
+build-sharedlib-tests: build-sharedlib-linux-amd64
+	@echo "Building shared library tests..."
+	@$(SHARED_LIB_TEST_CC) $(SHARED_LIB_TEST_CFLAGS) -o $(SHARED_LIB_TEST_TARGET) $(SHARED_LIB_TEST_SOURCES)
+
+run-sharedlib-tests: build-sharedlib-tests
+	@echo "Running shared library tests..."
+	@$(SHARED_LIB_TEST_TARGET) $(DIST_DIR)/$(BINARY_NAME)-linux-amd64.so
 
 xgo-compile-sharedlib:
 	@echo "Building shared libraries using xgo..."

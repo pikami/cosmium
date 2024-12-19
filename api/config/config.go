@@ -57,6 +57,18 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 	logger.EnableDebugOutput = c.Debug
 }
 
+func (c *ServerConfig) ApplyDefaultsToEmptyFields() {
+	if c.Host == "" {
+		c.Host = "localhost"
+	}
+	if c.Port == 0 {
+		c.Port = 8081
+	}
+	if c.AccountKey == "" {
+		c.AccountKey = DefaultAccountKey
+	}
+}
+
 func setFlagsFromEnvironment() (err error) {
 	flag.VisitAll(func(f *flag.Flag) {
 		name := EnvPrefix + strings.ToUpper(strings.Replace(f.Name, "-", "_", -1))

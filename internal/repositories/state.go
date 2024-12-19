@@ -39,20 +39,33 @@ func (r *DataRepository) LoadStateFS(filePath string) {
 		return
 	}
 
-	var state repositorymodels.State
-	if err := json.Unmarshal(data, &state); err != nil {
+	err = r.LoadStateJSON(string(data))
+	if err != nil {
 		log.Fatalf("Error unmarshalling state JSON: %v", err)
-		return
+	}
+}
+
+func (r *DataRepository) LoadStateJSON(jsonData string) error {
+	r.storeState.RLock()
+	defer r.storeState.RUnlock()
+
+	var state repositorymodels.State
+	if err := json.Unmarshal([]byte(jsonData), &state); err != nil {
+		return err
 	}
 
-	logger.Info("Loaded state:")
-	logger.Infof("Databases: %d\n", getLength(state.Databases))
-	logger.Infof("Collections: %d\n", getLength(state.Collections))
-	logger.Infof("Documents: %d\n", getLength(state.Documents))
-
-	r.storeState = state
+	r.storeState.Collections = state.Collections
+	r.storeState.Databases = state.Databases
+	r.storeState.Documents = state.Documents
 
 	r.ensureStoreStateNoNullReferences()
+
+	logger.Info("Loaded state:")
+	logger.Infof("Databases: %d\n", getLength(r.storeState.Databases))
+	logger.Infof("Collections: %d\n", getLength(r.storeState.Collections))
+	logger.Infof("Documents: %d\n", getLength(r.storeState.Documents))
+
+	return nil
 }
 
 func (r *DataRepository) SaveStateFS(filePath string) {

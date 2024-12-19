@@ -1,20 +1,20 @@
 package config
 
 type ServerConfig struct {
-	DatabaseAccount  string
-	DatabaseDomain   string
-	DatabaseEndpoint string
-	AccountKey       string
+	DatabaseAccount  string `json:"databaseAccount"`
+	DatabaseDomain   string `json:"databaseDomain"`
+	DatabaseEndpoint string `json:"databaseEndpoint"`
+	AccountKey       string `json:"accountKey"`
 
-	ExplorerPath            string
-	Port                    int
-	Host                    string
-	TLS_CertificatePath     string
-	TLS_CertificateKey      string
-	InitialDataFilePath     string
-	PersistDataFilePath     string
-	DisableAuth             bool
-	DisableTls              bool
-	Debug                   bool
-	ExplorerBaseUrlLocation string
+	ExplorerPath            string `json:"explorerPath"`
+	Port                    int    `json:"port"`
+	Host                    string `json:"host"`
+	TLS_CertificatePath     string `json:"tlsCertificatePath"`
+	TLS_CertificateKey      string `json:"tlsCertificateKey"`
+	InitialDataFilePath     string `json:"initialDataFilePath"`
+	PersistDataFilePath     string `json:"persistDataFilePath"`
+	DisableAuth             bool   `json:"disableAuth"`
+	DisableTls              bool   `json:"disableTls"`
+	Debug                   bool   `json:"debug"`
+	ExplorerBaseUrlLocation string `json:"explorerBaseUrlLocation"`
 }

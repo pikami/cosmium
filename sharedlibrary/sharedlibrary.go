@@ -22,6 +22,7 @@ const (
 	ResponseServerInstanceAlreadyExists = 2
 	ResponseFailedToParseConfiguration  = 3
 	ResponseServerInstanceNotFound      = 4
+	ResponseFailedToLoadState           = 5
 )
 
 //export CreateServerInstance
@@ -44,6 +45,7 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 	}
 
 	configuration.PopulateCalculatedFields()
+	configuration.ApplyDefaultsToEmptyFields()
 
 	repository := repositories.NewDataRepository(repositories.RepositoryOptions{
 		InitialDataFilePath: configuration.InitialDataFilePath,
@@ -83,6 +85,22 @@ func GetServerInstanceState(serverName *C.char) *C.char {
 	}
 
 	return nil
+}
+
+//export LoadServerInstanceState
+func LoadServerInstanceState(serverName *C.char, stateJSON *C.char) int {
+	serverNameStr := C.GoString(serverName)
+	stateJSONStr := C.GoString(stateJSON)
+
+	if serverInstance, ok := serverInstances[serverNameStr]; ok {
+		err := serverInstance.repository.LoadStateJSON(stateJSONStr)
+		if err != nil {
+			return ResponseFailedToLoadState
+		}
+		return ResponseSuccess
+	}
+
+	return ResponseServerInstanceNotFound
 }
 
 func main() {}
