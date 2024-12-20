@@ -1,6 +1,6 @@
 #include "shared.h"
 
-void test_StopServerInstance()
+int test_StopServerInstance()
 {
     typedef int (*StopServerInstanceFn)(char *);
     StopServerInstanceFn StopServerInstance = (StopServerInstanceFn)load_function("StopServerInstance");
@@ -8,7 +8,7 @@ void test_StopServerInstance()
     if (!StopServerInstance)
     {
         fprintf(stderr, "Failed to find StopServerInstance function\n");
-        return;
+        return 0;
     }
 
     char *serverName = "TestServer";
@@ -20,5 +20,8 @@ void test_StopServerInstance()
     else
     {
         printf("StopServerInstance: FAILED (result = %d)\n", result);
+        return 0;
     }
+
+    return 1;
 }

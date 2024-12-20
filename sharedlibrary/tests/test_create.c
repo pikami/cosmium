@@ -1,6 +1,6 @@
 #include "shared.h"
 
-void test_CreateServerInstance()
+int test_CreateServerInstance()
 {
     typedef int (*CreateServerInstanceFn)(char *, char *);
     CreateServerInstanceFn CreateServerInstance = (CreateServerInstanceFn)load_function("CreateServerInstance");
@@ -8,7 +8,7 @@ void test_CreateServerInstance()
     if (!CreateServerInstance)
     {
         fprintf(stderr, "Failed to find CreateServerInstance function\n");
-        return;
+        return 0;
     }
 
     char *serverName = "TestServer";
@@ -22,5 +22,8 @@ void test_CreateServerInstance()
     else
     {
         printf("CreateServerInstance: FAILED (result = %d)\n", result);
+        return 0;
     }
+
+    return 1;
 }

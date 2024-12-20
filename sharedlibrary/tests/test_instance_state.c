@@ -1,13 +1,13 @@
 #include "shared.h"
 
-void test_ServerInstanceStateMethods()
+int test_ServerInstanceStateMethods()
 {
     typedef int (*LoadServerInstanceStateFn)(char *, char *);
     LoadServerInstanceStateFn LoadServerInstanceState = (LoadServerInstanceStateFn)load_function("LoadServerInstanceState");
     if (!LoadServerInstanceState)
     {
         fprintf(stderr, "Failed to find LoadServerInstanceState function\n");
-        return;
+        return 0;
     }
 
     char *serverName = "TestServer";
@@ -20,6 +20,7 @@ void test_ServerInstanceStateMethods()
     else
     {
         printf("LoadServerInstanceState: FAILED (result = %d)\n", result);
+        return 0;
     }
 
     typedef char *(*GetServerInstanceStateFn)(char *);
@@ -27,7 +28,7 @@ void test_ServerInstanceStateMethods()
     if (!GetServerInstanceState)
     {
         fprintf(stderr, "Failed to find GetServerInstanceState function\n");
-        return;
+        return 0;
     }
 
     char *state = GetServerInstanceState(serverName);
@@ -38,6 +39,7 @@ void test_ServerInstanceStateMethods()
     else
     {
         printf("GetServerInstanceState: FAILED\n");
+        return 0;
     }
 
     const char *expected_state = "{\"databases\":{\"test-db\":{\"id\":\"test-db\",\"_ts\":0,\"_rid\":\"\",\"_etag\":\"\",\"_self\":\"\"}},\"collections\":{\"test-db\":{}},\"documents\":{\"test-db\":{}}}";
@@ -45,7 +47,7 @@ void test_ServerInstanceStateMethods()
     if (!compact_state)
     {
         free(state);
-        return;
+        return 0;
     }
 
     if (strcmp(compact_state, expected_state) == 0)
@@ -57,8 +59,10 @@ void test_ServerInstanceStateMethods()
         printf("GetServerInstanceState: State does not match expected value.\n");
         printf("Expected: %s\n", expected_state);
         printf("Actual:   %s\n", compact_state);
+        return 0;
     }
 
     free(state);
     free(compact_state);
+    return 1;
 }
