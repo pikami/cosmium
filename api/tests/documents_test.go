@@ -235,11 +235,14 @@ func Test_Documents_Patch(t *testing.T) {
 
 	t.Run("Should PATCH document", func(t *testing.T) {
 		context := context.TODO()
-		expectedData := map[string]interface{}{"id": "67890", "pk": "456", "newField": "newValue"}
+		expectedData := map[string]interface{}{"id": "67890", "pk": "666", "newField": "newValue", "incr": 15., "setted": "isSet"}
 
 		patch := azcosmos.PatchOperations{}
 		patch.AppendAdd("/newField", "newValue")
+		patch.AppendIncrement("/incr", 15)
 		patch.AppendRemove("/isCool")
+		patch.AppendReplace("/pk", "666")
+		patch.AppendSet("/setted", "isSet")
 
 		itemResponse, err := collectionClient.PatchItem(
 			context,
@@ -252,13 +255,15 @@ func Test_Documents_Patch(t *testing.T) {
 		)
 		assert.Nil(t, err)
 
-		var itemResponseBody map[string]string
+		var itemResponseBody map[string]interface{}
 		json.Unmarshal(itemResponse.Value, &itemResponseBody)
 
 		assert.Equal(t, expectedData["id"], itemResponseBody["id"])
 		assert.Equal(t, expectedData["pk"], itemResponseBody["pk"])
 		assert.Empty(t, itemResponseBody["isCool"])
 		assert.Equal(t, expectedData["newField"], itemResponseBody["newField"])
+		assert.Equal(t, expectedData["incr"], itemResponseBody["incr"])
+		assert.Equal(t, expectedData["setted"], itemResponseBody["setted"])
 	})
 
 	t.Run("Should not allow to PATCH document ID", func(t *testing.T) {

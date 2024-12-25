@@ -5,9 +5,9 @@ go 1.22.0
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.9.2
 	github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos v0.3.6
-	github.com/evanphx/json-patch/v5 v5.9.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
+	github.com/pikami/json-patch/v5 v5.9.2
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/exp v0.0.0-20241217172543-b2144cdd0a67
 )
