@@ -35,6 +35,29 @@ func Test_Execute_Select(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute SELECT with query parameters as accessor", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "@param"}},
+				},
+				Table: parsers.Table{Value: "c"},
+				Parameters: map[string]interface{}{
+					"@param": "pk",
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "12345", "pk": 123},
+				map[string]interface{}{"id": "67890", "pk": 456},
+				map[string]interface{}{"id": "456", "pk": 456},
+				map[string]interface{}{"id": "123", "pk": 456},
+			},
+		)
+	})
+
 	t.Run("Should execute SELECT DISTINCT", func(t *testing.T) {
 		testQueryExecute(
 			t,

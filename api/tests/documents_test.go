@@ -147,6 +147,21 @@ func Test_Documents(t *testing.T) {
 		)
 	})
 
+	t.Run("Should query document with query parameters as accessor", func(t *testing.T) {
+		testCosmosQuery(t, collectionClient,
+			`select c.id
+			FROM c
+			WHERE c[@param]="67890"
+			ORDER BY c.id`,
+			[]azcosmos.QueryParameter{
+				{Name: "@param", Value: "id"},
+			},
+			[]interface{}{
+				map[string]interface{}{"id": "67890"},
+			},
+		)
+	})
+
 	t.Run("Should query array accessor", func(t *testing.T) {
 		testCosmosQuery(t, collectionClient,
 			`SELECT c.id,

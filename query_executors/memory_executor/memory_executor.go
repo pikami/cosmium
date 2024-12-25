@@ -317,6 +317,10 @@ func (r rowContext) applyProjection(selectItems []parsers.SelectItem) RowType {
 			} else {
 				destinationName = fmt.Sprintf("$%d", index+1)
 			}
+
+			if destinationName[0] == '@' {
+				destinationName = r.parameters[destinationName].(string)
+			}
 		}
 
 		row[destinationName] = r.resolveSelectItem(selectItem)
@@ -572,6 +576,9 @@ func (r rowContext) selectItem_SelectItemTypeField(selectItem parsers.SelectItem
 
 	if len(selectItem.Path) > 1 {
 		for _, pathSegment := range selectItem.Path[1:] {
+			if pathSegment[0] == '@' {
+				pathSegment = r.parameters[pathSegment].(string)
+			}
 
 			switch nestedValue := value.(type) {
 			case map[string]interface{}:

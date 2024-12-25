@@ -22,6 +22,20 @@ func Test_Parse_Select(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT with query parameters as accessor", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id, c[@param] FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Path: []string{"c", "@param"}},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT DISTINCT", func(t *testing.T) {
 		testQueryParse(
 			t,
