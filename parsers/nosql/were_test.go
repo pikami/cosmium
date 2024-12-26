@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pikami/cosmium/parsers"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Parse_Were(t *testing.T) {
@@ -22,10 +23,7 @@ func Test_Parse_Were(t *testing.T) {
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
 					Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
-					Right: parsers.SelectItem{
-						Type:  parsers.SelectItemTypeConstant,
-						Value: parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
-					},
+					Right:     testutils.SelectItem_Constant_Bool(true),
 				},
 			},
 		)
@@ -51,18 +49,12 @@ func Test_Parse_Were(t *testing.T) {
 						parsers.ComparisonExpression{
 							Operation: "=",
 							Left:      parsers.SelectItem{Path: []string{"c", "id"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeString, Value: "12345"},
-							},
+							Right:     testutils.SelectItem_Constant_String("12345"),
 						},
 						parsers.ComparisonExpression{
 							Operation: "=",
 							Left:      parsers.SelectItem{Path: []string{"c", "pk"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeInteger, Value: 123},
-							},
+							Right:     testutils.SelectItem_Constant_Int(123),
 						},
 					},
 				},
@@ -87,10 +79,7 @@ func Test_Parse_Were(t *testing.T) {
 						parsers.ComparisonExpression{
 							Operation: "=",
 							Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
-							},
+							Right:     testutils.SelectItem_Constant_Bool(true),
 						},
 						parsers.LogicalExpression{
 							Operation: parsers.LogicalExpressionTypeOr,
@@ -98,18 +87,12 @@ func Test_Parse_Were(t *testing.T) {
 								parsers.ComparisonExpression{
 									Operation: "=",
 									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
-									Right: parsers.SelectItem{
-										Type:  parsers.SelectItemTypeConstant,
-										Value: parsers.Constant{Type: parsers.ConstantTypeString, Value: "123"},
-									},
+									Right:     testutils.SelectItem_Constant_String("123"),
 								},
 								parsers.ComparisonExpression{
 									Operation: "=",
 									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
-									Right: parsers.SelectItem{
-										Type:  parsers.SelectItemTypeConstant,
-										Value: parsers.Constant{Type: parsers.ConstantTypeString, Value: "456"},
-									},
+									Right:     testutils.SelectItem_Constant_String("456"),
 								},
 							},
 						},
@@ -135,43 +118,28 @@ func Test_Parse_Were(t *testing.T) {
 				Filters: parsers.LogicalExpression{
 					Expressions: []interface{}{
 						parsers.ComparisonExpression{
-							Left: parsers.SelectItem{Path: []string{"c", "boolean"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
-							},
+							Left:      parsers.SelectItem{Path: []string{"c", "boolean"}},
+							Right:     testutils.SelectItem_Constant_Bool(true),
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
-							Left: parsers.SelectItem{Path: []string{"c", "integer"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeInteger, Value: 1},
-							},
+							Left:      parsers.SelectItem{Path: []string{"c", "integer"}},
+							Right:     testutils.SelectItem_Constant_Int(1),
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
-							Left: parsers.SelectItem{Path: []string{"c", "float"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeFloat, Value: 6.9},
-							},
+							Left:      parsers.SelectItem{Path: []string{"c", "float"}},
+							Right:     testutils.SelectItem_Constant_Float(6.9),
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
-							Left: parsers.SelectItem{Path: []string{"c", "string"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeString, Value: "hello"},
-							},
+							Left:      parsers.SelectItem{Path: []string{"c", "string"}},
+							Right:     testutils.SelectItem_Constant_String("hello"),
 							Operation: "=",
 						},
 						parsers.ComparisonExpression{
-							Left: parsers.SelectItem{Path: []string{"c", "param"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeParameterConstant, Value: "@param_id1"},
-							},
+							Left:      parsers.SelectItem{Path: []string{"c", "param"}},
+							Right:     testutils.SelectItem_Constant_Parameter("@param_id1"),
 							Operation: "=",
 						},
 					},

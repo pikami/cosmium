@@ -5,6 +5,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_StringFunctions(t *testing.T) {
@@ -33,20 +34,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "pk"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "aaa",
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeBoolean,
-										Value: true,
-									},
-								},
+								testutils.SelectItem_Constant_String("aaa"),
+								testutils.SelectItem_Constant_Bool(true),
 							},
 						},
 					},
@@ -81,13 +70,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "pk"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "aaa",
-									},
-								},
+								testutils.SelectItem_Constant_String("aaa"),
 								nil,
 							},
 						},
@@ -119,20 +102,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "id"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: " ",
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: 123,
-									},
-								},
+								testutils.SelectItem_Constant_String(" "),
+								testutils.SelectItem_Constant_Int(123),
 								parsers.SelectItem{
 									Path: []string{"c", "pk"},
 									Type: parsers.SelectItemTypeField,
@@ -171,20 +142,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "id"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "2",
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeBoolean,
-										Value: true,
-									},
-								},
+								testutils.SelectItem_Constant_String("2"),
+								testutils.SelectItem_Constant_Bool(true),
 							},
 						},
 					},
@@ -219,20 +178,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "id"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "3",
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeBoolean,
-										Value: true,
-									},
-								},
+								testutils.SelectItem_Constant_String("3"),
+								testutils.SelectItem_Constant_Bool(true),
 							},
 						},
 					},
@@ -267,20 +214,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "id"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "1",
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeBoolean,
-										Value: true,
-									},
-								},
+								testutils.SelectItem_Constant_String("1"),
+								testutils.SelectItem_Constant_Bool(true),
 							},
 						},
 					},
@@ -315,20 +250,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "str"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "o",
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 4,
-									},
-								},
+								testutils.SelectItem_Constant_String("o"),
+								testutils.SelectItem_Constant_Int(4),
 							},
 						},
 					},
@@ -397,13 +320,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "str"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 3,
-									},
-								},
+								testutils.SelectItem_Constant_Int(3),
 							},
 						},
 					},
@@ -506,20 +423,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "str"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "world",
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeString,
-										Value: "universe",
-									},
-								},
+								testutils.SelectItem_Constant_String("world"),
+								testutils.SelectItem_Constant_String("universe"),
 							},
 						},
 					},
@@ -554,13 +459,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "str"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 3,
-									},
-								},
+								testutils.SelectItem_Constant_Int(3),
 							},
 						},
 					},
@@ -629,13 +528,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "str"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 3,
-									},
-								},
+								testutils.SelectItem_Constant_Int(3),
 							},
 						},
 					},
@@ -704,20 +597,8 @@ func Test_Execute_StringFunctions(t *testing.T) {
 									Path: []string{"c", "str"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 2,
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 4,
-									},
-								},
+								testutils.SelectItem_Constant_Int(2),
+								testutils.SelectItem_Constant_Int(4),
 							},
 						},
 					},

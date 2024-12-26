@@ -5,6 +5,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_Where(t *testing.T) {
@@ -26,10 +27,7 @@ func Test_Execute_Where(t *testing.T) {
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
 					Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
-					Right: parsers.SelectItem{
-						Type:  parsers.SelectItemTypeConstant,
-						Value: parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
-					},
+					Right:     testutils.SelectItem_Constant_Bool(true),
 				},
 			},
 			mockData,
@@ -52,10 +50,7 @@ func Test_Execute_Where(t *testing.T) {
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
 					Left:      parsers.SelectItem{Path: []string{"c", "id"}},
-					Right: parsers.SelectItem{
-						Type:  parsers.SelectItemTypeConstant,
-						Value: parsers.Constant{Type: parsers.ConstantTypeParameterConstant, Value: "@param_id"},
-					},
+					Right:     testutils.SelectItem_Constant_Parameter("@param_id"),
 				},
 				Parameters: map[string]interface{}{
 					"@param_id": "456",
@@ -83,18 +78,12 @@ func Test_Execute_Where(t *testing.T) {
 						parsers.ComparisonExpression{
 							Operation: "=",
 							Left:      parsers.SelectItem{Path: []string{"c", "id"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeString, Value: "67890"},
-							},
+							Right:     testutils.SelectItem_Constant_String("67890"),
 						},
 						parsers.ComparisonExpression{
 							Operation: "=",
 							Left:      parsers.SelectItem{Path: []string{"c", "pk"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeInteger, Value: 456},
-							},
+							Right:     testutils.SelectItem_Constant_Int(456),
 						},
 					},
 				},
@@ -120,10 +109,7 @@ func Test_Execute_Where(t *testing.T) {
 						parsers.ComparisonExpression{
 							Operation: "=",
 							Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
-							Right: parsers.SelectItem{
-								Type:  parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: true},
-							},
+							Right:     testutils.SelectItem_Constant_Bool(true),
 						},
 						parsers.LogicalExpression{
 							Operation: parsers.LogicalExpressionTypeOr,
@@ -131,18 +117,12 @@ func Test_Execute_Where(t *testing.T) {
 								parsers.ComparisonExpression{
 									Operation: "=",
 									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
-									Right: parsers.SelectItem{
-										Type:  parsers.SelectItemTypeConstant,
-										Value: parsers.Constant{Type: parsers.ConstantTypeString, Value: "123"},
-									},
+									Right:     testutils.SelectItem_Constant_String("123"),
 								},
 								parsers.ComparisonExpression{
 									Operation: "=",
 									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
-									Right: parsers.SelectItem{
-										Type:  parsers.SelectItemTypeConstant,
-										Value: parsers.Constant{Type: parsers.ConstantTypeString, Value: "456"},
-									},
+									Right:     testutils.SelectItem_Constant_String("456"),
 								},
 							},
 						},

@@ -7,6 +7,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	"github.com/pikami/cosmium/parsers/nosql"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 // For Parser Debugging
@@ -102,20 +103,8 @@ func Test_Parse(t *testing.T) {
 								Path: []string{"c", "id"},
 								Type: parsers.SelectItemTypeField,
 							},
-							parsers.SelectItem{
-								Type: parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{
-									Type:  parsers.ConstantTypeString,
-									Value: "123",
-								},
-							},
-							parsers.SelectItem{
-								Type: parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{
-									Type:  parsers.ConstantTypeString,
-									Value: "456",
-								},
-							},
+							testutils.SelectItem_Constant_String("123"),
+							testutils.SelectItem_Constant_String("456"),
 						},
 					},
 				},

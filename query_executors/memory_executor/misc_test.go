@@ -6,6 +6,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func testQueryExecute(
@@ -111,20 +112,8 @@ func Test_Execute(t *testing.T) {
 								Path: []string{"c", "id"},
 								Type: parsers.SelectItemTypeField,
 							},
-							parsers.SelectItem{
-								Type: parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{
-									Type:  parsers.ConstantTypeString,
-									Value: "123",
-								},
-							},
-							parsers.SelectItem{
-								Type: parsers.SelectItemTypeConstant,
-								Value: parsers.Constant{
-									Type:  parsers.ConstantTypeString,
-									Value: "456",
-								},
-							},
+							testutils.SelectItem_Constant_String("123"),
+							testutils.SelectItem_Constant_String("456"),
 						},
 					},
 				},
