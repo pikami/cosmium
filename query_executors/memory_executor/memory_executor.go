@@ -470,6 +470,12 @@ func (r rowContext) selectItem_SelectItemTypeFunctionCall(functionCall parsers.F
 
 	case parsers.FunctionCallArrayConcat:
 		return r.array_Concat(functionCall.Arguments)
+	case parsers.FunctionCallArrayContains:
+		return r.array_Contains(functionCall.Arguments)
+	case parsers.FunctionCallArrayContainsAny:
+		return r.array_Contains_Any(functionCall.Arguments)
+	case parsers.FunctionCallArrayContainsAll:
+		return r.array_Contains_All(functionCall.Arguments)
 	case parsers.FunctionCallArrayLength:
 		return r.array_Length(functionCall.Arguments)
 	case parsers.FunctionCallArraySlice:

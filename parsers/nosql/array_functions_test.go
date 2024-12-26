@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pikami/cosmium/parsers"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Parse_ArrayFunctions(t *testing.T) {
@@ -27,6 +28,119 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 									Path: []string{"c", "a2"},
 									Type: parsers.SelectItemTypeField,
 								},
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
+	t.Run("Should parse function ARRAY_CONTAINS()", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT ARRAY_CONTAINS(c.a1, "value") FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "a1"},
+									Type: parsers.SelectItemTypeField,
+								},
+								testutils.SelectItem_Constant_String("value"),
+								nil,
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
+	t.Run("Should parse function ARRAY_CONTAINS() with partial match", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT ARRAY_CONTAINS(["a", "b"], "value", true) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeArray,
+									SelectItems: []parsers.SelectItem{
+										testutils.SelectItem_Constant_String("a"),
+										testutils.SelectItem_Constant_String("b"),
+									},
+								},
+								testutils.SelectItem_Constant_String("value"),
+								testutils.SelectItem_Constant_Bool(true),
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
+	t.Run("Should parse function ARRAY_CONTAINS_ANY()", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT ARRAY_CONTAINS_ANY(["a", "b"], "value", true) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAny,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeArray,
+									SelectItems: []parsers.SelectItem{
+										testutils.SelectItem_Constant_String("a"),
+										testutils.SelectItem_Constant_String("b"),
+									},
+								},
+								testutils.SelectItem_Constant_String("value"),
+								testutils.SelectItem_Constant_Bool(true),
+							},
+						},
+					},
+				},
+				Table: parsers.Table{Value: "c"},
+			},
+		)
+	})
+
+	t.Run("Should parse function ARRAY_CONTAINS_ALL()", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT ARRAY_CONTAINS_ALL(["a", "b"], "value", true) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAll,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Type: parsers.SelectItemTypeArray,
+									SelectItems: []parsers.SelectItem{
+										testutils.SelectItem_Constant_String("a"),
+										testutils.SelectItem_Constant_String("b"),
+									},
+								},
+								testutils.SelectItem_Constant_String("value"),
+								testutils.SelectItem_Constant_Bool(true),
 							},
 						},
 					},
@@ -75,20 +189,8 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 									Path: []string{"c", "array"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 0,
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 2,
-									},
-								},
+								testutils.SelectItem_Constant_Int(0),
+								testutils.SelectItem_Constant_Int(2),
 							},
 						},
 					},

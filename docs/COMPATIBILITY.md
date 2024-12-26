@@ -65,9 +65,9 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | Function           | Implemented |
 | ------------------ | ----------- |
 | ARRAY_CONCAT       | Yes         |
-| ARRAY_CONTAINS     | No          |
-| ARRAY_CONTAINS_ANY | No          |
-| ARRAY_CONTAINS_ALL | No          |
+| ARRAY_CONTAINS     | Yes         |
+| ARRAY_CONTAINS_ANY | Yes         |
+| ARRAY_CONTAINS_ALL | Yes         |
 | ARRAY_LENGTH       | Yes         |
 | ARRAY_SLICE        | Yes         |
 | CHOOSE             | No          |

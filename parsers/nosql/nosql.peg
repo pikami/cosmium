@@ -457,6 +457,9 @@ AggregateFunctions <- AvgAggregateExpression
     / SumAggregateExpression
 
 ArrayFunctions <- ArrayConcatExpression
+    / ArrayContainsExpression
+    / ArrayContainsAnyExpression
+    / ArrayContainsAllExpression
     / ArrayLengthExpression
     / ArraySliceExpression
     / SetIntersectExpression
@@ -624,6 +627,18 @@ IsString <- "IS_STRING"i ws "(" ws ex:SelectItem ws ")" {
 
 ArrayConcatExpression <- "ARRAY_CONCAT"i ws "(" ws arrays:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })+ ws ")" {
     return createFunctionCall(parsers.FunctionCallArrayConcat, append([]interface{}{arrays}, others.([]interface{})...))
+}
+
+ArrayContainsExpression <- "ARRAY_CONTAINS"i ws "(" ws array:SelectItem ws "," ws item:SelectItem partialMatch:(ws "," ws ex:SelectItem { return ex, nil })? ws ")" {
+    return createFunctionCall(parsers.FunctionCallArrayContains, []interface{}{array, item, partialMatch})
+}
+
+ArrayContainsAnyExpression <- "ARRAY_CONTAINS_ANY"i ws "(" ws array:SelectItem items:(ws "," ws ex:SelectItem { return ex, nil })+ ws ")" {
+    return createFunctionCall(parsers.FunctionCallArrayContainsAny, append([]interface{}{array}, items.([]interface{})...))
+}
+
+ArrayContainsAllExpression <- "ARRAY_CONTAINS_ALL"i ws "(" ws array:SelectItem items:(ws "," ws ex:SelectItem { return ex, nil })+ ws ")" {
+    return createFunctionCall(parsers.FunctionCallArrayContainsAll, append([]interface{}{array}, items.([]interface{})...))
 }
 
 ArrayLengthExpression <- "ARRAY_LENGTH"i ws "(" ws array:SelectItem ws ")" {

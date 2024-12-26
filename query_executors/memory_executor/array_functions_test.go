@@ -5,6 +5,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_ArrayFunctions(t *testing.T) {
@@ -48,6 +49,286 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 				map[string]interface{}{"id": "123", "Concat": []interface{}{1, 2, 3, 3, 4, 5}},
 				map[string]interface{}{"id": "456", "Concat": []interface{}{4, 5, 6, 5, 6, 7, 8}},
 				map[string]interface{}{"id": "789", "Concat": []interface{}{7, 8, 9, 7, 8, 9, 10, 11}},
+			},
+		)
+	})
+
+	t.Run("Should execute function ARRAY_CONTAINS()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				Parameters: map[string]interface{}{
+					"@categories":                []interface{}{"coats", "jackets", "sweatshirts"},
+					"@objectArray":               []interface{}{map[string]interface{}{"category": "shirts", "color": "blue"}},
+					"@fullMatchObject":           map[string]interface{}{"category": "shirts", "color": "blue"},
+					"@partialMatchObject":        map[string]interface{}{"category": "shirts"},
+					"@missingPartialMatchObject": map[string]interface{}{"category": "shorts", "color": "blue"},
+				},
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias: "ContainsItem",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@categories"),
+								testutils.SelectItem_Constant_String("coats"),
+							},
+						},
+					},
+					{
+						Alias: "MissingItem",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@categories"),
+								testutils.SelectItem_Constant_String("hoodies"),
+							},
+						},
+					},
+					{
+						Alias: "ContainsFullMatchObject",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@objectArray"),
+								testutils.SelectItem_Constant_Parameter("@fullMatchObject"),
+							},
+						},
+					},
+					{
+						Alias: "MissingFullMatchObject",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@objectArray"),
+								testutils.SelectItem_Constant_Parameter("@partialMatchObject"),
+							},
+						},
+					},
+					{
+						Alias: "ContainsPartialMatchObject",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@objectArray"),
+								testutils.SelectItem_Constant_Parameter("@partialMatchObject"),
+								testutils.SelectItem_Constant_Bool(true),
+							},
+						},
+					},
+					{
+						Alias: "MissingPartialMatchObject",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@objectArray"),
+								testutils.SelectItem_Constant_Parameter("@missingPartialMatchObject"),
+								testutils.SelectItem_Constant_Bool(true),
+							},
+						},
+					},
+				},
+			},
+			[]memoryexecutor.RowType{map[string]interface{}{"id": "123"}},
+			[]memoryexecutor.RowType{
+				map[string]interface{}{
+					"ContainsItem":               true,
+					"MissingItem":                false,
+					"ContainsFullMatchObject":    true,
+					"MissingFullMatchObject":     false,
+					"ContainsPartialMatchObject": true,
+					"MissingPartialMatchObject":  false,
+				},
+			},
+		)
+	})
+
+	t.Run("Should execute function ARRAY_CONTAINS_ANY()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				Parameters: map[string]interface{}{
+					"@mixedArray": []interface{}{1, true, "3", []int{1, 2, 3}},
+					"@numbers":    []interface{}{1, 2, 3, 4},
+					"@emptyArray": []interface{}{},
+					"@arr123":     []interface{}{1, 2, 3},
+				},
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias: "matchesEntireArray",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAny,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@mixedArray"),
+								testutils.SelectItem_Constant_Int(1),
+								testutils.SelectItem_Constant_Bool(true),
+								testutils.SelectItem_Constant_String("3"),
+								testutils.SelectItem_Constant_Parameter("@arr123"),
+							},
+						},
+					},
+					{
+						Alias: "matchesSomeValues",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAny,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@numbers"),
+								testutils.SelectItem_Constant_Int(2),
+								testutils.SelectItem_Constant_Int(3),
+								testutils.SelectItem_Constant_Int(4),
+								testutils.SelectItem_Constant_Int(5),
+							},
+						},
+					},
+					{
+						Alias: "matchSingleValue",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAny,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@numbers"),
+								testutils.SelectItem_Constant_Int(1),
+							},
+						},
+					},
+					{
+						Alias: "noMatches",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAny,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@numbers"),
+								testutils.SelectItem_Constant_Int(5),
+								testutils.SelectItem_Constant_Int(6),
+								testutils.SelectItem_Constant_Int(7),
+								testutils.SelectItem_Constant_Int(8),
+							},
+						},
+					},
+					{
+						Alias: "emptyArray",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAny,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@emptyArray"),
+								testutils.SelectItem_Constant_Int(1),
+								testutils.SelectItem_Constant_Int(2),
+								testutils.SelectItem_Constant_Int(3),
+							},
+						},
+					},
+				},
+			},
+			[]memoryexecutor.RowType{map[string]interface{}{"id": "123"}},
+			[]memoryexecutor.RowType{
+				map[string]interface{}{
+					"matchesEntireArray": true,
+					"matchesSomeValues":  true,
+					"matchSingleValue":   true,
+					"noMatches":          false,
+					"emptyArray":         false,
+				},
+			},
+		)
+	})
+
+	t.Run("Should execute function ARRAY_CONTAINS_ALL()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				Parameters: map[string]interface{}{
+					"@mixedArray": []interface{}{1, true, "3", []interface{}{1, 2, 3}},
+					"@numbers":    []interface{}{1, 2, 3, 4},
+					"@emptyArray": []interface{}{},
+					"@arr123":     []interface{}{1, 2, 3},
+				},
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias: "matchesEntireArray",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAll,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@mixedArray"),
+								testutils.SelectItem_Constant_Int(1),
+								testutils.SelectItem_Constant_Bool(true),
+								testutils.SelectItem_Constant_String("3"),
+								testutils.SelectItem_Constant_Parameter("@arr123"),
+							},
+						},
+					},
+					{
+						Alias: "matchesSomeValues",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAll,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@numbers"),
+								testutils.SelectItem_Constant_Int(2),
+								testutils.SelectItem_Constant_Int(3),
+								testutils.SelectItem_Constant_Int(4),
+								testutils.SelectItem_Constant_Int(5),
+							},
+						},
+					},
+					{
+						Alias: "matchSingleValue",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAll,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@numbers"),
+								testutils.SelectItem_Constant_Int(1),
+							},
+						},
+					},
+					{
+						Alias: "noMatches",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAll,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@numbers"),
+								testutils.SelectItem_Constant_Int(5),
+								testutils.SelectItem_Constant_Int(6),
+								testutils.SelectItem_Constant_Int(7),
+								testutils.SelectItem_Constant_Int(8),
+							},
+						},
+					},
+					{
+						Alias: "emptyArray",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContainsAll,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@emptyArray"),
+								testutils.SelectItem_Constant_Int(1),
+								testutils.SelectItem_Constant_Int(2),
+								testutils.SelectItem_Constant_Int(3),
+							},
+						},
+					},
+				},
+			},
+			[]memoryexecutor.RowType{map[string]interface{}{"id": "123"}},
+			[]memoryexecutor.RowType{
+				map[string]interface{}{
+					"matchesEntireArray": true,
+					"matchesSomeValues":  false,
+					"matchSingleValue":   true,
+					"noMatches":          false,
+					"emptyArray":         false,
+				},
 			},
 		)
 	})
@@ -105,20 +386,8 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 									Path: []string{"c", "arr2"},
 									Type: parsers.SelectItemTypeField,
 								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 1,
-									},
-								},
-								parsers.SelectItem{
-									Type: parsers.SelectItemTypeConstant,
-									Value: parsers.Constant{
-										Type:  parsers.ConstantTypeInteger,
-										Value: 2,
-									},
-								},
+								testutils.SelectItem_Constant_Int(1),
+								testutils.SelectItem_Constant_Int(2),
 							},
 						},
 					},

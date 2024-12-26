@@ -16,6 +16,86 @@ func (r rowContext) array_Concat(arguments []interface{}) []interface{} {
 	return result
 }
 
+func (r rowContext) array_Contains(arguments []interface{}) bool {
+	array := r.parseArray(arguments[0])
+	if array == nil {
+		return false
+	}
+
+	exprToSearch := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
+
+	partialSearch := false
+	if len(arguments) > 2 {
+		boolExpr := r.resolveSelectItem(arguments[2].(parsers.SelectItem))
+		if boolValue, ok := boolExpr.(bool); ok {
+			partialSearch = boolValue
+		} else {
+			logger.Error("array_Contains - got parameters of wrong type")
+			return false
+		}
+	}
+
+	for _, item := range array {
+		if partialSearch {
+			if r.partialMatch(item, exprToSearch) {
+				return true
+			}
+		} else {
+			if reflect.DeepEqual(item, exprToSearch) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (r rowContext) array_Contains_Any(arguments []interface{}) bool {
+	array := r.parseArray(arguments[0])
+	if array == nil {
+		return false
+	}
+
+	valueSelectItems := arguments[1:]
+
+	for _, valueSelectItem := range valueSelectItems {
+		value := r.resolveSelectItem(valueSelectItem.(parsers.SelectItem))
+		for _, item := range array {
+			if reflect.DeepEqual(item, value) {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func (r rowContext) array_Contains_All(arguments []interface{}) bool {
+	array := r.parseArray(arguments[0])
+	if array == nil {
+		return false
+	}
+
+	valueSelectItems := arguments[1:]
+
+	for _, valueSelectItem := range valueSelectItems {
+		value := r.resolveSelectItem(valueSelectItem.(parsers.SelectItem))
+
+		found := false
+		for _, item := range array {
+			if reflect.DeepEqual(item, value) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	return true
+}
+
 func (r rowContext) array_Length(arguments []interface{}) int {
 	array := r.parseArray(arguments[0])
 	if array == nil {
@@ -128,4 +208,22 @@ func (r rowContext) parseArray(argument interface{}) []interface{} {
 	}
 
 	return result
+}
+
+func (r rowContext) partialMatch(item interface{}, exprToSearch interface{}) bool {
+	itemValue := reflect.ValueOf(item)
+	exprValue := reflect.ValueOf(exprToSearch)
+
+	if itemValue.Kind() != reflect.Map || exprValue.Kind() != reflect.Map {
+		logger.Error("partialMatch got parameters of wrong type")
+		return false
+	}
+
+	for _, key := range exprValue.MapKeys() {
+		if itemValue.MapIndex(key).Interface() != exprValue.MapIndex(key).Interface() {
+			return false
+		}
+	}
+
+	return true
 }
