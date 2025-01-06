@@ -19,6 +19,22 @@ const (
 	BadRequest     = 4
 )
 
+type TriggerOperation string
+
+const (
+	All     TriggerOperation = "All"
+	Create  TriggerOperation = "Create"
+	Delete  TriggerOperation = "Delete"
+	Replace TriggerOperation = "Replace"
+)
+
+type TriggerType string
+
+const (
+	Pre  TriggerType = "Pre"
+	Post TriggerType = "Post"
+)
+
 type Collection struct {
 	ID             string                   `json:"id"`
 	IndexingPolicy CollectionIndexingPolicy `json:"indexingPolicy"`
@@ -60,29 +76,29 @@ type UserDefinedFunction struct {
 	Body       string `json:"body"`
 	ID         string `json:"id"`
 	ResourceID string `json:"_rid"`
-	TimeStamp  int    `json:"_ts"`
+	TimeStamp  int64  `json:"_ts"`
 	Self       string `json:"_self"`
-	Etag       string `json:"_etag"`
+	ETag       string `json:"_etag"`
 }
 
 type StoredProcedure struct {
 	Body       string `json:"body"`
 	ID         string `json:"id"`
 	ResourceID string `json:"_rid"`
-	TimeStamp  int    `json:"_ts"`
+	TimeStamp  int64  `json:"_ts"`
 	Self       string `json:"_self"`
-	Etag       string `json:"_etag"`
+	ETag       string `json:"_etag"`
 }
 
 type Trigger struct {
-	Body             string `json:"body"`
-	ID               string `json:"id"`
-	TriggerOperation string `json:"triggerOperation"`
-	TriggerType      string `json:"triggerType"`
-	ResourceID       string `json:"_rid"`
-	TimeStamp        int    `json:"_ts"`
-	Self             string `json:"_self"`
-	Etag             string `json:"_etag"`
+	Body             string           `json:"body"`
+	ID               string           `json:"id"`
+	TriggerOperation TriggerOperation `json:"triggerOperation"`
+	TriggerType      TriggerType      `json:"triggerType"`
+	ResourceID       string           `json:"_rid"`
+	TimeStamp        int64            `json:"_ts"`
+	Self             string           `json:"_self"`
+	ETag             string           `json:"_etag"`
 }
 
 type Document map[string]interface{}
@@ -113,4 +129,13 @@ type State struct {
 
 	// Map databaseId -> collectionId -> documentId -> Documents
 	Documents map[string]map[string]map[string]Document `json:"documents"`
+
+	// Map databaseId -> collectionId -> triggerId -> Trigger
+	Triggers map[string]map[string]map[string]Trigger `json:"triggers"`
+
+	// Map databaseId -> collectionId -> spId -> StoredProcedure
+	StoredProcedures map[string]map[string]map[string]StoredProcedure `json:"sprocs"`
+
+	// Map databaseId -> collectionId -> udfId -> UserDefinedFunction
+	UserDefinedFunctions map[string]map[string]map[string]UserDefinedFunction `json:"udfs"`
 }

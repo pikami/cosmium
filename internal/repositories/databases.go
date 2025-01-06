@@ -57,6 +57,9 @@ func (r *DataRepository) CreateDatabase(newDatabase repositorymodels.Database) (
 	r.storeState.Databases[newDatabase.ID] = newDatabase
 	r.storeState.Collections[newDatabase.ID] = make(map[string]repositorymodels.Collection)
 	r.storeState.Documents[newDatabase.ID] = make(map[string]map[string]repositorymodels.Document)
+	r.storeState.Triggers[newDatabase.ID] = make(map[string]map[string]repositorymodels.Trigger)
+	r.storeState.StoredProcedures[newDatabase.ID] = make(map[string]map[string]repositorymodels.StoredProcedure)
+	r.storeState.UserDefinedFunctions[newDatabase.ID] = make(map[string]map[string]repositorymodels.UserDefinedFunction)
 
 	return newDatabase, repositorymodels.StatusOk
 }

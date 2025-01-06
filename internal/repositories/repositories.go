@@ -3,10 +3,7 @@ package repositories
 import repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 
 type DataRepository struct {
-	storedProcedures     []repositorymodels.StoredProcedure
-	triggers             []repositorymodels.Trigger
-	userDefinedFunctions []repositorymodels.UserDefinedFunction
-	storeState           repositorymodels.State
+	storeState repositorymodels.State
 
 	initialDataFilePath string
 	persistDataFilePath string
@@ -19,13 +16,13 @@ type RepositoryOptions struct {
 
 func NewDataRepository(options RepositoryOptions) *DataRepository {
 	repository := &DataRepository{
-		storedProcedures:     []repositorymodels.StoredProcedure{},
-		triggers:             []repositorymodels.Trigger{},
-		userDefinedFunctions: []repositorymodels.UserDefinedFunction{},
 		storeState: repositorymodels.State{
-			Databases:   make(map[string]repositorymodels.Database),
-			Collections: make(map[string]map[string]repositorymodels.Collection),
-			Documents:   make(map[string]map[string]map[string]repositorymodels.Document),
+			Databases:            make(map[string]repositorymodels.Database),
+			Collections:          make(map[string]map[string]repositorymodels.Collection),
+			Documents:            make(map[string]map[string]map[string]repositorymodels.Document),
+			Triggers:             make(map[string]map[string]map[string]repositorymodels.Trigger),
+			StoredProcedures:     make(map[string]map[string]map[string]repositorymodels.StoredProcedure),
+			UserDefinedFunctions: make(map[string]map[string]map[string]repositorymodels.UserDefinedFunction),
 		},
 		initialDataFilePath: options.InitialDataFilePath,
 		persistDataFilePath: options.PersistDataFilePath,

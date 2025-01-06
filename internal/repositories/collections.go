@@ -77,6 +77,9 @@ func (r *DataRepository) CreateCollection(databaseId string, newCollection repos
 
 	r.storeState.Collections[databaseId][newCollection.ID] = newCollection
 	r.storeState.Documents[databaseId][newCollection.ID] = make(map[string]repositorymodels.Document)
+	r.storeState.Triggers[databaseId][newCollection.ID] = make(map[string]repositorymodels.Trigger)
+	r.storeState.StoredProcedures[databaseId][newCollection.ID] = make(map[string]repositorymodels.StoredProcedure)
+	r.storeState.UserDefinedFunctions[databaseId][newCollection.ID] = make(map[string]repositorymodels.UserDefinedFunction)
 
 	return newCollection, repositorymodels.StatusOk
 }

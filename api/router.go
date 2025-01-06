@@ -50,9 +50,23 @@ func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
 	router.GET("/dbs/:databaseId", routeHandlers.GetDatabase)
 	router.DELETE("/dbs/:databaseId", routeHandlers.DeleteDatabase)
 
-	router.GET("/dbs/:databaseId/colls/:collId/udfs", routeHandlers.GetAllUserDefinedFunctions)
-	router.GET("/dbs/:databaseId/colls/:collId/sprocs", routeHandlers.GetAllStoredProcedures)
+	router.POST("/dbs/:databaseId/colls/:collId/triggers", routeHandlers.CreateTrigger)
 	router.GET("/dbs/:databaseId/colls/:collId/triggers", routeHandlers.GetAllTriggers)
+	router.GET("/dbs/:databaseId/colls/:collId/triggers/:triggerId", routeHandlers.GetTrigger)
+	router.PUT("/dbs/:databaseId/colls/:collId/triggers/:triggerId", routeHandlers.ReplaceTrigger)
+	router.DELETE("/dbs/:databaseId/colls/:collId/triggers/:triggerId", routeHandlers.DeleteTrigger)
+
+	router.POST("/dbs/:databaseId/colls/:collId/sprocs", routeHandlers.CreateStoredProcedure)
+	router.GET("/dbs/:databaseId/colls/:collId/sprocs", routeHandlers.GetAllStoredProcedures)
+	router.GET("/dbs/:databaseId/colls/:collId/sprocs/:sprocId", routeHandlers.GetStoredProcedure)
+	router.PUT("/dbs/:databaseId/colls/:collId/sprocs/:sprocId", routeHandlers.ReplaceStoredProcedure)
+	router.DELETE("/dbs/:databaseId/colls/:collId/sprocs/:sprocId", routeHandlers.DeleteStoredProcedure)
+
+	router.POST("/dbs/:databaseId/colls/:collId/udfs", routeHandlers.CreateUserDefinedFunction)
+	router.GET("/dbs/:databaseId/colls/:collId/udfs", routeHandlers.GetAllUserDefinedFunctions)
+	router.GET("/dbs/:databaseId/colls/:collId/udfs/:udfId", routeHandlers.GetUserDefinedFunction)
+	router.PUT("/dbs/:databaseId/colls/:collId/udfs/:udfId", routeHandlers.ReplaceUserDefinedFunction)
+	router.DELETE("/dbs/:databaseId/colls/:collId/udfs/:udfId", routeHandlers.DeleteUserDefinedFunction)
 
 	router.GET("/offers", handlers.GetOffers)
 	router.GET("/", routeHandlers.GetServerInfo)

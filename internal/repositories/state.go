@@ -64,6 +64,9 @@ func (r *DataRepository) LoadStateJSON(jsonData string) error {
 	logger.Infof("Databases: %d\n", getLength(r.storeState.Databases))
 	logger.Infof("Collections: %d\n", getLength(r.storeState.Collections))
 	logger.Infof("Documents: %d\n", getLength(r.storeState.Documents))
+	logger.Infof("Triggers: %d\n", getLength(r.storeState.Triggers))
+	logger.Infof("Stored procedures: %d\n", getLength(r.storeState.StoredProcedures))
+	logger.Infof("User defined functions: %d\n", getLength(r.storeState.UserDefinedFunctions))
 
 	return nil
 }
@@ -84,6 +87,9 @@ func (r *DataRepository) SaveStateFS(filePath string) {
 	logger.Infof("Databases: %d\n", getLength(r.storeState.Databases))
 	logger.Infof("Collections: %d\n", getLength(r.storeState.Collections))
 	logger.Infof("Documents: %d\n", getLength(r.storeState.Documents))
+	logger.Infof("Triggers: %d\n", getLength(r.storeState.Triggers))
+	logger.Infof("Stored procedures: %d\n", getLength(r.storeState.StoredProcedures))
+	logger.Infof("User defined functions: %d\n", getLength(r.storeState.UserDefinedFunctions))
 }
 
 func (r *DataRepository) GetState() (string, error) {
@@ -103,7 +109,10 @@ func getLength(v interface{}) int {
 	switch v.(type) {
 	case repositorymodels.Database,
 		repositorymodels.Collection,
-		repositorymodels.Document:
+		repositorymodels.Document,
+		repositorymodels.Trigger,
+		repositorymodels.StoredProcedure,
+		repositorymodels.UserDefinedFunction:
 		return 1
 	}
 
@@ -137,6 +146,18 @@ func (r *DataRepository) ensureStoreStateNoNullReferences() {
 		r.storeState.Documents = make(map[string]map[string]map[string]repositorymodels.Document)
 	}
 
+	if r.storeState.Triggers == nil {
+		r.storeState.Triggers = make(map[string]map[string]map[string]repositorymodels.Trigger)
+	}
+
+	if r.storeState.StoredProcedures == nil {
+		r.storeState.StoredProcedures = make(map[string]map[string]map[string]repositorymodels.StoredProcedure)
+	}
+
+	if r.storeState.UserDefinedFunctions == nil {
+		r.storeState.UserDefinedFunctions = make(map[string]map[string]map[string]repositorymodels.UserDefinedFunction)
+	}
+
 	for database := range r.storeState.Databases {
 		if r.storeState.Collections[database] == nil {
 			r.storeState.Collections[database] = make(map[string]repositorymodels.Collection)
@@ -144,6 +165,18 @@ func (r *DataRepository) ensureStoreStateNoNullReferences() {
 
 		if r.storeState.Documents[database] == nil {
 			r.storeState.Documents[database] = make(map[string]map[string]repositorymodels.Document)
+		}
+
+		if r.storeState.Triggers[database] == nil {
+			r.storeState.Triggers[database] = make(map[string]map[string]repositorymodels.Trigger)
+		}
+
+		if r.storeState.StoredProcedures[database] == nil {
+			r.storeState.StoredProcedures[database] = make(map[string]map[string]repositorymodels.StoredProcedure)
+		}
+
+		if r.storeState.UserDefinedFunctions[database] == nil {
+			r.storeState.UserDefinedFunctions[database] = make(map[string]map[string]repositorymodels.UserDefinedFunction)
 		}
 
 		for collection := range r.storeState.Collections[database] {
@@ -155,6 +188,18 @@ func (r *DataRepository) ensureStoreStateNoNullReferences() {
 				if r.storeState.Documents[database][collection][document] == nil {
 					delete(r.storeState.Documents[database][collection], document)
 				}
+			}
+
+			if r.storeState.Triggers[database][collection] == nil {
+				r.storeState.Triggers[database][collection] = make(map[string]repositorymodels.Trigger)
+			}
+
+			if r.storeState.StoredProcedures[database][collection] == nil {
+				r.storeState.StoredProcedures[database][collection] = make(map[string]repositorymodels.StoredProcedure)
+			}
+
+			if r.storeState.UserDefinedFunctions[database][collection] == nil {
+				r.storeState.UserDefinedFunctions[database][collection] = make(map[string]repositorymodels.UserDefinedFunction)
 			}
 		}
 	}
