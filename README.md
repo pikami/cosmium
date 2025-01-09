@@ -78,7 +78,7 @@ To disable SSL and run Cosmium on HTTP instead, you can use the `-DisableTls` fl
 - **-InitialData**: Path to JSON containing initial state
 - **-Persist**: Saves data to the given path on application exit (When `-InitialData` argument is not supplied, it will try to load data from path supplied in `-Persist`)
 - **-Port**: Listen port (default 8081)
-- **-Debug**: Runs application in debug mode, this provides additional logging
+- **-LogLevel**: Sets the logging level (one of: debug, info, error, silent) (default info)
 
 These arguments allow you to configure various aspects of Cosmium's behavior according to your requirements.
 
@@ -90,7 +90,7 @@ All mentioned arguments can also be set using environment variables:
 - **COSMIUM_INITIALDATA** for `-InitialData`
 - **COSMIUM_PERSIST** for `-Persist`
 - **COSMIUM_PORT** for `-Port`
-- **COSMIUM_DEBUG** for `-Debug`
+- **COSMIUM_LOGLEVEL** for `-LogLevel`
 
 # License
 

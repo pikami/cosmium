@@ -119,7 +119,7 @@ func (r rowContext) strings_Left(arguments []interface{}) string {
 	lengthEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
 
 	if length, ok = lengthEx.(int); !ok {
-		logger.Error("strings_Left - got parameters of wrong type")
+		logger.ErrorLn("strings_Left - got parameters of wrong type")
 		return ""
 	}
 
@@ -158,7 +158,7 @@ func (r rowContext) strings_Replicate(arguments []interface{}) string {
 	timesEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
 
 	if times, ok = timesEx.(int); !ok {
-		logger.Error("strings_Replicate - got parameters of wrong type")
+		logger.ErrorLn("strings_Replicate - got parameters of wrong type")
 		return ""
 	}
 
@@ -191,7 +191,7 @@ func (r rowContext) strings_Right(arguments []interface{}) string {
 	lengthEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
 
 	if length, ok = lengthEx.(int); !ok {
-		logger.Error("strings_Right - got parameters of wrong type")
+		logger.ErrorLn("strings_Right - got parameters of wrong type")
 		return ""
 	}
 
@@ -220,11 +220,11 @@ func (r rowContext) strings_Substring(arguments []interface{}) string {
 	lengthEx := r.resolveSelectItem(arguments[2].(parsers.SelectItem))
 
 	if startPos, ok = startPosEx.(int); !ok {
-		logger.Error("strings_Substring - got start parameters of wrong type")
+		logger.ErrorLn("strings_Substring - got start parameters of wrong type")
 		return ""
 	}
 	if length, ok = lengthEx.(int); !ok {
-		logger.Error("strings_Substring - got length parameters of wrong type")
+		logger.ErrorLn("strings_Substring - got length parameters of wrong type")
 		return ""
 	}
 
@@ -264,7 +264,7 @@ func (r rowContext) parseString(argument interface{}) string {
 		return str1
 	}
 
-	logger.Error("StringEquals got parameters of wrong type")
+	logger.ErrorLn("StringEquals got parameters of wrong type")
 	return ""
 }
 

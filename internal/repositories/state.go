@@ -23,7 +23,7 @@ func (r *DataRepository) InitializeRepository() {
 		}
 
 		if stat.IsDir() {
-			logger.Error("Argument '-Persist' must be a path to file, not a directory.")
+			logger.ErrorLn("Argument '-Persist' must be a path to file, not a directory.")
 			os.Exit(1)
 		}
 
@@ -60,7 +60,7 @@ func (r *DataRepository) LoadStateJSON(jsonData string) error {
 
 	r.ensureStoreStateNoNullReferences()
 
-	logger.Info("Loaded state:")
+	logger.InfoLn("Loaded state:")
 	logger.Infof("Databases: %d\n", getLength(r.storeState.Databases))
 	logger.Infof("Collections: %d\n", getLength(r.storeState.Collections))
 	logger.Infof("Documents: %d\n", getLength(r.storeState.Documents))
@@ -83,7 +83,7 @@ func (r *DataRepository) SaveStateFS(filePath string) {
 
 	os.WriteFile(filePath, data, os.ModePerm)
 
-	logger.Info("Saved state:")
+	logger.InfoLn("Saved state:")
 	logger.Infof("Databases: %d\n", getLength(r.storeState.Databases))
 	logger.Infof("Collections: %d\n", getLength(r.storeState.Collections))
 	logger.Infof("Documents: %d\n", getLength(r.storeState.Documents))

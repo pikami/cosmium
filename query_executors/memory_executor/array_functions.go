@@ -30,7 +30,7 @@ func (r rowContext) array_Contains(arguments []interface{}) bool {
 		if boolValue, ok := boolExpr.(bool); ok {
 			partialSearch = boolValue
 		} else {
-			logger.Error("array_Contains - got parameters of wrong type")
+			logger.ErrorLn("array_Contains - got parameters of wrong type")
 			return false
 		}
 	}
@@ -116,13 +116,13 @@ func (r rowContext) array_Slice(arguments []interface{}) []interface{} {
 		lengthEx := r.resolveSelectItem(arguments[2].(parsers.SelectItem))
 
 		if length, ok = lengthEx.(int); !ok {
-			logger.Error("array_Slice - got length parameters of wrong type")
+			logger.ErrorLn("array_Slice - got length parameters of wrong type")
 			return []interface{}{}
 		}
 	}
 
 	if start, ok = startEx.(int); !ok {
-		logger.Error("array_Slice - got start parameters of wrong type")
+		logger.ErrorLn("array_Slice - got start parameters of wrong type")
 		return []interface{}{}
 	}
 
@@ -197,7 +197,7 @@ func (r rowContext) parseArray(argument interface{}) []interface{} {
 
 	arrValue := reflect.ValueOf(ex)
 	if arrValue.Kind() != reflect.Slice {
-		logger.Error("parseArray got parameters of wrong type")
+		logger.ErrorLn("parseArray got parameters of wrong type")
 		return nil
 	}
 
@@ -215,7 +215,7 @@ func (r rowContext) partialMatch(item interface{}, exprToSearch interface{}) boo
 	exprValue := reflect.ValueOf(exprToSearch)
 
 	if itemValue.Kind() != reflect.Map || exprValue.Kind() != reflect.Map {
-		logger.Error("partialMatch got parameters of wrong type")
+		logger.ErrorLn("partialMatch got parameters of wrong type")
 		return false
 	}
 

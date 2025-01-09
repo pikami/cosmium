@@ -16,7 +16,7 @@ func RequestLogger() gin.HandlerFunc {
 
 		bodyStr := readBody(rdr1)
 		if bodyStr != "" {
-			logger.Debug(bodyStr)
+			logger.DebugLn(bodyStr)
 		}
 
 		c.Request.Body = rdr2

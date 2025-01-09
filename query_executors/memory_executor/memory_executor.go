@@ -172,7 +172,7 @@ func (r rowContext) filters_ComparisonExpression(expression parsers.ComparisonEx
 	rightExpression, rightExpressionOk := expression.Right.(parsers.SelectItem)
 
 	if !leftExpressionOk || !rightExpressionOk {
-		logger.Error("ComparisonExpression has incorrect Left or Right type")
+		logger.ErrorLn("ComparisonExpression has incorrect Left or Right type")
 		return false
 	}
 
@@ -351,7 +351,7 @@ func (r rowContext) resolveSelectItem(selectItem parsers.SelectItem) interface{}
 			return r.selectItem_SelectItemTypeFunctionCall(typedFunctionCall)
 		}
 
-		logger.Error("parsers.SelectItem has incorrect Value type (expected parsers.FunctionCall)")
+		logger.ErrorLn("parsers.SelectItem has incorrect Value type (expected parsers.FunctionCall)")
 		return nil
 	}
 
@@ -379,7 +379,7 @@ func (r rowContext) selectItem_SelectItemTypeConstant(selectItem parsers.SelectI
 	var ok bool
 	if typedValue, ok = selectItem.Value.(parsers.Constant); !ok {
 		// TODO: Handle error
-		logger.Error("parsers.Constant has incorrect Value type")
+		logger.ErrorLn("parsers.Constant has incorrect Value type")
 	}
 
 	if typedValue.Type == parsers.ConstantTypeParameterConstant &&

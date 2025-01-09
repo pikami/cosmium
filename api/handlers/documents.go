@@ -135,7 +135,7 @@ func (h *Handlers) PatchDocument(c *gin.Context) {
 
 	currentDocumentBytes, err := json.Marshal(document)
 	if err != nil {
-		logger.Error("Failed to marshal existing document:", err)
+		logger.ErrorLn("Failed to marshal existing document:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to marshal existing document"})
 		return
 	}
@@ -149,7 +149,7 @@ func (h *Handlers) PatchDocument(c *gin.Context) {
 	var modifiedDocument map[string]interface{}
 	err = json.Unmarshal(modifiedDocumentBytes, &modifiedDocument)
 	if err != nil {
-		logger.Error("Failed to unmarshal modified document:", err)
+		logger.ErrorLn("Failed to unmarshal modified document:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to unmarshal modified document"})
 		return
 	}

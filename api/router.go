@@ -16,7 +16,10 @@ import (
 func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
 	routeHandlers := handlers.NewHandlers(repository, s.config)
 
-	if !s.config.Debug {
+	gin.DefaultWriter = logger.InfoWriter()
+	gin.DefaultErrorWriter = logger.ErrorWriter()
+
+	if s.config.LogLevel != "debug" {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -24,7 +27,7 @@ func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
 		e.RedirectTrailingSlash = false
 	})
 
-	if s.config.Debug {
+	if s.config.LogLevel == "debug" {
 		router.Use(middleware.RequestLogger())
 	}
 
@@ -89,10 +92,10 @@ func (s *ApiServer) Start() {
 
 	go func() {
 		<-s.stopServer
-		logger.Info("Shutting down server...")
+		logger.InfoLn("Shutting down server...")
 		err := server.Shutdown(context.TODO())
 		if err != nil {
-			logger.Error("Failed to shutdown server:", err)
+			logger.ErrorLn("Failed to shutdown server:", err)
 		}
 	}()
 
@@ -101,7 +104,7 @@ func (s *ApiServer) Start() {
 			logger.Infof("Listening and serving HTTP on %s\n", server.Addr)
 			err := server.ListenAndServe()
 			if err != nil {
-				logger.Error("Failed to start HTTP server:", err)
+				logger.ErrorLn("Failed to start HTTP server:", err)
 			}
 			s.isActive = false
 		} else if s.config.TLS_CertificatePath != "" && s.config.TLS_CertificateKey != "" {
@@ -110,7 +113,7 @@ func (s *ApiServer) Start() {
 				s.config.TLS_CertificatePath,
 				s.config.TLS_CertificateKey)
 			if err != nil {
-				logger.Error("Failed to start HTTPS server:", err)
+				logger.ErrorLn("Failed to start HTTPS server:", err)
 			}
 			s.isActive = false
 		} else {
@@ -120,7 +123,7 @@ func (s *ApiServer) Start() {
 			logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
 			err := server.ListenAndServeTLS("", "")
 			if err != nil {
-				logger.Error("Failed to start HTTPS server:", err)
+				logger.ErrorLn("Failed to start HTTPS server:", err)
 			}
 			s.isActive = false
 		}

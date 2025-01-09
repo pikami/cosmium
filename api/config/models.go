@@ -15,6 +15,6 @@ type ServerConfig struct {
 	PersistDataFilePath     string `json:"persistDataFilePath"`
 	DisableAuth             bool   `json:"disableAuth"`
 	DisableTls              bool   `json:"disableTls"`
-	Debug                   bool   `json:"debug"`
+	LogLevel                string `json:"logLevel"`
 	ExplorerBaseUrlLocation string `json:"explorerBaseUrlLocation"`
 }

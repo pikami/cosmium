@@ -26,7 +26,8 @@ func ParseFlags() ServerConfig {
 	disableAuthentication := flag.Bool("DisableAuth", false, "Disable authentication")
 	disableTls := flag.Bool("DisableTls", false, "Disable TLS, serve over HTTP")
 	persistDataPath := flag.String("Persist", "", "Saves data to given path on application exit")
-	debug := flag.Bool("Debug", false, "Runs application in debug mode, this provides additional logging")
+	logLevel := NewEnumValue("info", []string{"debug", "info", "error", "silent"})
+	flag.Var(logLevel, "LogLevel", fmt.Sprintf("Sets the logging level %s", logLevel.AllowedValuesList()))
 
 	flag.Parse()
 	setFlagsFromEnvironment()
@@ -41,8 +42,8 @@ func ParseFlags() ServerConfig {
 	config.PersistDataFilePath = *persistDataPath
 	config.DisableAuth = *disableAuthentication
 	config.DisableTls = *disableTls
-	config.Debug = *debug
 	config.AccountKey = *accountKey
+	config.LogLevel = logLevel.value
 
 	config.PopulateCalculatedFields()
 
@@ -54,7 +55,19 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 	c.DatabaseDomain = c.Host
 	c.DatabaseEndpoint = fmt.Sprintf("https://%s:%d/", c.Host, c.Port)
 	c.ExplorerBaseUrlLocation = ExplorerBaseUrlLocation
-	logger.EnableDebugOutput = c.Debug
+
+	switch c.LogLevel {
+	case "debug":
+		logger.LogLevel = logger.LogLevelDebug
+	case "info":
+		logger.LogLevel = logger.LogLevelInfo
+	case "error":
+		logger.LogLevel = logger.LogLevelError
+	case "silent":
+		logger.LogLevel = logger.LogLevelSilent
+	default:
+		logger.LogLevel = logger.LogLevelInfo
+	}
 }
 
 func (c *ServerConfig) ApplyDefaultsToEmptyFields() {

@@ -21,7 +21,7 @@ func (r rowContext) math_Abs(arguments []interface{}) interface{} {
 		}
 		return val
 	default:
-		logger.Debug("math_Abs - got parameters of wrong type")
+		logger.DebugLn("math_Abs - got parameters of wrong type")
 		return 0
 	}
 }
@@ -32,12 +32,12 @@ func (r rowContext) math_Acos(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Acos - got parameters of wrong type")
+		logger.DebugLn("math_Acos - got parameters of wrong type")
 		return nil
 	}
 
 	if val < -1 || val > 1 {
-		logger.Debug("math_Acos - value out of domain for acos")
+		logger.DebugLn("math_Acos - value out of domain for acos")
 		return nil
 	}
 
@@ -50,12 +50,12 @@ func (r rowContext) math_Asin(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Asin - got parameters of wrong type")
+		logger.DebugLn("math_Asin - got parameters of wrong type")
 		return nil
 	}
 
 	if val < -1 || val > 1 {
-		logger.Debug("math_Asin - value out of domain for acos")
+		logger.DebugLn("math_Asin - value out of domain for acos")
 		return nil
 	}
 
@@ -68,7 +68,7 @@ func (r rowContext) math_Atan(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Atan - got parameters of wrong type")
+		logger.DebugLn("math_Atan - got parameters of wrong type")
 		return nil
 	}
 
@@ -85,7 +85,7 @@ func (r rowContext) math_Ceiling(arguments []interface{}) interface{} {
 	case int:
 		return val
 	default:
-		logger.Debug("math_Ceiling - got parameters of wrong type")
+		logger.DebugLn("math_Ceiling - got parameters of wrong type")
 		return 0
 	}
 }
@@ -96,7 +96,7 @@ func (r rowContext) math_Cos(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Cos - got parameters of wrong type")
+		logger.DebugLn("math_Cos - got parameters of wrong type")
 		return nil
 	}
 
@@ -109,12 +109,12 @@ func (r rowContext) math_Cot(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Cot - got parameters of wrong type")
+		logger.DebugLn("math_Cot - got parameters of wrong type")
 		return nil
 	}
 
 	if val == 0 {
-		logger.Debug("math_Cot - cotangent undefined for zero")
+		logger.DebugLn("math_Cot - cotangent undefined for zero")
 		return nil
 	}
 
@@ -127,7 +127,7 @@ func (r rowContext) math_Degrees(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Degrees - got parameters of wrong type")
+		logger.DebugLn("math_Degrees - got parameters of wrong type")
 		return nil
 	}
 
@@ -140,7 +140,7 @@ func (r rowContext) math_Exp(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Exp - got parameters of wrong type")
+		logger.DebugLn("math_Exp - got parameters of wrong type")
 		return nil
 	}
 
@@ -157,7 +157,7 @@ func (r rowContext) math_Floor(arguments []interface{}) interface{} {
 	case int:
 		return val
 	default:
-		logger.Debug("math_Floor - got parameters of wrong type")
+		logger.DebugLn("math_Floor - got parameters of wrong type")
 		return 0
 	}
 }
@@ -170,7 +170,7 @@ func (r rowContext) math_IntBitNot(arguments []interface{}) interface{} {
 	case int:
 		return ^val
 	default:
-		logger.Debug("math_IntBitNot - got parameters of wrong type")
+		logger.DebugLn("math_IntBitNot - got parameters of wrong type")
 		return nil
 	}
 }
@@ -181,12 +181,12 @@ func (r rowContext) math_Log10(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Log10 - got parameters of wrong type")
+		logger.DebugLn("math_Log10 - got parameters of wrong type")
 		return nil
 	}
 
 	if val <= 0 {
-		logger.Debug("math_Log10 - value must be greater than 0")
+		logger.DebugLn("math_Log10 - value must be greater than 0")
 		return nil
 	}
 
@@ -199,7 +199,7 @@ func (r rowContext) math_Radians(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Radians - got parameters of wrong type")
+		logger.DebugLn("math_Radians - got parameters of wrong type")
 		return nil
 	}
 
@@ -216,7 +216,7 @@ func (r rowContext) math_Round(arguments []interface{}) interface{} {
 	case int:
 		return val
 	default:
-		logger.Debug("math_Round - got parameters of wrong type")
+		logger.DebugLn("math_Round - got parameters of wrong type")
 		return nil
 	}
 }
@@ -243,7 +243,7 @@ func (r rowContext) math_Sign(arguments []interface{}) interface{} {
 			return 0
 		}
 	default:
-		logger.Debug("math_Sign - got parameters of wrong type")
+		logger.DebugLn("math_Sign - got parameters of wrong type")
 		return nil
 	}
 }
@@ -254,7 +254,7 @@ func (r rowContext) math_Sin(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Sin - got parameters of wrong type")
+		logger.DebugLn("math_Sin - got parameters of wrong type")
 		return nil
 	}
 
@@ -267,7 +267,7 @@ func (r rowContext) math_Sqrt(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Sqrt - got parameters of wrong type")
+		logger.DebugLn("math_Sqrt - got parameters of wrong type")
 		return nil
 	}
 
@@ -280,7 +280,7 @@ func (r rowContext) math_Square(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Square - got parameters of wrong type")
+		logger.DebugLn("math_Square - got parameters of wrong type")
 		return nil
 	}
 
@@ -293,7 +293,7 @@ func (r rowContext) math_Tan(arguments []interface{}) interface{} {
 
 	val, valIsNumber := numToFloat64(ex)
 	if !valIsNumber {
-		logger.Debug("math_Tan - got parameters of wrong type")
+		logger.DebugLn("math_Tan - got parameters of wrong type")
 		return nil
 	}
 
@@ -310,7 +310,7 @@ func (r rowContext) math_Trunc(arguments []interface{}) interface{} {
 	case int:
 		return float64(val)
 	default:
-		logger.Debug("math_Trunc - got parameters of wrong type")
+		logger.DebugLn("math_Trunc - got parameters of wrong type")
 		return nil
 	}
 }
@@ -325,7 +325,7 @@ func (r rowContext) math_Atn2(arguments []interface{}) interface{} {
 	x, xIsNumber := numToFloat64(ex2)
 
 	if !yIsNumber || !xIsNumber {
-		logger.Debug("math_Atn2 - got parameters of wrong type")
+		logger.DebugLn("math_Atn2 - got parameters of wrong type")
 		return nil
 	}
 
@@ -342,7 +342,7 @@ func (r rowContext) math_IntAdd(arguments []interface{}) interface{} {
 	ex2Number, ex2IsNumber := numToInt(ex2)
 
 	if !ex1IsNumber || !ex2IsNumber {
-		logger.Debug("math_IntAdd - got parameters of wrong type")
+		logger.DebugLn("math_IntAdd - got parameters of wrong type")
 		return nil
 	}
 
@@ -359,7 +359,7 @@ func (r rowContext) math_IntBitAnd(arguments []interface{}) interface{} {
 	ex2Int, ex2IsInt := numToInt(ex2)
 
 	if !ex1IsInt || !ex2IsInt {
-		logger.Debug("math_IntBitAnd - got parameters of wrong type")
+		logger.DebugLn("math_IntBitAnd - got parameters of wrong type")
 		return nil
 	}
 
@@ -376,7 +376,7 @@ func (r rowContext) math_IntBitLeftShift(arguments []interface{}) interface{} {
 	num2, num2IsInt := numToInt(ex2)
 
 	if !num1IsInt || !num2IsInt {
-		logger.Debug("math_IntBitLeftShift - got parameters of wrong type")
+		logger.DebugLn("math_IntBitLeftShift - got parameters of wrong type")
 		return nil
 	}
 
@@ -393,7 +393,7 @@ func (r rowContext) math_IntBitOr(arguments []interface{}) interface{} {
 	num2, num2IsInt := ex2.(int)
 
 	if !num1IsInt || !num2IsInt {
-		logger.Debug("math_IntBitOr - got parameters of wrong type")
+		logger.DebugLn("math_IntBitOr - got parameters of wrong type")
 		return nil
 	}
 
@@ -410,7 +410,7 @@ func (r rowContext) math_IntBitRightShift(arguments []interface{}) interface{} {
 	num2, num2IsInt := numToInt(ex2)
 
 	if !num1IsInt || !num2IsInt {
-		logger.Debug("math_IntBitRightShift - got parameters of wrong type")
+		logger.DebugLn("math_IntBitRightShift - got parameters of wrong type")
 		return nil
 	}
 
@@ -427,7 +427,7 @@ func (r rowContext) math_IntBitXor(arguments []interface{}) interface{} {
 	num2, num2IsInt := ex2.(int)
 
 	if !num1IsInt || !num2IsInt {
-		logger.Debug("math_IntBitXor - got parameters of wrong type")
+		logger.DebugLn("math_IntBitXor - got parameters of wrong type")
 		return nil
 	}
 
@@ -444,7 +444,7 @@ func (r rowContext) math_IntDiv(arguments []interface{}) interface{} {
 	num2, num2IsInt := ex2.(int)
 
 	if !num1IsInt || !num2IsInt || num2 == 0 {
-		logger.Debug("math_IntDiv - got parameters of wrong type or divide by zero")
+		logger.DebugLn("math_IntDiv - got parameters of wrong type or divide by zero")
 		return nil
 	}
 
@@ -461,7 +461,7 @@ func (r rowContext) math_IntMul(arguments []interface{}) interface{} {
 	num2, num2IsInt := ex2.(int)
 
 	if !num1IsInt || !num2IsInt {
-		logger.Debug("math_IntMul - got parameters of wrong type")
+		logger.DebugLn("math_IntMul - got parameters of wrong type")
 		return nil
 	}
 
@@ -478,7 +478,7 @@ func (r rowContext) math_IntSub(arguments []interface{}) interface{} {
 	num2, num2IsInt := ex2.(int)
 
 	if !num1IsInt || !num2IsInt {
-		logger.Debug("math_IntSub - got parameters of wrong type")
+		logger.DebugLn("math_IntSub - got parameters of wrong type")
 		return nil
 	}
 
@@ -495,7 +495,7 @@ func (r rowContext) math_IntMod(arguments []interface{}) interface{} {
 	num2, num2IsInt := ex2.(int)
 
 	if !num1IsInt || !num2IsInt || num2 == 0 {
-		logger.Debug("math_IntMod - got parameters of wrong type or divide by zero")
+		logger.DebugLn("math_IntMod - got parameters of wrong type or divide by zero")
 		return nil
 	}
 
@@ -512,7 +512,7 @@ func (r rowContext) math_Power(arguments []interface{}) interface{} {
 	exponent, exponentIsNumber := numToFloat64(ex2)
 
 	if !baseIsNumber || !exponentIsNumber {
-		logger.Debug("math_Power - got parameters of wrong type")
+		logger.DebugLn("math_Power - got parameters of wrong type")
 		return nil
 	}
 
@@ -530,21 +530,21 @@ func (r rowContext) math_Log(arguments []interface{}) interface{} {
 		baseValue, baseValueIsNumber := numToFloat64(baseValueObject)
 
 		if !baseValueIsNumber {
-			logger.Debug("math_Log - base parameter must be a numeric value")
+			logger.DebugLn("math_Log - base parameter must be a numeric value")
 			return nil
 		}
 
 		if baseValue > 0 && baseValue != 1 {
 			base = baseValue
 		} else {
-			logger.Debug("math_Log - base must be greater than 0 and not equal to 1")
+			logger.DebugLn("math_Log - base must be greater than 0 and not equal to 1")
 			return nil
 		}
 	}
 
 	num, numIsNumber := numToFloat64(ex)
 	if !numIsNumber || num <= 0 {
-		logger.Debug("math_Log - parameter must be a positive numeric value")
+		logger.DebugLn("math_Log - parameter must be a positive numeric value")
 		return nil
 	}
 
@@ -563,21 +563,21 @@ func (r rowContext) math_NumberBin(arguments []interface{}) interface{} {
 		binSizeValue, binSizeValueIsNumber := numToFloat64(binSizeValueObject)
 
 		if !binSizeValueIsNumber {
-			logger.Debug("math_NumberBin - base parameter must be a numeric value")
+			logger.DebugLn("math_NumberBin - base parameter must be a numeric value")
 			return nil
 		}
 
 		if binSizeValue != 0 {
 			binSize = binSizeValue
 		} else {
-			logger.Debug("math_NumberBin - base must not be equal to 0")
+			logger.DebugLn("math_NumberBin - base must not be equal to 0")
 			return nil
 		}
 	}
 
 	num, numIsNumber := numToFloat64(ex)
 	if !numIsNumber {
-		logger.Debug("math_NumberBin - parameter must be a numeric value")
+		logger.DebugLn("math_NumberBin - parameter must be a numeric value")
 		return nil
 	}
 
