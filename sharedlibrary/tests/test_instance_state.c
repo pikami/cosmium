@@ -42,7 +42,7 @@ int test_ServerInstanceStateMethods()
         return 0;
     }
 
-    const char *expected_state = "{\"databases\":{\"test-db\":{\"id\":\"test-db\",\"_ts\":0,\"_rid\":\"\",\"_etag\":\"\",\"_self\":\"\"}},\"collections\":{\"test-db\":{}},\"documents\":{\"test-db\":{}}}";
+    const char *expected_state = "{\"databases\":{\"test-db\":{\"id\":\"test-db\",\"_ts\":0,\"_rid\":\"\",\"_etag\":\"\",\"_self\":\"\"}},\"collections\":{\"test-db\":{}},\"documents\":{\"test-db\":{}},\"triggers\":{\"test-db\":{}},\"sprocs\":{\"test-db\":{}},\"udfs\":{\"test-db\":{}}}";
     char *compact_state = compact_json(state);
     if (!compact_state)
     {

@@ -103,7 +103,7 @@ func (s *ApiServer) Start() {
 		if s.config.DisableTls {
 			logger.Infof("Listening and serving HTTP on %s\n", server.Addr)
 			err := server.ListenAndServe()
-			if err != nil {
+			if err != nil && err != http.ErrServerClosed {
 				logger.ErrorLn("Failed to start HTTP server:", err)
 			}
 			s.isActive = false
@@ -112,7 +112,7 @@ func (s *ApiServer) Start() {
 			err := server.ListenAndServeTLS(
 				s.config.TLS_CertificatePath,
 				s.config.TLS_CertificateKey)
-			if err != nil {
+			if err != nil && err != http.ErrServerClosed {
 				logger.ErrorLn("Failed to start HTTPS server:", err)
 			}
 			s.isActive = false
@@ -122,7 +122,7 @@ func (s *ApiServer) Start() {
 
 			logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
 			err := server.ListenAndServeTLS("", "")
-			if err != nil {
+			if err != nil && err != http.ErrServerClosed {
 				logger.ErrorLn("Failed to start HTTPS server:", err)
 			}
 			s.isActive = false

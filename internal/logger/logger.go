@@ -1,8 +1,11 @@
 package logger
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"runtime"
+	"strings"
 )
 
 type LogLevelType int
@@ -20,25 +23,28 @@ type LogWriter struct {
 
 var LogLevel = LogLevelInfo
 
-var DebugLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+var DebugLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 var InfoLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
-var ErrorLogger = log.New(os.Stderr, "", log.Ldate|log.Ltime|log.Lshortfile)
+var ErrorLogger = log.New(os.Stderr, "", log.Ldate|log.Ltime)
 
 func DebugLn(v ...any) {
 	if LogLevel <= LogLevelDebug {
-		DebugLogger.Println(v...)
+		prefix := getCallerPrefix()
+		DebugLogger.Println(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Debug(v ...any) {
 	if LogLevel <= LogLevelDebug {
-		DebugLogger.Print(v...)
+		prefix := getCallerPrefix()
+		DebugLogger.Println(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Debugf(format string, v ...any) {
 	if LogLevel <= LogLevelDebug {
-		DebugLogger.Printf(format, v...)
+		prefix := getCallerPrefix()
+		DebugLogger.Printf(prefix+format, v...)
 	}
 }
 
@@ -62,19 +68,22 @@ func Infof(format string, v ...any) {
 
 func ErrorLn(v ...any) {
 	if LogLevel <= LogLevelError {
-		ErrorLogger.Println(v...)
+		prefix := getCallerPrefix()
+		ErrorLogger.Println(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Error(v ...any) {
 	if LogLevel <= LogLevelError {
-		ErrorLogger.Print(v...)
+		prefix := getCallerPrefix()
+		ErrorLogger.Print(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Errorf(format string, v ...any) {
 	if LogLevel <= LogLevelError {
-		ErrorLogger.Printf(format, v...)
+		prefix := getCallerPrefix()
+		ErrorLogger.Printf(prefix+format, v...)
 	}
 }
 
@@ -101,4 +110,15 @@ func InfoWriter() *LogWriter {
 
 func DebugWriter() *LogWriter {
 	return &LogWriter{WriterLevel: LogLevelDebug}
+}
+
+func getCallerPrefix() string {
+	_, file, line, ok := runtime.Caller(2)
+	if ok {
+		parts := strings.Split(file, "/")
+		file = parts[len(parts)-1]
+		return fmt.Sprintf("%s:%d - ", file, line)
+	}
+
+	return ""
 }
