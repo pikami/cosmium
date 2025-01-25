@@ -71,7 +71,7 @@ dockers:
     goarch: amd64
     image_templates:
     - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-amd64"
-    dockerfile: Dockerfile
+    dockerfile: Explorer.Dockerfile
     use: buildx
     build_flag_templates:
     - "--platform=linux/amd64"
@@ -89,7 +89,7 @@ dockers:
     image_templates:
     - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-arm64"
     - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-arm64v8"
-    dockerfile: Dockerfile
+    dockerfile: Explorer.Dockerfile
     use: buildx
     build_flag_templates:
     - "--platform=linux/arm64"
