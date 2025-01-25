@@ -50,9 +50,16 @@ AccountEndpoint=https://localhost:8081/;AccountKey=C2y6yDjf5/R+ob0N8A7Cgv30VRDJI
 
 If you want to run Cosmos DB Explorer alongside Cosmium, you'll need to build it yourself and point the `-ExplorerDir` argument to the dist directory. Please refer to the [Cosmos DB Explorer repository](https://github.com/Azure/cosmos-explorer) for instructions on building the application.
 
+There's also a prebuilt docker image that includes the explorer: `ghcr.io/pikami/cosmium:explorer`
+
 Once running, the explorer can be reached by navigating following URL: `https://127.0.0.1:8081/_explorer/` (might be different depending on your configuration).
 
 ### Running with docker (optional)
+
+There are two docker tags available:
+
+- ghcr.io/pikami/cosmium:latest - Cosmium core service
+- ghcr.io/pikami/cosmium:explorer - Cosmium with database explorer available on `https://127.0.0.1:8081/_explorer/`
 
 If you wan to run the application using docker, configure it using environment variables see example:
 
@@ -61,7 +68,7 @@ docker run --rm \
   -e COSMIUM_PERSIST=/save.json \
   -v ./save.json:/save.json \
   -p 8081:8081 \
-  ghcr.io/pikami/cosmium
+  ghcr.io/pikami/cosmium # or `ghcr.io/pikami/cosmium:explorer`
 ```
 
 ### SSL Certificate

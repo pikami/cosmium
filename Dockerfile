@@ -1,4 +1,4 @@
-FROM scratch
+FROM alpine:latest
 
 WORKDIR /app
 COPY cosmium /app/cosmium

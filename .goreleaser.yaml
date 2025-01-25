@@ -66,6 +66,41 @@ dockers:
     - "--label=org.opencontainers.image.created={{.Date}}"
     - "--label=org.opencontainers.image.revision={{.FullCommit}}"
     - "--label=org.opencontainers.image.version={{.Version}}"
+  - id: docker-explorer-linux-amd64
+    goos: linux
+    goarch: amd64
+    image_templates:
+    - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-amd64"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+    - "--platform=linux/amd64"
+    - "--pull"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.description=Lightweight Cosmos DB emulator"
+    - "--label=org.opencontainers.image.url=https://github.com/pikami/cosmium"
+    - "--label=org.opencontainers.image.source=https://github.com/pikami/cosmium"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
+  - id: docker-explorer-linux-arm64
+    goos: linux
+    goarch: arm64
+    image_templates:
+    - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-arm64"
+    - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-arm64v8"
+    dockerfile: Dockerfile
+    use: buildx
+    build_flag_templates:
+    - "--platform=linux/arm64"
+    - "--pull"
+    - "--label=org.opencontainers.image.title={{.ProjectName}}"
+    - "--label=org.opencontainers.image.description=Lightweight Cosmos DB emulator"
+    - "--label=org.opencontainers.image.url=https://github.com/pikami/cosmium"
+    - "--label=org.opencontainers.image.source=https://github.com/pikami/cosmium"
+    - "--label=org.opencontainers.image.created={{.Date}}"
+    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+    - "--label=org.opencontainers.image.version={{.Version}}"
 
 docker_manifests:
   - name_template: 'ghcr.io/pikami/{{ .ProjectName }}:latest'
@@ -78,6 +113,11 @@ docker_manifests:
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-amd64"
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64"
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+  - name_template: 'ghcr.io/pikami/{{ .ProjectName }}:explorer'
+    image_templates:
+      - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-amd64"
+      - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-arm64"
+      - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-arm64v8"
 
 checksum:
   name_template: 'checksums.txt'
