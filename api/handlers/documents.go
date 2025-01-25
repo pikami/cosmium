@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"strconv"
 
+	jsonpatch "github.com/cosmiumdev/json-patch/v5"
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/logger"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
-	jsonpatch "github.com/pikami/json-patch/v5"
 )
 
 func (h *Handlers) GetAllDocuments(c *gin.Context) {
