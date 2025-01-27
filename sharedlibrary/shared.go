@@ -14,7 +14,7 @@ type ServerInstance struct {
 }
 
 var serverInstances map[string]*ServerInstance
-var mutex sync.RWMutex
+var mutex sync.Mutex
 
 const (
 	ResponseSuccess = 0
@@ -32,8 +32,8 @@ const (
 )
 
 func getInstance(serverName string) (*ServerInstance, bool) {
-	mutex.RLock()
-	defer mutex.RUnlock()
+	mutex.Lock()
+	defer mutex.Unlock()
 
 	if serverInstances == nil {
 		serverInstances = make(map[string]*ServerInstance)

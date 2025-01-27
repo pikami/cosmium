@@ -6,6 +6,7 @@ import (
 	"os"
 	"runtime"
 	"strings"
+	"sync"
 )
 
 type LogLevelType int
@@ -21,67 +22,68 @@ type LogWriter struct {
 	WriterLevel LogLevelType
 }
 
-var LogLevel = LogLevelInfo
+var logLevelMutex sync.RWMutex
+var logLevel = LogLevelInfo
 
 var DebugLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 var InfoLogger = log.New(os.Stdout, "", log.Ldate|log.Ltime)
 var ErrorLogger = log.New(os.Stderr, "", log.Ldate|log.Ltime)
 
 func DebugLn(v ...any) {
-	if LogLevel <= LogLevelDebug {
+	if GetLogLevel() <= LogLevelDebug {
 		prefix := getCallerPrefix()
 		DebugLogger.Println(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Debug(v ...any) {
-	if LogLevel <= LogLevelDebug {
+	if GetLogLevel() <= LogLevelDebug {
 		prefix := getCallerPrefix()
 		DebugLogger.Println(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Debugf(format string, v ...any) {
-	if LogLevel <= LogLevelDebug {
+	if GetLogLevel() <= LogLevelDebug {
 		prefix := getCallerPrefix()
 		DebugLogger.Printf(prefix+format, v...)
 	}
 }
 
 func InfoLn(v ...any) {
-	if LogLevel <= LogLevelInfo {
+	if GetLogLevel() <= LogLevelInfo {
 		InfoLogger.Println(v...)
 	}
 }
 
 func Info(v ...any) {
-	if LogLevel <= LogLevelInfo {
+	if GetLogLevel() <= LogLevelInfo {
 		InfoLogger.Print(v...)
 	}
 }
 
 func Infof(format string, v ...any) {
-	if LogLevel <= LogLevelInfo {
+	if GetLogLevel() <= LogLevelInfo {
 		InfoLogger.Printf(format, v...)
 	}
 }
 
 func ErrorLn(v ...any) {
-	if LogLevel <= LogLevelError {
+	if GetLogLevel() <= LogLevelError {
 		prefix := getCallerPrefix()
 		ErrorLogger.Println(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Error(v ...any) {
-	if LogLevel <= LogLevelError {
+	if GetLogLevel() <= LogLevelError {
 		prefix := getCallerPrefix()
 		ErrorLogger.Print(append([]interface{}{prefix}, v...)...)
 	}
 }
 
 func Errorf(format string, v ...any) {
-	if LogLevel <= LogLevelError {
+	if GetLogLevel() <= LogLevelError {
 		prefix := getCallerPrefix()
 		ErrorLogger.Printf(prefix+format, v...)
 	}
@@ -112,11 +114,25 @@ func DebugWriter() *LogWriter {
 	return &LogWriter{WriterLevel: LogLevelDebug}
 }
 
+func SetLogLevel(level LogLevelType) {
+	logLevelMutex.Lock()
+	defer logLevelMutex.Unlock()
+	logLevel = level
+}
+
+func GetLogLevel() LogLevelType {
+	logLevelMutex.RLock()
+	defer logLevelMutex.RUnlock()
+	return logLevel
+}
+
 func getCallerPrefix() string {
 	_, file, line, ok := runtime.Caller(2)
 	if ok {
 		parts := strings.Split(file, "/")
-		file = parts[len(parts)-1]
+		if len(parts) > 0 {
+			file = parts[len(parts)-1]
+		}
 		return fmt.Sprintf("%s:%d - ", file, line)
 	}
 

@@ -58,15 +58,15 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 
 	switch c.LogLevel {
 	case "debug":
-		logger.LogLevel = logger.LogLevelDebug
+		logger.SetLogLevel(logger.LogLevelDebug)
 	case "info":
-		logger.LogLevel = logger.LogLevelInfo
+		logger.SetLogLevel(logger.LogLevelInfo)
 	case "error":
-		logger.LogLevel = logger.LogLevelError
+		logger.SetLogLevel(logger.LogLevelError)
 	case "silent":
-		logger.LogLevel = logger.LogLevelSilent
+		logger.SetLogLevel(logger.LogLevelSilent)
 	default:
-		logger.LogLevel = logger.LogLevelInfo
+		logger.SetLogLevel(logger.LogLevelInfo)
 	}
 }
 

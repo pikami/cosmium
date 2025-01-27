@@ -45,7 +45,10 @@ func GetDatabase(serverName *C.char, databaseId *C.char) *C.char {
 		return C.CString("")
 	}
 
-	databaseJson, _ := json.Marshal(database)
+	databaseJson, err := json.Marshal(database)
+	if err != nil {
+		return C.CString("")
+	}
 	return C.CString(string(databaseJson))
 }
 

@@ -46,8 +46,8 @@ func (r *DataRepository) LoadStateFS(filePath string) {
 }
 
 func (r *DataRepository) LoadStateJSON(jsonData string) error {
-	r.storeState.RLock()
-	defer r.storeState.RUnlock()
+	r.storeState.Lock()
+	defer r.storeState.Unlock()
 
 	var state repositorymodels.State
 	if err := json.Unmarshal([]byte(jsonData), &state); err != nil {

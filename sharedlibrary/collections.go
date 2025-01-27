@@ -47,7 +47,10 @@ func GetCollection(serverName *C.char, databaseId *C.char, collectionId *C.char)
 		return C.CString("")
 	}
 
-	collectionJson, _ := json.Marshal(collection)
+	collectionJson, err := json.Marshal(collection)
+	if err != nil {
+		return C.CString("")
+	}
 	return C.CString(string(collectionJson))
 }
 
@@ -67,7 +70,10 @@ func GetAllCollections(serverName *C.char, databaseId *C.char) *C.char {
 		return C.CString("")
 	}
 
-	collectionsJson, _ := json.Marshal(collections)
+	collectionsJson, err := json.Marshal(collections)
+	if err != nil {
+		return C.CString("")
+	}
 	return C.CString(string(collectionsJson))
 }
 

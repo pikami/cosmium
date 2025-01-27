@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/api/handlers"
@@ -13,15 +14,19 @@ import (
 	tlsprovider "github.com/pikami/cosmium/internal/tls_provider"
 )
 
+var ginMux sync.Mutex
+
 func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
 	routeHandlers := handlers.NewHandlers(repository, s.config)
 
+	ginMux.Lock()
 	gin.DefaultWriter = logger.InfoWriter()
 	gin.DefaultErrorWriter = logger.ErrorWriter()
 
 	if s.config.LogLevel != "debug" {
 		gin.SetMode(gin.ReleaseMode)
 	}
+	ginMux.Unlock()
 
 	router := gin.Default(func(e *gin.Engine) {
 		e.RedirectTrailingSlash = false

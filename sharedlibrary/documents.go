@@ -49,7 +49,10 @@ func GetDocument(serverName *C.char, databaseId *C.char, collectionId *C.char, d
 		return C.CString("")
 	}
 
-	documentJson, _ := json.Marshal(document)
+	documentJson, err := json.Marshal(document)
+	if err != nil {
+		return C.CString("")
+	}
 	return C.CString(string(documentJson))
 }
 
@@ -70,7 +73,10 @@ func GetAllDocuments(serverName *C.char, databaseId *C.char, collectionId *C.cha
 		return C.CString("")
 	}
 
-	documentsJson, _ := json.Marshal(documents)
+	documentsJson, err := json.Marshal(documents)
+	if err != nil {
+		return C.CString("")
+	}
 	return C.CString(string(documentsJson))
 }
 
