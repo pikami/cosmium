@@ -26,6 +26,23 @@ brews:
     commit_author:
       name: pikami
       email: git@pikami.org
+    skip_upload: auto
+
+archives:
+  - id: bundle
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+  - id: shared-libraries
+    meta: true
+    format: "tar.gz"
+    wrap_in_directory: true
+    name_template: "{{ .ProjectName }}_{{ .Version }}_shared-libraries"
+    files:
+    - LICENSE
+    - README.md
+    - sharedlibrary_dist/**
 
 dockers:
   - id: docker-linux-amd64
@@ -33,7 +50,6 @@ dockers:
     goarch: amd64
     image_templates:
     - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-amd64"
-    - "ghcr.io/pikami/{{ .ProjectName }}:latest-amd64"
     dockerfile: Dockerfile
     use: buildx
     build_flag_templates:
@@ -51,9 +67,7 @@ dockers:
     goarch: arm64
     image_templates:
     - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64"
-    - "ghcr.io/pikami/{{ .ProjectName }}:latest-arm64"
     - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64v8"
-    - "ghcr.io/pikami/{{ .ProjectName }}:latest-arm64v8"
     dockerfile: Dockerfile
     use: buildx
     build_flag_templates:
@@ -104,16 +118,19 @@ dockers:
 
 docker_manifests:
   - name_template: 'ghcr.io/pikami/{{ .ProjectName }}:latest'
+    skip_push: auto
     image_templates:
-      - "ghcr.io/pikami/{{ .ProjectName }}:latest-amd64"
-      - "ghcr.io/pikami/{{ .ProjectName }}:latest-arm64"
-      - "ghcr.io/pikami/{{ .ProjectName }}:latest-arm64v8"
+      - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-amd64"
+      - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64"
+      - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64v8"
   - name_template: 'ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}'
+    skip_push: auto
     image_templates:
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-amd64"
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64"
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-arm64v8"
   - name_template: 'ghcr.io/pikami/{{ .ProjectName }}:explorer'
+    skip_push: auto
     image_templates:
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-amd64"
       - "ghcr.io/pikami/{{ .ProjectName }}:{{ .Version }}-explorer-arm64"
