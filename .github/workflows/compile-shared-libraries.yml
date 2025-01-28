@@ -25,7 +25,7 @@ jobs:
           buildvcs: true
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: shared-libraries
           path: dist/*
