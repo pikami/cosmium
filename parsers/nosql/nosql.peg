@@ -271,7 +271,7 @@ SelectValueSpec <- "VALUE"i ws column:SelectItem {
     return makeColumnList(selectItem, make([]interface{}, 0))
 }
 
-TableName <- key:Identifier {
+TableName <- "ROOT"i? ws key:Identifier {
     return parsers.Table{Value: key.(string)}, nil
 }
 
