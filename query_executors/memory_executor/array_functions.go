@@ -220,7 +220,7 @@ func (r rowContext) partialMatch(item interface{}, exprToSearch interface{}) boo
 	}
 
 	for _, key := range exprValue.MapKeys() {
-		if itemValue.MapIndex(key).Interface() != exprValue.MapIndex(key).Interface() {
+		if !reflect.DeepEqual(itemValue.MapIndex(key).Interface(), exprValue.MapIndex(key).Interface()) {
 			return false
 		}
 	}

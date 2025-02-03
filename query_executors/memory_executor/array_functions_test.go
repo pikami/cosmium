@@ -59,10 +59,11 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 			parsers.SelectStmt{
 				Parameters: map[string]interface{}{
 					"@categories":                []interface{}{"coats", "jackets", "sweatshirts"},
-					"@objectArray":               []interface{}{map[string]interface{}{"category": "shirts", "color": "blue"}},
-					"@fullMatchObject":           map[string]interface{}{"category": "shirts", "color": "blue"},
+					"@objectArray":               []interface{}{map[string]interface{}{"category": "shirts", "color": "blue", "nestedObject": map[string]interface{}{"size": "M"}}},
+					"@fullMatchObject":           map[string]interface{}{"category": "shirts", "color": "blue", "nestedObject": map[string]interface{}{"size": "M"}},
 					"@partialMatchObject":        map[string]interface{}{"category": "shirts"},
 					"@missingPartialMatchObject": map[string]interface{}{"category": "shorts", "color": "blue"},
+					"@nestedPartialMatchObject":  map[string]interface{}{"nestedObject": map[string]interface{}{"size": "M"}},
 				},
 				SelectItems: []parsers.SelectItem{
 					{
@@ -133,17 +134,30 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 							},
 						},
 					},
+					{
+						Alias: "ContainsNestedPartialMatchObject",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallArrayContains,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Parameter("@objectArray"),
+								testutils.SelectItem_Constant_Parameter("@nestedPartialMatchObject"),
+								testutils.SelectItem_Constant_Bool(true),
+							},
+						},
+					},
 				},
 			},
 			[]memoryexecutor.RowType{map[string]interface{}{"id": "123"}},
 			[]memoryexecutor.RowType{
 				map[string]interface{}{
-					"ContainsItem":               true,
-					"MissingItem":                false,
-					"ContainsFullMatchObject":    true,
-					"MissingFullMatchObject":     false,
-					"ContainsPartialMatchObject": true,
-					"MissingPartialMatchObject":  false,
+					"ContainsItem":                     true,
+					"MissingItem":                      false,
+					"ContainsFullMatchObject":          true,
+					"MissingFullMatchObject":           false,
+					"ContainsPartialMatchObject":       true,
+					"MissingPartialMatchObject":        false,
+					"ContainsNestedPartialMatchObject": true,
 				},
 			},
 		)
