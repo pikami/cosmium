@@ -7,18 +7,21 @@ import (
 )
 
 type ApiServer struct {
-	stopServer chan interface{}
-	isActive   bool
-	router     *gin.Engine
-	config     config.ServerConfig
+	stopServer       chan interface{}
+	onServerShutdown chan interface{}
+	isActive         bool
+	router           *gin.Engine
+	config           config.ServerConfig
 }
 
 func NewApiServer(dataRepository *repositories.DataRepository, config config.ServerConfig) *ApiServer {
 	stopChan := make(chan interface{})
+	onServerShutdownChan := make(chan interface{})
 
 	apiServer := &ApiServer{
-		stopServer: stopChan,
-		config:     config,
+		stopServer:       stopChan,
+		onServerShutdown: onServerShutdownChan,
+		config:           config,
 	}
 
 	apiServer.CreateRouter(dataRepository)
@@ -32,4 +35,5 @@ func (s *ApiServer) GetRouter() *gin.Engine {
 
 func (s *ApiServer) Stop() {
 	s.stopServer <- true
+	<-s.onServerShutdown
 }

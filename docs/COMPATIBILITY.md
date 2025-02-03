@@ -204,6 +204,15 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | IS_PRIMITIVE     | Yes         |
 | IS_STRING        | Yes         |
 
+### Document Batch Requests
+
+| Operation | Implemented |
+| --------- | ----------- |
+| Create    | No          |
+| Update    | No          |
+| Delete    | No          |
+| Read      | No          |
+
 ## Known Differences
 
 While Cosmium aims to replicate the behavior of Cosmos DB as closely as possible, there are certain differences and limitations to be aware of:

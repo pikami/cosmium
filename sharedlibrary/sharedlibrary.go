@@ -1,8 +1,12 @@
 package main
 
+/*
+#include <stdlib.h>
+*/
 import "C"
 import (
 	"encoding/json"
+	"unsafe"
 
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
@@ -85,6 +89,11 @@ func LoadServerInstanceState(serverName *C.char, stateJSON *C.char) int {
 	}
 
 	return ResponseServerInstanceNotFound
+}
+
+//export FreeMemory
+func FreeMemory(ptr *C.char) {
+	C.free(unsafe.Pointer(ptr))
 }
 
 func main() {}

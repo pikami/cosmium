@@ -102,6 +102,7 @@ func (s *ApiServer) Start() {
 		if err != nil {
 			logger.ErrorLn("Failed to shutdown server:", err)
 		}
+		s.onServerShutdown <- true
 	}()
 
 	go func() {
