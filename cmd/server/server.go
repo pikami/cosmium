@@ -19,7 +19,10 @@ func main() {
 	})
 
 	server := api.NewApiServer(repository, configuration)
-	server.Start()
+	err := server.Start()
+	if err != nil {
+		panic(err)
+	}
 
 	waitForExit(server, repository, configuration)
 }

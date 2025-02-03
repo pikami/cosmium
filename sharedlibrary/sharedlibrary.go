@@ -37,7 +37,10 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 	})
 
 	server := api.NewApiServer(repository, configuration)
-	server.Start()
+	err = server.Start()
+	if err != nil {
+		return ResponseFailedToStartServer
+	}
 
 	addInstance(serverNameStr, &ServerInstance{
 		server:     server,

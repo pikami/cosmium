@@ -25,6 +25,7 @@ const (
 	ResponseFailedToParseRequest        = 103
 	ResponseServerInstanceAlreadyExists = 104
 	ResponseServerInstanceNotFound      = 105
+	ResponseFailedToStartServer         = 106
 
 	ResponseRepositoryNotFound   = 200
 	ResponseRepositoryConflict   = 201

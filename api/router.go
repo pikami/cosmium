@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/api/handlers"
@@ -86,7 +87,7 @@ func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
 	s.router = router
 }
 
-func (s *ApiServer) Start() {
+func (s *ApiServer) Start() error {
 	listenAddress := fmt.Sprintf(":%d", s.config.Port)
 	s.isActive = true
 
@@ -94,6 +95,8 @@ func (s *ApiServer) Start() {
 		Addr:    listenAddress,
 		Handler: s.router.Handler(),
 	}
+
+	errChan := make(chan error, 1)
 
 	go func() {
 		<-s.stopServer
@@ -106,32 +109,36 @@ func (s *ApiServer) Start() {
 	}()
 
 	go func() {
+		var err error
 		if s.config.DisableTls {
 			logger.Infof("Listening and serving HTTP on %s\n", server.Addr)
-			err := server.ListenAndServe()
-			if err != nil && err != http.ErrServerClosed {
-				logger.ErrorLn("Failed to start HTTP server:", err)
-			}
-			s.isActive = false
+			err = server.ListenAndServe()
 		} else if s.config.TLS_CertificatePath != "" && s.config.TLS_CertificateKey != "" {
 			logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
-			err := server.ListenAndServeTLS(
+			err = server.ListenAndServeTLS(
 				s.config.TLS_CertificatePath,
 				s.config.TLS_CertificateKey)
-			if err != nil && err != http.ErrServerClosed {
-				logger.ErrorLn("Failed to start HTTPS server:", err)
-			}
-			s.isActive = false
 		} else {
 			tlsConfig := tlsprovider.GetDefaultTlsConfig()
 			server.TLSConfig = tlsConfig
 
 			logger.Infof("Listening and serving HTTPS on %s\n", server.Addr)
-			err := server.ListenAndServeTLS("", "")
-			if err != nil && err != http.ErrServerClosed {
-				logger.ErrorLn("Failed to start HTTPS server:", err)
-			}
-			s.isActive = false
+			err = server.ListenAndServeTLS("", "")
 		}
+
+		if err != nil && err != http.ErrServerClosed {
+			logger.ErrorLn("Failed to start server:", err)
+			errChan <- err
+		} else {
+			errChan <- nil
+		}
+		s.isActive = false
 	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	case <-time.After(50 * time.Millisecond):
+		return nil
+	}
 }
