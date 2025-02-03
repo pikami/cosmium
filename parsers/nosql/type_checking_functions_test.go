@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pikami/cosmium/parsers"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_TypeCheckingFunctions(t *testing.T) {
@@ -27,7 +28,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -63,7 +64,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -99,7 +100,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -135,7 +136,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -171,7 +172,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -207,7 +208,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -243,7 +244,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -279,7 +280,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -315,7 +316,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -351,7 +352,7 @@ func Test_Execute_TypeCheckingFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{

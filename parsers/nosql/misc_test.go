@@ -49,7 +49,7 @@ func Test_Parse(t *testing.T) {
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "pk"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				OrderExpressions: []parsers.OrderExpression{
 					{
 						SelectItem: parsers.SelectItem{Path: []string{"c", "id"}},
@@ -73,7 +73,7 @@ func Test_Parse(t *testing.T) {
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "pk"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				GroupBy: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "pk"}},
@@ -93,7 +93,7 @@ func Test_Parse(t *testing.T) {
 						Type: parsers.SelectItemTypeField,
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.SelectItem{
 					Type: parsers.SelectItemTypeFunctionCall,
 					Value: parsers.FunctionCall{
@@ -124,10 +124,9 @@ func Test_Parse(t *testing.T) {
 					},
 				},
 				Table: parsers.Table{
-					Value: "c",
-					SelectItem: parsers.SelectItem{
-						Path: []string{"c", "tags"},
-					},
+					Value:      "c",
+					SelectItem: testutils.SelectItem_Path("c", "tags"),
+					IsInSelect: true,
 				},
 			},
 		)

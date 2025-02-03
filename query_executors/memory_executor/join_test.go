@@ -5,6 +5,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_Joins(t *testing.T) {
@@ -33,7 +34,7 @@ func Test_Execute_Joins(t *testing.T) {
 					{Path: []string{"c", "id"}},
 					{Path: []string{"cc", "name"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				JoinItems: []parsers.JoinItem{
 					{
 						Table: parsers.Table{
@@ -62,7 +63,7 @@ func Test_Execute_Joins(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"cc"}, IsTopLevel: true},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				JoinItems: []parsers.JoinItem{
 					{
 						Table: parsers.Table{

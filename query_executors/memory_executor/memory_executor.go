@@ -80,10 +80,15 @@ func resolveFrom(query parsers.SelectStmt, doc RowType) []rowContext {
 			initialTableName = query.Table.Value
 		}
 
+		if initialTableName == "" {
+			initialTableName = resolveDestinationColumnName(query.Table.SelectItem, 0, query.Parameters)
+		}
+
 		initialRow = rowContext{
 			parameters: query.Parameters,
 			tables: map[string]RowType{
 				initialTableName: doc,
+				"$root":          doc,
 			},
 		}
 	}
@@ -93,15 +98,33 @@ func resolveFrom(query parsers.SelectStmt, doc RowType) []rowContext {
 		if destinationTableName == "" {
 			destinationTableName = query.Table.Value
 		}
-
-		selectValue := initialRow.parseArray(query.Table.SelectItem)
-		rowContexts := make([]rowContext, len(selectValue))
-		for i, newRowData := range selectValue {
-			rowContexts[i].parameters = initialRow.parameters
-			rowContexts[i].tables = copyMap(initialRow.tables)
-			rowContexts[i].tables[destinationTableName] = newRowData
+		if destinationTableName == "" {
+			destinationTableName = resolveDestinationColumnName(query.Table.SelectItem, 0, initialRow.parameters)
 		}
-		return rowContexts
+
+		if query.Table.IsInSelect || query.Table.SelectItem.Type == parsers.SelectItemTypeSubQuery {
+			selectValue := initialRow.parseArray(query.Table.SelectItem)
+			rowContexts := make([]rowContext, len(selectValue))
+			for i, newRowData := range selectValue {
+				rowContexts[i].parameters = initialRow.parameters
+				rowContexts[i].tables = copyMap(initialRow.tables)
+				rowContexts[i].tables[destinationTableName] = newRowData
+			}
+			return rowContexts
+		}
+
+		if len(query.Table.SelectItem.Path) > 0 {
+			sourceTableName := query.Table.SelectItem.Path[0]
+			sourceTableData := initialRow.tables[sourceTableName]
+			if sourceTableData == nil {
+				// When source table is not found, assume it's root document
+				initialRow.tables[sourceTableName] = initialRow.tables["$root"]
+			}
+		}
+
+		newRowData := initialRow.resolveSelectItem(query.Table.SelectItem)
+		initialRow.tables[destinationTableName] = newRowData
+		return []rowContext{initialRow}
 	}
 
 	return []rowContext{initialRow}
@@ -310,23 +333,29 @@ func (r rowContext) applyProjection(selectItems []parsers.SelectItem) RowType {
 	// Construct a new row based on the selected columns
 	row := make(map[string]interface{})
 	for index, selectItem := range selectItems {
-		destinationName := selectItem.Alias
-		if destinationName == "" {
-			if len(selectItem.Path) > 0 {
-				destinationName = selectItem.Path[len(selectItem.Path)-1]
-			} else {
-				destinationName = fmt.Sprintf("$%d", index+1)
-			}
-
-			if destinationName[0] == '@' {
-				destinationName = r.parameters[destinationName].(string)
-			}
-		}
+		destinationName := resolveDestinationColumnName(selectItem, index, r.parameters)
 
 		row[destinationName] = r.resolveSelectItem(selectItem)
 	}
 
 	return row
+}
+
+func resolveDestinationColumnName(selectItem parsers.SelectItem, itemIndex int, queryParameters map[string]interface{}) string {
+	if selectItem.Alias != "" {
+		return selectItem.Alias
+	}
+
+	destinationName := fmt.Sprintf("$%d", itemIndex+1)
+	if len(selectItem.Path) > 0 {
+		destinationName = selectItem.Path[len(selectItem.Path)-1]
+	}
+
+	if destinationName[0] == '@' {
+		destinationName = queryParameters[destinationName].(string)
+	}
+
+	return destinationName
 }
 
 func (r rowContext) resolveSelectItem(selectItem parsers.SelectItem) interface{} {

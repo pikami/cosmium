@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pikami/cosmium/parsers"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Parse_Select(t *testing.T) {
@@ -17,7 +18,7 @@ func Test_Parse_Select(t *testing.T) {
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "pk"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -31,7 +32,7 @@ func Test_Parse_Select(t *testing.T) {
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "@param"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -44,7 +45,7 @@ func Test_Parse_Select(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table:    parsers.Table{Value: "c"},
+				Table:    parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Distinct: true,
 			},
 		)
@@ -58,7 +59,7 @@ func Test_Parse_Select(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Count: 1,
 			},
 		)
@@ -72,7 +73,7 @@ func Test_Parse_Select(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table:  parsers.Table{Value: "c"},
+				Table:  parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Count:  5,
 				Offset: 3,
 			},
@@ -87,7 +88,7 @@ func Test_Parse_Select(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}, IsTopLevel: true},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -100,7 +101,20 @@ func Test_Parse_Select(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c"}, IsTopLevel: true},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+		)
+	})
+
+	t.Run("Should parse SELECT c", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c"}, IsTopLevel: false},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -120,7 +134,27 @@ func Test_Parse_Select(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+		)
+	})
+
+	t.Run("Should parse SELECT with alias", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT
+			  c.id AS aliasWithAs,
+			  c.pk aliasWithoutAs
+			FROM root c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Alias: "aliasWithAs", Path: []string{"c", "id"}},
+					{Alias: "aliasWithoutAs", Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{
+					Value:      "c",
+					SelectItem: parsers.SelectItem{Alias: "c", Path: []string{"root"}},
+				},
 			},
 		)
 	})
@@ -140,7 +174,7 @@ func Test_Parse_Select(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})

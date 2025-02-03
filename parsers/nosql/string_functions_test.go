@@ -30,7 +30,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -56,7 +56,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -85,7 +85,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -111,7 +111,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -137,7 +137,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -163,7 +163,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -189,7 +189,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -213,7 +213,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -237,7 +237,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -261,7 +261,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -286,7 +286,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -310,7 +310,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -334,7 +334,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -360,7 +360,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -385,7 +385,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -409,7 +409,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -434,7 +434,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -458,7 +458,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -484,7 +484,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -508,7 +508,7 @@ func Test_Execute_StringFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})

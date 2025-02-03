@@ -51,3 +51,9 @@ func SelectItem_Constant_Parameter(name string) parsers.SelectItem {
 		},
 	}
 }
+
+func SelectItem_Path(path ...string) parsers.SelectItem {
+	return parsers.SelectItem{
+		Path: path,
+	}
+}

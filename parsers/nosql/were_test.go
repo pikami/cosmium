@@ -19,7 +19,7 @@ func Test_Parse_Were(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
 					Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
@@ -42,7 +42,7 @@ func Test_Parse_Were(t *testing.T) {
 					{Path: []string{"c", "_rid"}},
 					{Path: []string{"c", "_ts"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.LogicalExpression{
 					Operation: parsers.LogicalExpressionTypeOr,
 					Expressions: []interface{}{
@@ -72,7 +72,7 @@ func Test_Parse_Were(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.LogicalExpression{
 					Operation: parsers.LogicalExpressionTypeAnd,
 					Expressions: []interface{}{
@@ -114,7 +114,7 @@ func Test_Parse_Were(t *testing.T) {
 			AND c.param=@param_id1`,
 			parsers.SelectStmt{
 				SelectItems: []parsers.SelectItem{{Path: []string{"c", "id"}, Alias: ""}},
-				Table:       parsers.Table{Value: "c"},
+				Table:       parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.LogicalExpression{
 					Expressions: []interface{}{
 						parsers.ComparisonExpression{

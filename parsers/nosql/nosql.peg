@@ -204,14 +204,22 @@ TopClause <- Top ws count:Integer {
     return count, nil
 }
 
-FromClause <- From ws table:TableName selectItem:(ws "IN"i ws column:SelectItem { return column, nil })? {
+FromClause <- From ws table:TableName selectItem:(ws In ws column:SelectItem { return column, nil }) {
     tableTyped := table.(parsers.Table)
 
     if selectItem != nil {
 	    tableTyped.SelectItem = selectItem.(parsers.SelectItem)
+        tableTyped.IsInSelect = true
 	}
 
 	return tableTyped, nil
+} / From ws column:SelectItem {
+    tableSelectItem := column.(parsers.SelectItem)
+    table := parsers.Table{
+        Value: tableSelectItem.Alias,
+        SelectItem: tableSelectItem,
+    }
+    return table, nil
 } / From ws subQuery:SubQuerySelectItem {
     subQueryTyped := subQuery.(parsers.SelectItem)
 	table := parsers.Table{
@@ -243,13 +251,13 @@ SubQuerySelectItem <- subQuery:SubQuery asClause:(ws alias:AsClause { return ali
     return selectItem, nil
 }
 
-JoinClause <- Join ws table:TableName ws "IN"i ws column:SelectItem {
+JoinClause <- Join ws table:TableName ws In ws column:SelectItem {
     return makeJoin(table, column)
 } / Join ws subQuery:SubQuerySelectItem {
     return makeJoin(nil, subQuery)
 }
 
-OffsetClause <- "OFFSET"i ws offset:IntegerLiteral ws "LIMIT"i ws limit:IntegerLiteral {
+OffsetClause <- Offset ws offset:IntegerLiteral ws "LIMIT"i ws limit:IntegerLiteral {
     return []interface{}{offset.(parsers.Constant).Value, limit.(parsers.Constant).Value}, nil
 }
 
@@ -317,7 +325,11 @@ SelectItem <- selectItem:(SubQuerySelectItem / Literal / FunctionCall / SelectAr
 	return itemResult, nil
 }
 
-AsClause <- ws As ws alias:Identifier { return alias, nil }
+AsClause <- (ws As)? ws !ExcludedKeywords alias:Identifier {
+    return alias, nil
+}
+
+ExcludedKeywords <- Select / Top / As / From / In / Join / Exists / Where / And / Or / GroupBy / OrderBy / Offset
 
 DotFieldAccess <- "." id:Identifier {
     return id, nil
@@ -373,6 +385,8 @@ As <- "AS"i
 
 From <- "FROM"i
 
+In <- "IN"i
+
 Join <- "JOIN"i
 
 Exists <- "EXISTS"i
@@ -386,6 +400,8 @@ Or <- "OR"i wss
 GroupBy <- "GROUP"i ws "BY"i
 
 OrderBy <- "ORDER"i ws "BY"i
+
+Offset <- "OFFSET"i
 
 ComparisonOperator <- ("=" / "!=" / "<" / "<=" / ">" / ">=") {
     return string(c.text), nil
@@ -700,7 +716,7 @@ MathNumberBinExpression <- "NumberBin"i ws "(" ws ex1:SelectItem others:(ws "," 
 MathPiExpression <- "PI"i ws "(" ws ")" { return createFunctionCall(parsers.FunctionCallMathPi, []interface{}{}) }
 MathRandExpression <- "RAND"i ws "(" ws ")" { return createFunctionCall(parsers.FunctionCallMathRand, []interface{}{}) }
 
-InFunction <- ex1:SelectProperty ws "IN"i ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
+InFunction <- ex1:SelectProperty ws In ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
     return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))
 }
 

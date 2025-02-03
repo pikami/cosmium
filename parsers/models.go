@@ -17,6 +17,7 @@ type SelectStmt struct {
 type Table struct {
 	Value      string
 	SelectItem SelectItem
+	IsInSelect bool
 }
 
 type JoinItem struct {

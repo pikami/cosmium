@@ -6,6 +6,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_MathFunctions(t *testing.T) {
@@ -261,7 +262,7 @@ func testMathFunctionExecute(
 					},
 				},
 			},
-			Table: parsers.Table{Value: "c"},
+			Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 		},
 		data,
 		expectedData,

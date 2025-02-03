@@ -32,7 +32,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -58,7 +58,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -87,7 +87,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -116,7 +116,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -145,7 +145,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -169,7 +169,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -195,7 +195,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -223,7 +223,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -251,7 +251,7 @@ func Test_Parse_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})

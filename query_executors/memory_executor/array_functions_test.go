@@ -42,7 +42,7 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -356,7 +356,7 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -392,7 +392,7 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -430,7 +430,7 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -468,7 +468,7 @@ func Test_Execute_ArrayFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{

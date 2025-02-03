@@ -23,7 +23,7 @@ func Test_Execute_Where(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
 					Left:      parsers.SelectItem{Path: []string{"c", "isCool"}},
@@ -46,7 +46,7 @@ func Test_Execute_Where(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.ComparisonExpression{
 					Operation: "=",
 					Left:      parsers.SelectItem{Path: []string{"c", "id"}},
@@ -71,7 +71,7 @@ func Test_Execute_Where(t *testing.T) {
 					{Path: []string{"c", "id"}},
 					{Path: []string{"c", "_self"}, Alias: "self"},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.LogicalExpression{
 					Operation: parsers.LogicalExpressionTypeAnd,
 					Expressions: []interface{}{
@@ -102,7 +102,7 @@ func Test_Execute_Where(t *testing.T) {
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				Filters: parsers.LogicalExpression{
 					Operation: parsers.LogicalExpressionTypeAnd,
 					Expressions: []interface{}{

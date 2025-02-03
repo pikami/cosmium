@@ -5,6 +5,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_AggregateFunctions(t *testing.T) {
@@ -38,7 +39,7 @@ func Test_Execute_AggregateFunctions(t *testing.T) {
 				GroupBy: []parsers.SelectItem{
 					{Path: []string{"c", "key"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -67,7 +68,7 @@ func Test_Execute_AggregateFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -99,7 +100,7 @@ func Test_Execute_AggregateFunctions(t *testing.T) {
 				GroupBy: []parsers.SelectItem{
 					{Path: []string{"c", "key"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -132,7 +133,7 @@ func Test_Execute_AggregateFunctions(t *testing.T) {
 				GroupBy: []parsers.SelectItem{
 					{Path: []string{"c", "key"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -165,7 +166,7 @@ func Test_Execute_AggregateFunctions(t *testing.T) {
 				GroupBy: []parsers.SelectItem{
 					{Path: []string{"c", "key"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
@@ -198,7 +199,7 @@ func Test_Execute_AggregateFunctions(t *testing.T) {
 				GroupBy: []parsers.SelectItem{
 					{Path: []string{"c", "key"}},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 			mockData,
 			[]memoryexecutor.RowType{

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pikami/cosmium/parsers"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_MathFunctions(t *testing.T) {
@@ -644,7 +645,7 @@ func testMathFunctionParse(
 					},
 				},
 			},
-			Table: parsers.Table{Value: expectedTable},
+			Table: parsers.Table{SelectItem: testutils.SelectItem_Path(expectedTable)},
 		},
 	)
 }

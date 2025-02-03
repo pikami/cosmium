@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pikami/cosmium/parsers"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Parse_AggregateFunctions(t *testing.T) {
@@ -27,7 +28,7 @@ func Test_Parse_AggregateFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -51,7 +52,7 @@ func Test_Parse_AggregateFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -75,7 +76,7 @@ func Test_Parse_AggregateFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -99,7 +100,7 @@ func Test_Parse_AggregateFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})
@@ -123,7 +124,7 @@ func Test_Parse_AggregateFunctions(t *testing.T) {
 						},
 					},
 				},
-				Table: parsers.Table{Value: "c"},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 			},
 		)
 	})

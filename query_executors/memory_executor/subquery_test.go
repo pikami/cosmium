@@ -5,6 +5,7 @@ import (
 
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
+	testutils "github.com/pikami/cosmium/test_utils"
 )
 
 func Test_Execute_SubQuery(t *testing.T) {
@@ -41,7 +42,7 @@ func Test_Execute_SubQuery(t *testing.T) {
 						Alias: "c",
 						Type:  parsers.SelectItemTypeSubQuery,
 						Value: parsers.SelectStmt{
-							Table: parsers.Table{Value: "cc"},
+							Table: parsers.Table{SelectItem: testutils.SelectItem_Path("cc")},
 							SelectItems: []parsers.SelectItem{
 								{Path: []string{"cc", "info"}, IsTopLevel: true},
 							},
@@ -66,9 +67,7 @@ func Test_Execute_SubQuery(t *testing.T) {
 					{Path: []string{"c", "id"}},
 					{Path: []string{"cc", "name"}},
 				},
-				Table: parsers.Table{
-					Value: "c",
-				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
 				JoinItems: []parsers.JoinItem{
 					{
 						Table: parsers.Table{
@@ -79,13 +78,12 @@ func Test_Execute_SubQuery(t *testing.T) {
 							Type:  parsers.SelectItemTypeSubQuery,
 							Value: parsers.SelectStmt{
 								SelectItems: []parsers.SelectItem{
-									{Path: []string{"tag", "name"}},
+									testutils.SelectItem_Path("tag", "name"),
 								},
 								Table: parsers.Table{
-									Value: "tag",
-									SelectItem: parsers.SelectItem{
-										Path: []string{"c", "tags"},
-									},
+									Value:      "tag",
+									SelectItem: testutils.SelectItem_Path("c", "tags"),
+									IsInSelect: true,
 								},
 							},
 						},
@@ -107,10 +105,10 @@ func Test_Execute_SubQuery(t *testing.T) {
 			t,
 			parsers.SelectStmt{
 				SelectItems: []parsers.SelectItem{
-					{Path: []string{"c", "id"}},
+					testutils.SelectItem_Path("c", "id"),
 				},
 				Table: parsers.Table{
-					Value: "c",
+					SelectItem: testutils.SelectItem_Path("c"),
 				},
 				JoinItems: []parsers.JoinItem{
 					{
@@ -125,13 +123,12 @@ func Test_Execute_SubQuery(t *testing.T) {
 										Type:       parsers.SelectItemTypeSubQuery,
 										Value: parsers.SelectStmt{
 											SelectItems: []parsers.SelectItem{
-												{Path: []string{"tag", "name"}},
+												testutils.SelectItem_Path("tag", "name"),
 											},
 											Table: parsers.Table{
-												Value: "tag",
-												SelectItem: parsers.SelectItem{
-													Path: []string{"c", "tags"},
-												},
+												Value:      "tag",
+												SelectItem: testutils.SelectItem_Path("c", "tags"),
+												IsInSelect: true,
 											},
 											Exists: true,
 										},
