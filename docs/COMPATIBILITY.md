@@ -204,14 +204,18 @@ Cosmium strives to support the core features of Cosmos DB, including:
 | IS_PRIMITIVE     | Yes         |
 | IS_STRING        | Yes         |
 
-### Document Batch Requests
+### Transactional batch operations
+
+Note: There's actually no transaction here. Think of this as a 'bulk operation' that can partially succeed.
 
 | Operation | Implemented |
 | --------- | ----------- |
-| Create    | No          |
-| Update    | No          |
-| Delete    | No          |
-| Read      | No          |
+| Create    | Yes         |
+| Delete    | Yes         |
+| Replace   | Yes         |
+| Upsert    | Yes         |
+| Read      | Yes         |
+| Patch     | No          |
 
 ## Known Differences
 

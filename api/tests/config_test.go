@@ -5,6 +5,7 @@ import (
 
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
+	"github.com/pikami/cosmium/internal/logger"
 	"github.com/pikami/cosmium/internal/repositories"
 )
 
@@ -34,6 +35,9 @@ func runTestServer() *TestServer {
 		ExplorerPath:            "/tmp/nothing",
 		ExplorerBaseUrlLocation: config.ExplorerBaseUrlLocation,
 	}
+
+	config.LogLevel = "debug"
+	logger.SetLogLevel(logger.LogLevelDebug)
 
 	return runTestServerCustomConfig(config)
 }

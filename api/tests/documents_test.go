@@ -377,5 +377,140 @@ func Test_Documents_Patch(t *testing.T) {
 		assert.NotNil(t, r)
 		assert.Nil(t, err2)
 	})
+}
 
+func Test_Documents_TransactionalBatch(t *testing.T) {
+	ts, collectionClient := documents_InitializeDb(t)
+	defer ts.Server.Close()
+
+	t.Run("Should execute CREATE transactional batch", func(t *testing.T) {
+		context := context.TODO()
+		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+
+		newItem := map[string]interface{}{
+			"id": "678901",
+		}
+		bytes, err := json.Marshal(newItem)
+		assert.Nil(t, err)
+
+		batch.CreateItem(bytes, nil)
+		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+		assert.Nil(t, err)
+		assert.True(t, response.Success)
+		assert.Equal(t, 1, len(response.OperationResults))
+
+		operationResponse := response.OperationResults[0]
+		assert.NotNil(t, operationResponse)
+		assert.NotNil(t, operationResponse.ResourceBody)
+		assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
+
+		var itemResponseBody map[string]interface{}
+		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+		assert.Equal(t, newItem["id"], itemResponseBody["id"])
+
+		createdDoc, _ := ts.Repository.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+		assert.Equal(t, newItem["id"], createdDoc["id"])
+	})
+
+	t.Run("Should execute DELETE transactional batch", func(t *testing.T) {
+		context := context.TODO()
+		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+
+		batch.DeleteItem("12345", nil)
+		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+		assert.Nil(t, err)
+		assert.True(t, response.Success)
+		assert.Equal(t, 1, len(response.OperationResults))
+
+		operationResponse := response.OperationResults[0]
+		assert.NotNil(t, operationResponse)
+		assert.Equal(t, int32(http.StatusNoContent), operationResponse.StatusCode)
+
+		_, status := ts.Repository.GetDocument(testDatabaseName, testCollectionName, "12345")
+		assert.Equal(t, repositorymodels.StatusNotFound, int(status))
+	})
+
+	t.Run("Should execute REPLACE transactional batch", func(t *testing.T) {
+		context := context.TODO()
+		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+
+		newItem := map[string]interface{}{
+			"id": "67890",
+			"pk": "666",
+		}
+		bytes, err := json.Marshal(newItem)
+		assert.Nil(t, err)
+
+		batch.ReplaceItem("67890", bytes, nil)
+		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+		assert.Nil(t, err)
+		assert.True(t, response.Success)
+		assert.Equal(t, 1, len(response.OperationResults))
+
+		operationResponse := response.OperationResults[0]
+		assert.NotNil(t, operationResponse)
+		assert.NotNil(t, operationResponse.ResourceBody)
+		assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
+
+		var itemResponseBody map[string]interface{}
+		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+		assert.Equal(t, newItem["id"], itemResponseBody["id"])
+		assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
+
+		updatedDoc, _ := ts.Repository.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+		assert.Equal(t, newItem["id"], updatedDoc["id"])
+		assert.Equal(t, newItem["pk"], updatedDoc["pk"])
+	})
+
+	t.Run("Should execute UPSERT transactional batch", func(t *testing.T) {
+		context := context.TODO()
+		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+
+		newItem := map[string]interface{}{
+			"id": "678901",
+			"pk": "666",
+		}
+		bytes, err := json.Marshal(newItem)
+		assert.Nil(t, err)
+
+		batch.UpsertItem(bytes, nil)
+		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+		assert.Nil(t, err)
+		assert.True(t, response.Success)
+		assert.Equal(t, 1, len(response.OperationResults))
+
+		operationResponse := response.OperationResults[0]
+		assert.NotNil(t, operationResponse)
+		assert.NotNil(t, operationResponse.ResourceBody)
+		assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
+
+		var itemResponseBody map[string]interface{}
+		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+		assert.Equal(t, newItem["id"], itemResponseBody["id"])
+		assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
+
+		updatedDoc, _ := ts.Repository.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+		assert.Equal(t, newItem["id"], updatedDoc["id"])
+		assert.Equal(t, newItem["pk"], updatedDoc["pk"])
+	})
+
+	t.Run("Should execute READ transactional batch", func(t *testing.T) {
+		context := context.TODO()
+		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+
+		batch.ReadItem("67890", nil)
+		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+		assert.Nil(t, err)
+		assert.True(t, response.Success)
+		assert.Equal(t, 1, len(response.OperationResults))
+
+		operationResponse := response.OperationResults[0]
+		assert.NotNil(t, operationResponse)
+		assert.NotNil(t, operationResponse.ResourceBody)
+		assert.Equal(t, int32(http.StatusOK), operationResponse.StatusCode)
+
+		var itemResponseBody map[string]interface{}
+		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+		assert.Equal(t, "67890", itemResponseBody["id"])
+	})
 }
