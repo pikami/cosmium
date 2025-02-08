@@ -10,10 +10,10 @@ import (
 
 func Test_Execute_Select(t *testing.T) {
 	mockData := []memoryexecutor.RowType{
-		map[string]interface{}{"id": "12345", "pk": 123, "_self": "self1", "_rid": "rid1", "_ts": 123456, "isCool": false},
-		map[string]interface{}{"id": "67890", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
-		map[string]interface{}{"id": "456", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
-		map[string]interface{}{"id": "123", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true},
+		map[string]interface{}{"id": "12345", "pk": 123, "_self": "self1", "_rid": "rid1", "_ts": 123456, "isCool": false, "order": 1},
+		map[string]interface{}{"id": "67890", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true, "order": 2},
+		map[string]interface{}{"id": "456", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true, "order": 3},
+		map[string]interface{}{"id": "123", "pk": 456, "_self": "self2", "_rid": "rid2", "_ts": 789012, "isCool": true, "order": 4},
 	}
 
 	t.Run("Should execute simple SELECT", func(t *testing.T) {
@@ -108,15 +108,15 @@ func Test_Execute_Select(t *testing.T) {
 				Offset: 1,
 				OrderExpressions: []parsers.OrderExpression{
 					{
-						SelectItem: parsers.SelectItem{Path: []string{"c", "id"}},
+						SelectItem: parsers.SelectItem{Path: []string{"c", "order"}},
 						Direction:  parsers.OrderDirectionDesc,
 					},
 				},
 			},
 			mockData,
 			[]memoryexecutor.RowType{
-				map[string]interface{}{"id": "67890", "pk": 456},
 				map[string]interface{}{"id": "456", "pk": 456},
+				map[string]interface{}{"id": "67890", "pk": 456},
 			},
 		)
 	})

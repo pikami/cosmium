@@ -60,6 +60,15 @@ func ExecuteQuery(query parsers.SelectStmt, documents []RowType) []RowType {
 		projectedDocuments = deduplicate(projectedDocuments)
 	}
 
+	// Apply offset
+	if query.Offset > 0 {
+		if query.Offset < len(projectedDocuments) {
+			projectedDocuments = projectedDocuments[query.Offset:]
+		} else {
+			projectedDocuments = []RowType{}
+		}
+	}
+
 	// Apply result limit
 	if query.Count > 0 && len(projectedDocuments) > query.Count {
 		projectedDocuments = projectedDocuments[:query.Count]
