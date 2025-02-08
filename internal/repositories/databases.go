@@ -37,6 +37,11 @@ func (r *DataRepository) DeleteDatabase(id string) repositorymodels.RepositorySt
 	}
 
 	delete(r.storeState.Databases, id)
+	delete(r.storeState.Collections, id)
+	delete(r.storeState.Documents, id)
+	delete(r.storeState.Triggers, id)
+	delete(r.storeState.StoredProcedures, id)
+	delete(r.storeState.UserDefinedFunctions, id)
 
 	return repositorymodels.StatusOk
 }
@@ -50,7 +55,7 @@ func (r *DataRepository) CreateDatabase(newDatabase repositorymodels.Database) (
 	}
 
 	newDatabase.TimeStamp = time.Now().Unix()
-	newDatabase.ResourceID = resourceid.New()
+	newDatabase.ResourceID = resourceid.New(resourceid.ResourceTypeDatabase)
 	newDatabase.ETag = fmt.Sprintf("\"%s\"", uuid.New())
 	newDatabase.Self = fmt.Sprintf("dbs/%s/", newDatabase.ResourceID)
 

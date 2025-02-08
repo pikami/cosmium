@@ -26,7 +26,7 @@ func (r *DataRepository) GetPartitionKeyRanges(databaseId string, collectionId s
 		timestamp = collection.TimeStamp
 	}
 
-	pkrResourceId := resourceid.NewCombined(databaseRid, collectionRid, resourceid.New())
+	pkrResourceId := resourceid.NewCombined(collectionRid, resourceid.New(resourceid.ResourceTypePartitionKeyRange))
 	pkrSelf := fmt.Sprintf("dbs/%s/colls/%s/pkranges/%s/", databaseRid, collectionRid, pkrResourceId)
 	etag := fmt.Sprintf("\"%s\"", uuid.New())
 

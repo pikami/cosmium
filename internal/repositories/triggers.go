@@ -81,7 +81,7 @@ func (r *DataRepository) CreateTrigger(databaseId string, collectionId string, t
 	}
 
 	trigger.TimeStamp = time.Now().Unix()
-	trigger.ResourceID = resourceid.NewCombined(database.ResourceID, collection.ResourceID, resourceid.New())
+	trigger.ResourceID = resourceid.NewCombined(collection.ResourceID, resourceid.New(resourceid.ResourceTypeTrigger))
 	trigger.ETag = fmt.Sprintf("\"%s\"", uuid.New())
 	trigger.Self = fmt.Sprintf("dbs/%s/colls/%s/triggers/%s/", database.ResourceID, collection.ResourceID, trigger.ResourceID)
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/resourceid"
 )
 
 func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
@@ -31,8 +32,9 @@ func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
 			collectionRid = collection.ResourceID
 		}
 
+		rid := resourceid.NewCombined(collectionRid, resourceid.New(resourceid.ResourceTypePartitionKeyRange))
 		c.IndentedJSON(http.StatusOK, gin.H{
-			"_rid":               collectionRid,
+			"_rid":               rid,
 			"_count":             len(partitionKeyRanges),
 			"PartitionKeyRanges": partitionKeyRanges,
 		})

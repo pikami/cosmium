@@ -75,8 +75,7 @@ func requestToResourceId(c *gin.Context) string {
 
 	isFeed := c.Request.Header.Get("A-Im") == "Incremental Feed"
 	if resourceType == "pkranges" && isFeed {
-		// CosmosSDK replaces '/' with '-' in resource id requests
-		resourceId = strings.Replace(collId, "-", "/", -1)
+		resourceId = collId
 	}
 
 	return resourceId

@@ -81,7 +81,7 @@ func (r *DataRepository) CreateStoredProcedure(databaseId string, collectionId s
 	}
 
 	sp.TimeStamp = time.Now().Unix()
-	sp.ResourceID = resourceid.NewCombined(database.ResourceID, collection.ResourceID, resourceid.New())
+	sp.ResourceID = resourceid.NewCombined(collection.ResourceID, resourceid.New(resourceid.ResourceTypeStoredProcedure))
 	sp.ETag = fmt.Sprintf("\"%s\"", uuid.New())
 	sp.Self = fmt.Sprintf("dbs/%s/colls/%s/sprocs/%s/", database.ResourceID, collection.ResourceID, sp.ResourceID)
 

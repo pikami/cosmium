@@ -50,6 +50,10 @@ func (r *DataRepository) DeleteCollection(databaseId string, collectionId string
 	}
 
 	delete(r.storeState.Collections[databaseId], collectionId)
+	delete(r.storeState.Documents[databaseId], collectionId)
+	delete(r.storeState.Triggers[databaseId], collectionId)
+	delete(r.storeState.StoredProcedures[databaseId], collectionId)
+	delete(r.storeState.UserDefinedFunctions[databaseId], collectionId)
 
 	return repositorymodels.StatusOk
 }
@@ -71,7 +75,7 @@ func (r *DataRepository) CreateCollection(databaseId string, newCollection repos
 	newCollection = structhidrators.Hidrate(newCollection).(repositorymodels.Collection)
 
 	newCollection.TimeStamp = time.Now().Unix()
-	newCollection.ResourceID = resourceid.NewCombined(database.ResourceID, resourceid.New())
+	newCollection.ResourceID = resourceid.NewCombined(database.ResourceID, resourceid.New(resourceid.ResourceTypeCollection))
 	newCollection.ETag = fmt.Sprintf("\"%s\"", uuid.New())
 	newCollection.Self = fmt.Sprintf("dbs/%s/colls/%s/", database.ResourceID, newCollection.ResourceID)
 

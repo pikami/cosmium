@@ -81,7 +81,7 @@ func (r *DataRepository) CreateUserDefinedFunction(databaseId string, collection
 	}
 
 	udf.TimeStamp = time.Now().Unix()
-	udf.ResourceID = resourceid.NewCombined(database.ResourceID, collection.ResourceID, resourceid.New())
+	udf.ResourceID = resourceid.NewCombined(collection.ResourceID, resourceid.New(resourceid.ResourceTypeUserDefinedFunction))
 	udf.ETag = fmt.Sprintf("\"%s\"", uuid.New())
 	udf.Self = fmt.Sprintf("dbs/%s/colls/%s/udfs/%s/", database.ResourceID, collection.ResourceID, udf.ResourceID)
 

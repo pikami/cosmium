@@ -95,7 +95,7 @@ func (r *DataRepository) CreateDocument(databaseId string, collectionId string, 
 	}
 
 	document["_ts"] = time.Now().Unix()
-	document["_rid"] = resourceid.NewCombined(database.ResourceID, collection.ResourceID, resourceid.New())
+	document["_rid"] = resourceid.NewCombined(collection.ResourceID, resourceid.New(resourceid.ResourceTypeDocument))
 	document["_etag"] = fmt.Sprintf("\"%s\"", uuid.New())
 	document["_self"] = fmt.Sprintf("dbs/%s/colls/%s/docs/%s/", database.ResourceID, collection.ResourceID, document["_rid"])
 
