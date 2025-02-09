@@ -3,6 +3,7 @@ package main
 import "C"
 import (
 	"encoding/json"
+	"strings"
 
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
@@ -21,7 +22,7 @@ func CreateDocument(serverName *C.char, databaseId *C.char, collectionId *C.char
 	}
 
 	var document repositorymodels.Document
-	err := json.Unmarshal([]byte(documentStr), &document)
+	err := json.NewDecoder(strings.NewReader(documentStr)).Decode(&document)
 	if err != nil {
 		return ResponseFailedToParseRequest
 	}

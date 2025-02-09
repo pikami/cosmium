@@ -13,8 +13,10 @@ type ServerInstance struct {
 	repository *repositories.DataRepository
 }
 
-var serverInstances map[string]*ServerInstance
-var mutex sync.Mutex
+var (
+	serverInstances = make(map[string]*ServerInstance)
+	mutex           = sync.Mutex{}
+)
 
 const (
 	ResponseSuccess = 0
@@ -36,10 +38,6 @@ func getInstance(serverName string) (*ServerInstance, bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if serverInstances == nil {
-		serverInstances = make(map[string]*ServerInstance)
-	}
-
 	var ok bool
 	var serverInstance *ServerInstance
 	if serverInstance, ok = serverInstances[serverName]; !ok {
@@ -53,20 +51,12 @@ func addInstance(serverName string, serverInstance *ServerInstance) {
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	if serverInstances == nil {
-		serverInstances = make(map[string]*ServerInstance)
-	}
-
 	serverInstances[serverName] = serverInstance
 }
 
 func removeInstance(serverName string) {
 	mutex.Lock()
 	defer mutex.Unlock()
-
-	if serverInstances == nil {
-		return
-	}
 
 	delete(serverInstances, serverName)
 }

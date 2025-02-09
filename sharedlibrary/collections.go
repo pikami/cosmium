@@ -3,6 +3,7 @@ package main
 import "C"
 import (
 	"encoding/json"
+	"strings"
 
 	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
@@ -20,7 +21,7 @@ func CreateCollection(serverName *C.char, databaseId *C.char, collectionJson *C.
 	}
 
 	var collection repositorymodels.Collection
-	err := json.Unmarshal([]byte(collectionStr), &collection)
+	err := json.NewDecoder(strings.NewReader(collectionStr)).Decode(&collection)
 	if err != nil {
 		return ResponseFailedToParseRequest
 	}

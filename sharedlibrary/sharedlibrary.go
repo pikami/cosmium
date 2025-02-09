@@ -6,6 +6,7 @@ package main
 import "C"
 import (
 	"encoding/json"
+	"strings"
 	"unsafe"
 
 	"github.com/pikami/cosmium/api"
@@ -15,21 +16,21 @@ import (
 
 //export CreateServerInstance
 func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
-	configStr := C.GoString(configurationJSON)
 	serverNameStr := C.GoString(serverName)
+	configStr := C.GoString(configurationJSON)
 
 	if _, ok := getInstance(serverNameStr); ok {
 		return ResponseServerInstanceAlreadyExists
 	}
 
 	var configuration config.ServerConfig
-	err := json.Unmarshal([]byte(configStr), &configuration)
+	err := json.NewDecoder(strings.NewReader(configStr)).Decode(&configuration)
 	if err != nil {
 		return ResponseFailedToParseConfiguration
 	}
 
-	configuration.PopulateCalculatedFields()
 	configuration.ApplyDefaultsToEmptyFields()
+	configuration.PopulateCalculatedFields()
 
 	repository := repositories.NewDataRepository(repositories.RepositoryOptions{
 		InitialDataFilePath: configuration.InitialDataFilePath,
