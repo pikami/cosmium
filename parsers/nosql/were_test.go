@@ -67,7 +67,7 @@ func Test_Parse_Were(t *testing.T) {
 			t,
 			`select c.id
 		FROM c
-		WHERE c.isCool=true AND (c.id = "123" OR c.id = "456")`,
+		WHERE c.isCool=true AND (c.id = "123" OR c.id <= "456")`,
 			parsers.SelectStmt{
 				SelectItems: []parsers.SelectItem{
 					{Path: []string{"c", "id"}},
@@ -90,7 +90,7 @@ func Test_Parse_Were(t *testing.T) {
 									Right:     testutils.SelectItem_Constant_String("123"),
 								},
 								parsers.ComparisonExpression{
-									Operation: "=",
+									Operation: "<=",
 									Left:      parsers.SelectItem{Path: []string{"c", "id"}},
 									Right:     testutils.SelectItem_Constant_String("456"),
 								},

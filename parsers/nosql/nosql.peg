@@ -403,7 +403,7 @@ OrderBy <- "ORDER"i ws "BY"i
 
 Offset <- "OFFSET"i
 
-ComparisonOperator <- ("=" / "!=" / "<" / "<=" / ">" / ">=") {
+ComparisonOperator <- ("<=" / ">=" / "=" / "!=" / "<" / ">") {
     return string(c.text), nil
 }
 
