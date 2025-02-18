@@ -9,9 +9,13 @@ import (
 )
 
 func (r rowContext) strings_StringEquals(arguments []interface{}) bool {
-	str1 := r.parseString(arguments[0])
-	str2 := r.parseString(arguments[1])
+	str1, str1ok := r.parseString(arguments[0])
+	str2, str2ok := r.parseString(arguments[1])
 	ignoreCase := r.getBoolFlag(arguments)
+
+	if !str1ok || !str2ok {
+		return false
+	}
 
 	if ignoreCase {
 		return strings.EqualFold(str1, str2)
@@ -21,9 +25,13 @@ func (r rowContext) strings_StringEquals(arguments []interface{}) bool {
 }
 
 func (r rowContext) strings_Contains(arguments []interface{}) bool {
-	str1 := r.parseString(arguments[0])
-	str2 := r.parseString(arguments[1])
+	str1, str1ok := r.parseString(arguments[0])
+	str2, str2ok := r.parseString(arguments[1])
 	ignoreCase := r.getBoolFlag(arguments)
+
+	if !str1ok || !str2ok {
+		return false
+	}
 
 	if ignoreCase {
 		str1 = strings.ToLower(str1)
@@ -34,9 +42,13 @@ func (r rowContext) strings_Contains(arguments []interface{}) bool {
 }
 
 func (r rowContext) strings_EndsWith(arguments []interface{}) bool {
-	str1 := r.parseString(arguments[0])
-	str2 := r.parseString(arguments[1])
+	str1, str1ok := r.parseString(arguments[0])
+	str2, str2ok := r.parseString(arguments[1])
 	ignoreCase := r.getBoolFlag(arguments)
+
+	if !str1ok || !str2ok {
+		return false
+	}
 
 	if ignoreCase {
 		str1 = strings.ToLower(str1)
@@ -47,9 +59,13 @@ func (r rowContext) strings_EndsWith(arguments []interface{}) bool {
 }
 
 func (r rowContext) strings_StartsWith(arguments []interface{}) bool {
-	str1 := r.parseString(arguments[0])
-	str2 := r.parseString(arguments[1])
+	str1, str1ok := r.parseString(arguments[0])
+	str2, str2ok := r.parseString(arguments[1])
 	ignoreCase := r.getBoolFlag(arguments)
+
+	if !str1ok || !str2ok {
+		return false
+	}
 
 	if ignoreCase {
 		str1 = strings.ToLower(str1)
@@ -73,8 +89,12 @@ func (r rowContext) strings_Concat(arguments []interface{}) string {
 }
 
 func (r rowContext) strings_IndexOf(arguments []interface{}) int {
-	str1 := r.parseString(arguments[0])
-	str2 := r.parseString(arguments[1])
+	str1, str1ok := r.parseString(arguments[0])
+	str2, str2ok := r.parseString(arguments[1])
+
+	if !str1ok || !str2ok {
+		return -1
+	}
 
 	start := 0
 	if len(arguments) > 2 && arguments[2] != nil {
@@ -115,8 +135,12 @@ func (r rowContext) strings_Lower(arguments []interface{}) string {
 func (r rowContext) strings_Left(arguments []interface{}) string {
 	var ok bool
 	var length int
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
 	lengthEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
+
+	if !strOk {
+		return ""
+	}
 
 	if length, ok = lengthEx.(int); !ok {
 		logger.ErrorLn("strings_Left - got parameters of wrong type")
@@ -135,27 +159,44 @@ func (r rowContext) strings_Left(arguments []interface{}) string {
 }
 
 func (r rowContext) strings_Length(arguments []interface{}) int {
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
+	if !strOk {
+		return 0
+	}
+
 	return len(str)
 }
 
 func (r rowContext) strings_LTrim(arguments []interface{}) string {
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
+	if !strOk {
+		return ""
+	}
+
 	return strings.TrimLeft(str, " ")
 }
 
 func (r rowContext) strings_Replace(arguments []interface{}) string {
-	str := r.parseString(arguments[0])
-	oldStr := r.parseString(arguments[1])
-	newStr := r.parseString(arguments[2])
+	str, strOk := r.parseString(arguments[0])
+	oldStr, oldStrOk := r.parseString(arguments[1])
+	newStr, newStrOk := r.parseString(arguments[2])
+
+	if !strOk || !oldStrOk || !newStrOk {
+		return ""
+	}
+
 	return strings.Replace(str, oldStr, newStr, -1)
 }
 
 func (r rowContext) strings_Replicate(arguments []interface{}) string {
 	var ok bool
 	var times int
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
 	timesEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
+
+	if !strOk {
+		return ""
+	}
 
 	if times, ok = timesEx.(int); !ok {
 		logger.ErrorLn("strings_Replicate - got parameters of wrong type")
@@ -174,8 +215,12 @@ func (r rowContext) strings_Replicate(arguments []interface{}) string {
 }
 
 func (r rowContext) strings_Reverse(arguments []interface{}) string {
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
 	runes := []rune(str)
+
+	if !strOk {
+		return ""
+	}
 
 	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
 		runes[i], runes[j] = runes[j], runes[i]
@@ -187,8 +232,12 @@ func (r rowContext) strings_Reverse(arguments []interface{}) string {
 func (r rowContext) strings_Right(arguments []interface{}) string {
 	var ok bool
 	var length int
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
 	lengthEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
+
+	if !strOk {
+		return ""
+	}
 
 	if length, ok = lengthEx.(int); !ok {
 		logger.ErrorLn("strings_Right - got parameters of wrong type")
@@ -207,7 +256,11 @@ func (r rowContext) strings_Right(arguments []interface{}) string {
 }
 
 func (r rowContext) strings_RTrim(arguments []interface{}) string {
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
+	if !strOk {
+		return ""
+	}
+
 	return strings.TrimRight(str, " ")
 }
 
@@ -215,9 +268,13 @@ func (r rowContext) strings_Substring(arguments []interface{}) string {
 	var ok bool
 	var startPos int
 	var length int
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
 	startPosEx := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
 	lengthEx := r.resolveSelectItem(arguments[2].(parsers.SelectItem))
+
+	if !strOk {
+		return ""
+	}
 
 	if startPos, ok = startPosEx.(int); !ok {
 		logger.ErrorLn("strings_Substring - got start parameters of wrong type")
@@ -241,7 +298,11 @@ func (r rowContext) strings_Substring(arguments []interface{}) string {
 }
 
 func (r rowContext) strings_Trim(arguments []interface{}) string {
-	str := r.parseString(arguments[0])
+	str, strOk := r.parseString(arguments[0])
+	if !strOk {
+		return ""
+	}
+
 	return strings.TrimSpace(str)
 }
 
@@ -257,15 +318,15 @@ func (r rowContext) getBoolFlag(arguments []interface{}) bool {
 	return ignoreCase
 }
 
-func (r rowContext) parseString(argument interface{}) string {
+func (r rowContext) parseString(argument interface{}) (value string, ok bool) {
 	exItem := argument.(parsers.SelectItem)
 	ex := r.resolveSelectItem(exItem)
 	if str1, ok := ex.(string); ok {
-		return str1
+		return str1, true
 	}
 
 	logger.ErrorLn("StringEquals got parameters of wrong type")
-	return ""
+	return "", false
 }
 
 func convertToString(value interface{}) string {
