@@ -9,7 +9,7 @@ SERVER_LOCATION=./cmd/server
 SHARED_LIB_LOCATION=./sharedlibrary
 SHARED_LIB_OPT=-buildmode=c-shared
 XGO_TARGETS=linux/amd64,linux/arm64,windows/amd64,windows/arm64,darwin/amd64,darwin/arm64
-GOVERSION=1.22.0
+GOVERSION=1.24.0
 
 DIST_DIR=dist
 

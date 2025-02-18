@@ -21,13 +21,13 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.22.0
+          go-version: 1.24.0
 
       - name: Cross-Compile with xgo
         uses: crazy-max/ghaction-xgo@v3.1.0
         with:
           xgo_version: latest
-          go_version: 1.22.0
+          go_version: 1.24.0
           dest: sharedlibrary_dist
           pkg: sharedlibrary
           prefix: cosmium
