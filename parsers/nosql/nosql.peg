@@ -718,6 +718,8 @@ MathRandExpression <- "RAND"i ws "(" ws ")" { return createFunctionCall(parsers.
 
 InFunction <- ex1:SelectProperty ws In ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
     return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))
+} / "(" ws ex1:SelectItem ws In ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" ws ")" {
+    return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))
 }
 
 AvgAggregateExpression   <- "AVG"i "(" ws ex:SelectItem  ws ")" {

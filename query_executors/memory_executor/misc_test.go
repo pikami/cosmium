@@ -126,6 +126,42 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute IN function with function call", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					testutils.SelectItem_Path("c", "id"),
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.SelectItem{
+					Type: parsers.SelectItemTypeFunctionCall,
+					Value: parsers.FunctionCall{
+						Type: parsers.FunctionCallIn,
+						Arguments: []interface{}{
+							parsers.SelectItem{
+								Type: parsers.SelectItemTypeFunctionCall,
+								Value: parsers.FunctionCall{
+									Type: parsers.FunctionCallToString,
+									Arguments: []interface{}{
+										testutils.SelectItem_Path("c", "id"),
+									},
+								},
+							},
+							testutils.SelectItem_Constant_String("123"),
+							testutils.SelectItem_Constant_String("456"),
+						},
+					},
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "456"},
+				map[string]interface{}{"id": "123"},
+			},
+		)
+	})
+
 	t.Run("Should execute IN selector", func(t *testing.T) {
 		testQueryExecute(
 			t,

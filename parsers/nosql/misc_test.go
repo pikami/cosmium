@@ -112,6 +112,38 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse IN function with function call", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`Select c.id FROM c WHERE (ToString(c.id) IN ("123", "456"))`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					testutils.SelectItem_Path("c", "id"),
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.SelectItem{
+					Type: parsers.SelectItemTypeFunctionCall,
+					Value: parsers.FunctionCall{
+						Type: parsers.FunctionCallIn,
+						Arguments: []interface{}{
+							parsers.SelectItem{
+								Type: parsers.SelectItemTypeFunctionCall,
+								Value: parsers.FunctionCall{
+									Type: parsers.FunctionCallToString,
+									Arguments: []interface{}{
+										testutils.SelectItem_Path("c", "id"),
+									},
+								},
+							},
+							testutils.SelectItem_Constant_String("123"),
+							testutils.SelectItem_Constant_String("456"),
+						},
+					},
+				},
+			},
+		)
+	})
+
 	t.Run("Should parse IN selector", func(t *testing.T) {
 		testQueryParse(
 			t,
