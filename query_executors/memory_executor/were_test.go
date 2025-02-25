@@ -136,4 +136,22 @@ func Test_Execute_Where(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should execute parse NOT conditions", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{{Path: []string{"c", "id"}, Alias: ""}},
+				Table:       parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.SelectItem{
+					Path:   []string{"c", "isCool"},
+					Invert: true,
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "12345"},
+			},
+		)
+	})
 }

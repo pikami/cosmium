@@ -329,7 +329,7 @@ AsClause <- (ws As)? ws !ExcludedKeywords alias:Identifier {
     return alias, nil
 }
 
-ExcludedKeywords <- Select / Top / As / From / In / Join / Exists / Where / And / Or / GroupBy / OrderBy / Offset
+ExcludedKeywords <- Select / Top / As / From / In / Join / Exists / Where / And / Or / Not / GroupBy / OrderBy / Offset
 
 DotFieldAccess <- "." id:Identifier {
     return id, nil
@@ -358,8 +358,14 @@ AndExpression <- ex1:ComparisonExpression ex2:(ws And ws ex:ComparisonExpression
 ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
     / left:SelectItem ws op:ComparisonOperator ws right:SelectItem {
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:op.(string)}, nil
+} / inv:(Not ws)? ex:SelectItem {
+    if inv != nil {
+		ex1 := ex.(parsers.SelectItem)
+		ex1.Invert = true
+		return ex1, nil
+	}
+    return ex, nil
 } / ex:BooleanLiteral { return ex, nil }
-  / ex:SelectItem { return ex, nil }
 
 OrderByClause <- OrderBy ws ex1:OrderExpression others:(ws "," ws ex:OrderExpression { return ex, nil })* {
     return makeOrderByClause(ex1, others)
@@ -396,6 +402,8 @@ Where <- "WHERE"i
 And <- "AND"i
 
 Or <- "OR"i wss
+
+Not <- "NOT"i
 
 GroupBy <- "GROUP"i ws "BY"i
 

@@ -192,6 +192,10 @@ func (r rowContext) applyFilters(filters interface{}) bool {
 	case parsers.SelectItem:
 		resolvedValue := r.resolveSelectItem(typedFilters)
 		if value, ok := resolvedValue.(bool); ok {
+			if typedFilters.Invert {
+				return !value
+			}
+
 			return value
 		}
 	}

@@ -148,4 +148,21 @@ func Test_Parse_Were(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should correctly parse NOT conditions", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`select c.id
+		FROM c
+		WHERE NOT c.boolean`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{{Path: []string{"c", "id"}, Alias: ""}},
+				Table:       parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.SelectItem{
+					Path:   []string{"c", "boolean"},
+					Invert: true,
+				},
+			},
+		)
+	})
 }

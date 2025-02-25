@@ -42,6 +42,7 @@ type SelectItem struct {
 	SelectItems []SelectItem
 	Type        SelectItemType
 	Value       interface{}
+	Invert      bool
 	IsTopLevel  bool
 }
 
