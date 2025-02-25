@@ -11,10 +11,10 @@ type ApiServer struct {
 	onServerShutdown chan interface{}
 	isActive         bool
 	router           *gin.Engine
-	config           config.ServerConfig
+	config           *config.ServerConfig
 }
 
-func NewApiServer(dataRepository *repositories.DataRepository, config config.ServerConfig) *ApiServer {
+func NewApiServer(dataRepository *repositories.DataRepository, config *config.ServerConfig) *ApiServer {
 	stopChan := make(chan interface{})
 	onServerShutdownChan := make(chan interface{})
 

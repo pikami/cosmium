@@ -27,7 +27,9 @@ func (h *Handlers) GetServerInfo(c *gin.Context) {
 				"databaseAccountEndpoint": h.config.DatabaseEndpoint,
 			},
 		},
-		"enableMultipleWriteLocations": false,
+		"enableMultipleWriteLocations":   false,
+		"continuousBackupEnabled":        false,
+		"enableNRegionSynchronousCommit": false,
 		"userReplicationPolicy": map[string]interface{}{
 			"asyncReplication":  false,
 			"minReplicaSetSize": 1,

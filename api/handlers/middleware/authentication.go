@@ -10,7 +10,7 @@ import (
 	"github.com/pikami/cosmium/internal/logger"
 )
 
-func Authentication(config config.ServerConfig) gin.HandlerFunc {
+func Authentication(config *config.ServerConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestUrl := c.Request.URL.String()
 		if config.DisableAuth ||

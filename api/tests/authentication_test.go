@@ -2,13 +2,11 @@ package tests_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/api/config"
 	"github.com/stretchr/testify/assert"
@@ -47,12 +45,7 @@ func Test_Authentication(t *testing.T) {
 			azcosmos.DatabaseProperties{ID: testDatabaseName},
 			&azcosmos.CreateDatabaseOptions{})
 
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
-			assert.Equal(t, respErr.StatusCode, http.StatusUnauthorized)
-		} else {
-			panic(err)
-		}
+		assert.Contains(t, err.Error(), "401 Unauthorized")
 	})
 
 	t.Run("Should allow unauthorized requests to /_explorer", func(t *testing.T) {
@@ -68,7 +61,7 @@ func Test_Authentication(t *testing.T) {
 }
 
 func Test_Authentication_Disabled(t *testing.T) {
-	ts := runTestServerCustomConfig(config.ServerConfig{
+	ts := runTestServerCustomConfig(&config.ServerConfig{
 		AccountKey:              config.DefaultAccountKey,
 		ExplorerPath:            "/tmp/nothing",
 		ExplorerBaseUrlLocation: config.ExplorerBaseUrlLocation,

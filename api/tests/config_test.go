@@ -15,12 +15,14 @@ type TestServer struct {
 	URL        string
 }
 
-func runTestServerCustomConfig(config config.ServerConfig) *TestServer {
+func runTestServerCustomConfig(config *config.ServerConfig) *TestServer {
 	repository := repositories.NewDataRepository(repositories.RepositoryOptions{})
 
 	api := api.NewApiServer(repository, config)
 
 	server := httptest.NewServer(api.GetRouter())
+
+	config.DatabaseEndpoint = server.URL
 
 	return &TestServer{
 		Server:     server,
@@ -30,7 +32,7 @@ func runTestServerCustomConfig(config config.ServerConfig) *TestServer {
 }
 
 func runTestServer() *TestServer {
-	config := config.ServerConfig{
+	config := &config.ServerConfig{
 		AccountKey:              config.DefaultAccountKey,
 		ExplorerPath:            "/tmp/nothing",
 		ExplorerBaseUrlLocation: config.ExplorerBaseUrlLocation,

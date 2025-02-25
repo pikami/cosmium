@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.17.0
-	github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos v0.3.6
+	github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos v1.3.0
 	github.com/cosmiumdev/json-patch/v5 v5.9.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0

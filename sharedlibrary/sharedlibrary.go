@@ -37,7 +37,7 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 		PersistDataFilePath: configuration.PersistDataFilePath,
 	})
 
-	server := api.NewApiServer(repository, configuration)
+	server := api.NewApiServer(repository, &configuration)
 	err = server.Start()
 	if err != nil {
 		return ResponseFailedToStartServer

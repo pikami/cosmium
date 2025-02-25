@@ -18,7 +18,7 @@ func main() {
 		PersistDataFilePath: configuration.PersistDataFilePath,
 	})
 
-	server := api.NewApiServer(repository, configuration)
+	server := api.NewApiServer(repository, &configuration)
 	err := server.Start()
 	if err != nil {
 		panic(err)

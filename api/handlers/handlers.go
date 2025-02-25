@@ -7,10 +7,10 @@ import (
 
 type Handlers struct {
 	repository *repositories.DataRepository
-	config     config.ServerConfig
+	config     *config.ServerConfig
 }
 
-func NewHandlers(dataRepository *repositories.DataRepository, config config.ServerConfig) *Handlers {
+func NewHandlers(dataRepository *repositories.DataRepository, config *config.ServerConfig) *Handlers {
 	return &Handlers{
 		repository: dataRepository,
 		config:     config,
