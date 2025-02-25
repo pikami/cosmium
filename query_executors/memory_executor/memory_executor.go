@@ -670,6 +670,14 @@ func hasAggregateFunctions(selectItems []parsers.SelectItem) bool {
 }
 
 func compareValues(val1, val2 interface{}) int {
+	if val1 == nil && val2 == nil {
+		return 0
+	} else if val1 == nil {
+		return -1
+	} else if val2 == nil {
+		return 1
+	}
+
 	if reflect.TypeOf(val1) != reflect.TypeOf(val2) {
 		return 1
 	}
