@@ -7,27 +7,28 @@ import (
 
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
-	"github.com/pikami/cosmium/internal/repositories"
+	"github.com/pikami/cosmium/internal/datastore"
+	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
 )
 
 func main() {
 	configuration := config.ParseFlags()
 
-	repository := repositories.NewDataRepository(repositories.RepositoryOptions{
+	var dataStore datastore.DataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
 		InitialDataFilePath: configuration.InitialDataFilePath,
 		PersistDataFilePath: configuration.PersistDataFilePath,
 	})
 
-	server := api.NewApiServer(repository, &configuration)
+	server := api.NewApiServer(dataStore, &configuration)
 	err := server.Start()
 	if err != nil {
 		panic(err)
 	}
 
-	waitForExit(server, repository, configuration)
+	waitForExit(server, dataStore, configuration)
 }
 
-func waitForExit(server *api.ApiServer, repository *repositories.DataRepository, config config.ServerConfig) {
+func waitForExit(server *api.ApiServer, dataStore datastore.DataStore, config config.ServerConfig) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
@@ -37,7 +38,5 @@ func waitForExit(server *api.ApiServer, repository *repositories.DataRepository,
 	// Stop the server
 	server.Stop()
 
-	if config.PersistDataFilePath != "" {
-		repository.SaveStateFS(config.PersistDataFilePath)
-	}
+	dataStore.Close()
 }

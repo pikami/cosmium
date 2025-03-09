@@ -1,21 +1,19 @@
 package structhidrators
 
-import (
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
-)
+import "github.com/pikami/cosmium/internal/datastore"
 
-var defaultCollection repositorymodels.Collection = repositorymodels.Collection{
-	IndexingPolicy: repositorymodels.CollectionIndexingPolicy{
+var defaultCollection datastore.Collection = datastore.Collection{
+	IndexingPolicy: datastore.CollectionIndexingPolicy{
 		IndexingMode: "consistent",
 		Automatic:    true,
-		IncludedPaths: []repositorymodels.CollectionIndexingPolicyPath{
+		IncludedPaths: []datastore.CollectionIndexingPolicyPath{
 			{Path: "/*"},
 		},
-		ExcludedPaths: []repositorymodels.CollectionIndexingPolicyPath{
+		ExcludedPaths: []datastore.CollectionIndexingPolicyPath{
 			{Path: "/\"_etag\"/?"},
 		},
 	},
-	PartitionKey: repositorymodels.CollectionPartitionKey{
+	PartitionKey: datastore.CollectionPartitionKey{
 		Paths:   []string{"/_partitionKey"},
 		Kind:    "Hash",
 		Version: 2,

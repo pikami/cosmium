@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 )
 
 //export CreateDatabase
@@ -19,15 +19,15 @@ func CreateDatabase(serverName *C.char, databaseJson *C.char) int {
 		return ResponseServerInstanceNotFound
 	}
 
-	var database repositorymodels.Database
+	var database datastore.Database
 	err := json.NewDecoder(strings.NewReader(databaseStr)).Decode(&database)
 	if err != nil {
 		return ResponseFailedToParseRequest
 	}
 
-	_, code := serverInstance.repository.CreateDatabase(database)
+	_, code := serverInstance.dataStore.CreateDatabase(database)
 
-	return repositoryStatusToResponseCode(code)
+	return dataStoreStatusToResponseCode(code)
 }
 
 //export GetDatabase
@@ -41,8 +41,8 @@ func GetDatabase(serverName *C.char, databaseId *C.char) *C.char {
 		return C.CString("")
 	}
 
-	database, code := serverInstance.repository.GetDatabase(databaseIdStr)
-	if code != repositorymodels.StatusOk {
+	database, code := serverInstance.dataStore.GetDatabase(databaseIdStr)
+	if code != datastore.StatusOk {
 		return C.CString("")
 	}
 
@@ -63,8 +63,8 @@ func GetAllDatabases(serverName *C.char) *C.char {
 		return C.CString("")
 	}
 
-	databases, code := serverInstance.repository.GetAllDatabases()
-	if code != repositorymodels.StatusOk {
+	databases, code := serverInstance.dataStore.GetAllDatabases()
+	if code != datastore.StatusOk {
 		return C.CString("")
 	}
 
@@ -87,7 +87,7 @@ func DeleteDatabase(serverName *C.char, databaseId *C.char) int {
 		return ResponseServerInstanceNotFound
 	}
 
-	code := serverInstance.repository.DeleteDatabase(databaseIdStr)
+	code := serverInstance.dataStore.DeleteDatabase(databaseIdStr)
 
-	return repositoryStatusToResponseCode(code)
+	return dataStoreStatusToResponseCode(code)
 }

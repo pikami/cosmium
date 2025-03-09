@@ -3,11 +3,11 @@ package structhidrators
 import (
 	"reflect"
 
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 )
 
 func Hidrate(input interface{}) interface{} {
-	if reflect.TypeOf(input) == reflect.TypeOf(repositorymodels.Collection{}) {
+	if reflect.TypeOf(input) == reflect.TypeOf(datastore.Collection{}) {
 		return hidrate(input, defaultCollection)
 	}
 	return input

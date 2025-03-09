@@ -51,6 +51,10 @@ build-sharedlib-linux-amd64:
 	@echo "Building shared library for Linux x64..."
 	@GOOS=linux GOARCH=amd64 $(GOBUILD) $(SHARED_LIB_OPT) -o $(DIST_DIR)/$(BINARY_NAME)-linux-amd64.so $(SHARED_LIB_LOCATION)
 
+build-sharedlib-darwin-arm64:
+	@echo "Building shared library for macOS ARM..."
+	@GOOS=darwin GOARCH=arm64 $(GOBUILD) $(SHARED_LIB_OPT) -o $(DIST_DIR)/$(BINARY_NAME)-darwin-arm64.so $(SHARED_LIB_LOCATION)
+
 build-sharedlib-tests: build-sharedlib-linux-amd64
 	@echo "Building shared library tests..."
 	@$(SHARED_LIB_TEST_CC) $(SHARED_LIB_TEST_CFLAGS) -o $(SHARED_LIB_TEST_TARGET) $(SHARED_LIB_TEST_SOURCES)

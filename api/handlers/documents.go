@@ -10,17 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 	apimodels "github.com/pikami/cosmium/api/api_models"
 	"github.com/pikami/cosmium/internal/constants"
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/logger"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/parsers"
+	"github.com/pikami/cosmium/parsers/nosql"
+	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
 )
 
 func (h *Handlers) GetAllDocuments(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
-	documents, status := h.repository.GetAllDocuments(databaseId, collectionId)
-	if status == repositorymodels.StatusOk {
-		collection, _ := h.repository.GetCollection(databaseId, collectionId)
+	documents, status := h.dataStore.GetAllDocuments(databaseId, collectionId)
+	if status == datastore.StatusOk {
+		collection, _ := h.dataStore.GetCollection(databaseId, collectionId)
 
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(documents)))
 		c.IndentedJSON(http.StatusOK, gin.H{
@@ -39,13 +42,13 @@ func (h *Handlers) GetDocument(c *gin.Context) {
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
 
-	document, status := h.repository.GetDocument(databaseId, collectionId, documentId)
-	if status == repositorymodels.StatusOk {
+	document, status := h.dataStore.GetDocument(databaseId, collectionId, documentId)
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusOK, document)
 		return
 	}
 
-	if status == repositorymodels.StatusNotFound {
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -58,13 +61,13 @@ func (h *Handlers) DeleteDocument(c *gin.Context) {
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
 
-	status := h.repository.DeleteDocument(databaseId, collectionId, documentId)
-	if status == repositorymodels.StatusOk {
+	status := h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
+	if status == datastore.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
 	}
 
-	if status == repositorymodels.StatusNotFound {
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -72,7 +75,7 @@ func (h *Handlers) DeleteDocument(c *gin.Context) {
 	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
 }
 
-// TODO: Maybe move "replace" logic to repository
+// TODO: Maybe move "replace" logic to data store
 func (h *Handlers) ReplaceDocument(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
@@ -84,19 +87,19 @@ func (h *Handlers) ReplaceDocument(c *gin.Context) {
 		return
 	}
 
-	status := h.repository.DeleteDocument(databaseId, collectionId, documentId)
-	if status == repositorymodels.StatusNotFound {
+	status := h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
 
-	createdDocument, status := h.repository.CreateDocument(databaseId, collectionId, requestBody)
-	if status == repositorymodels.Conflict {
+	createdDocument, status := h.dataStore.CreateDocument(databaseId, collectionId, requestBody)
+	if status == datastore.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusCreated, createdDocument)
 		return
 	}
@@ -109,8 +112,8 @@ func (h *Handlers) PatchDocument(c *gin.Context) {
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
 
-	document, status := h.repository.GetDocument(databaseId, collectionId, documentId)
-	if status == repositorymodels.StatusNotFound {
+	document, status := h.dataStore.GetDocument(databaseId, collectionId, documentId)
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -160,19 +163,19 @@ func (h *Handlers) PatchDocument(c *gin.Context) {
 		return
 	}
 
-	status = h.repository.DeleteDocument(databaseId, collectionId, documentId)
-	if status == repositorymodels.StatusNotFound {
+	status = h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
 
-	createdDocument, status := h.repository.CreateDocument(databaseId, collectionId, modifiedDocument)
-	if status == repositorymodels.Conflict {
+	createdDocument, status := h.dataStore.CreateDocument(databaseId, collectionId, modifiedDocument)
+	if status == datastore.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusCreated, createdDocument)
 		return
 	}
@@ -210,16 +213,16 @@ func (h *Handlers) DocumentsPost(c *gin.Context) {
 
 	isUpsert, _ := strconv.ParseBool(c.GetHeader("x-ms-documentdb-is-upsert"))
 	if isUpsert {
-		h.repository.DeleteDocument(databaseId, collectionId, requestBody["id"].(string))
+		h.dataStore.DeleteDocument(databaseId, collectionId, requestBody["id"].(string))
 	}
 
-	createdDocument, status := h.repository.CreateDocument(databaseId, collectionId, requestBody)
-	if status == repositorymodels.Conflict {
+	createdDocument, status := h.dataStore.CreateDocument(databaseId, collectionId, requestBody)
+	if status == datastore.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusCreated, createdDocument)
 		return
 	}
@@ -253,14 +256,15 @@ func (h *Handlers) handleDocumentQuery(c *gin.Context, requestBody map[string]in
 		queryParameters = parametersToMap(paramsArray)
 	}
 
-	docs, status := h.repository.ExecuteQueryDocuments(databaseId, collectionId, requestBody["query"].(string), queryParameters)
-	if status != repositorymodels.StatusOk {
+	queryText := requestBody["query"].(string)
+	docs, status := h.executeQueryDocuments(databaseId, collectionId, queryText, queryParameters)
+	if status != datastore.StatusOk {
 		// TODO: Currently we return everything if the query fails
 		h.GetAllDocuments(c)
 		return
 	}
 
-	collection, _ := h.repository.GetCollection(databaseId, collectionId)
+	collection, _ := h.dataStore.GetCollection(databaseId, collectionId)
 	c.Header("x-ms-item-count", fmt.Sprintf("%d", len(docs)))
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"_rid":      collection.ResourceID,
@@ -283,9 +287,9 @@ func (h *Handlers) handleBatchRequest(c *gin.Context) {
 	for idx, operation := range batchOperations {
 		switch operation.OperationType {
 		case apimodels.BatchOperationTypeCreate:
-			createdDocument, status := h.repository.CreateDocument(databaseId, collectionId, operation.ResourceBody)
-			responseCode := repositoryStatusToResponseCode(status)
-			if status == repositorymodels.StatusOk {
+			createdDocument, status := h.dataStore.CreateDocument(databaseId, collectionId, operation.ResourceBody)
+			responseCode := dataStoreStatusToResponseCode(status)
+			if status == datastore.StatusOk {
 				responseCode = http.StatusCreated
 			}
 			batchOperationResults[idx] = apimodels.BatchOperationResult{
@@ -293,25 +297,25 @@ func (h *Handlers) handleBatchRequest(c *gin.Context) {
 				ResourceBody: createdDocument,
 			}
 		case apimodels.BatchOperationTypeDelete:
-			status := h.repository.DeleteDocument(databaseId, collectionId, operation.Id)
-			responseCode := repositoryStatusToResponseCode(status)
-			if status == repositorymodels.StatusOk {
+			status := h.dataStore.DeleteDocument(databaseId, collectionId, operation.Id)
+			responseCode := dataStoreStatusToResponseCode(status)
+			if status == datastore.StatusOk {
 				responseCode = http.StatusNoContent
 			}
 			batchOperationResults[idx] = apimodels.BatchOperationResult{
 				StatusCode: responseCode,
 			}
 		case apimodels.BatchOperationTypeReplace:
-			deleteStatus := h.repository.DeleteDocument(databaseId, collectionId, operation.Id)
-			if deleteStatus == repositorymodels.StatusNotFound {
+			deleteStatus := h.dataStore.DeleteDocument(databaseId, collectionId, operation.Id)
+			if deleteStatus == datastore.StatusNotFound {
 				batchOperationResults[idx] = apimodels.BatchOperationResult{
 					StatusCode: http.StatusNotFound,
 				}
 				continue
 			}
-			createdDocument, createStatus := h.repository.CreateDocument(databaseId, collectionId, operation.ResourceBody)
-			responseCode := repositoryStatusToResponseCode(createStatus)
-			if createStatus == repositorymodels.StatusOk {
+			createdDocument, createStatus := h.dataStore.CreateDocument(databaseId, collectionId, operation.ResourceBody)
+			responseCode := dataStoreStatusToResponseCode(createStatus)
+			if createStatus == datastore.StatusOk {
 				responseCode = http.StatusCreated
 			}
 			batchOperationResults[idx] = apimodels.BatchOperationResult{
@@ -320,10 +324,10 @@ func (h *Handlers) handleBatchRequest(c *gin.Context) {
 			}
 		case apimodels.BatchOperationTypeUpsert:
 			documentId := operation.ResourceBody["id"].(string)
-			h.repository.DeleteDocument(databaseId, collectionId, documentId)
-			createdDocument, createStatus := h.repository.CreateDocument(databaseId, collectionId, operation.ResourceBody)
-			responseCode := repositoryStatusToResponseCode(createStatus)
-			if createStatus == repositorymodels.StatusOk {
+			h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
+			createdDocument, createStatus := h.dataStore.CreateDocument(databaseId, collectionId, operation.ResourceBody)
+			responseCode := dataStoreStatusToResponseCode(createStatus)
+			if createStatus == datastore.StatusOk {
 				responseCode = http.StatusCreated
 			}
 			batchOperationResults[idx] = apimodels.BatchOperationResult{
@@ -331,9 +335,9 @@ func (h *Handlers) handleBatchRequest(c *gin.Context) {
 				ResourceBody: createdDocument,
 			}
 		case apimodels.BatchOperationTypeRead:
-			document, status := h.repository.GetDocument(databaseId, collectionId, operation.Id)
+			document, status := h.dataStore.GetDocument(databaseId, collectionId, operation.Id)
 			batchOperationResults[idx] = apimodels.BatchOperationResult{
-				StatusCode:   repositoryStatusToResponseCode(status),
+				StatusCode:   dataStoreStatusToResponseCode(status),
 				ResourceBody: document,
 			}
 		case apimodels.BatchOperationTypePatch:
@@ -352,17 +356,43 @@ func (h *Handlers) handleBatchRequest(c *gin.Context) {
 	c.JSON(http.StatusOK, batchOperationResults)
 }
 
-func repositoryStatusToResponseCode(status repositorymodels.RepositoryStatus) int {
+func dataStoreStatusToResponseCode(status datastore.DataStoreStatus) int {
 	switch status {
-	case repositorymodels.StatusOk:
+	case datastore.StatusOk:
 		return http.StatusOK
-	case repositorymodels.StatusNotFound:
+	case datastore.StatusNotFound:
 		return http.StatusNotFound
-	case repositorymodels.Conflict:
+	case datastore.Conflict:
 		return http.StatusConflict
-	case repositorymodels.BadRequest:
+	case datastore.BadRequest:
 		return http.StatusBadRequest
 	default:
 		return http.StatusInternalServerError
 	}
+}
+
+func (h *Handlers) executeQueryDocuments(databaseId string, collectionId string, query string, queryParameters map[string]interface{}) ([]memoryexecutor.RowType, datastore.DataStoreStatus) {
+	parsedQuery, err := nosql.Parse("", []byte(query))
+	if err != nil {
+		logger.Errorf("Failed to parse query: %s\nerr: %v", query, err)
+		return nil, datastore.BadRequest
+	}
+
+	collectionDocuments, status := h.dataStore.GetAllDocuments(databaseId, collectionId)
+	if status != datastore.StatusOk {
+		return nil, status
+	}
+
+	// TODO: Investigate, this could cause unnecessary memory usage
+	covDocs := make([]memoryexecutor.RowType, 0)
+	for _, doc := range collectionDocuments {
+		covDocs = append(covDocs, map[string]interface{}(doc))
+	}
+
+	if typedQuery, ok := parsedQuery.(parsers.SelectStmt); ok {
+		typedQuery.Parameters = queryParameters
+		return memoryexecutor.ExecuteQuery(typedQuery, covDocs), datastore.StatusOk
+	}
+
+	return nil, datastore.BadRequest
 }

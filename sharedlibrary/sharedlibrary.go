@@ -11,7 +11,7 @@ import (
 
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
-	"github.com/pikami/cosmium/internal/repositories"
+	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
 )
 
 //export CreateServerInstance
@@ -32,20 +32,20 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 	configuration.ApplyDefaultsToEmptyFields()
 	configuration.PopulateCalculatedFields()
 
-	repository := repositories.NewDataRepository(repositories.RepositoryOptions{
+	dataStore := mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
 		InitialDataFilePath: configuration.InitialDataFilePath,
 		PersistDataFilePath: configuration.PersistDataFilePath,
 	})
 
-	server := api.NewApiServer(repository, &configuration)
+	server := api.NewApiServer(dataStore, &configuration)
 	err = server.Start()
 	if err != nil {
 		return ResponseFailedToStartServer
 	}
 
 	addInstance(serverNameStr, &ServerInstance{
-		server:     server,
-		repository: repository,
+		server:    server,
+		dataStore: dataStore,
 	})
 
 	return ResponseSuccess
@@ -69,7 +69,7 @@ func GetServerInstanceState(serverName *C.char) *C.char {
 	serverNameStr := C.GoString(serverName)
 
 	if serverInstance, ok := getInstance(serverNameStr); ok {
-		stateJSON, err := serverInstance.repository.GetState()
+		stateJSON, err := serverInstance.dataStore.DumpToJson()
 		if err != nil {
 			return nil
 		}
@@ -85,11 +85,14 @@ func LoadServerInstanceState(serverName *C.char, stateJSON *C.char) int {
 	stateJSONStr := C.GoString(stateJSON)
 
 	if serverInstance, ok := getInstance(serverNameStr); ok {
-		err := serverInstance.repository.LoadStateJSON(stateJSONStr)
-		if err != nil {
-			return ResponseFailedToLoadState
+		if mapDS, ok := serverInstance.dataStore.(*mapdatastore.MapDataStore); ok {
+			err := mapDS.LoadStateJSON(stateJSONStr)
+			if err != nil {
+				return ResponseFailedToLoadState
+			}
+			return ResponseSuccess
 		}
-		return ResponseSuccess
+		return ResponseCurentDataStoreDoesNotSupportStateLoading
 	}
 
 	return ResponseServerInstanceNotFound

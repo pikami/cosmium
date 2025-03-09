@@ -1,15 +1,15 @@
-package repositories
+package mapdatastore
 
 import (
 	"fmt"
 
 	"github.com/google/uuid"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/resourceid"
 )
 
 // I have no idea what this is tbh
-func (r *DataRepository) GetPartitionKeyRanges(databaseId string, collectionId string) ([]repositorymodels.PartitionKeyRange, repositorymodels.RepositoryStatus) {
+func (r *MapDataStore) GetPartitionKeyRanges(databaseId string, collectionId string) ([]datastore.PartitionKeyRange, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -30,7 +30,7 @@ func (r *DataRepository) GetPartitionKeyRanges(databaseId string, collectionId s
 	pkrSelf := fmt.Sprintf("dbs/%s/colls/%s/pkranges/%s/", databaseRid, collectionRid, pkrResourceId)
 	etag := fmt.Sprintf("\"%s\"", uuid.New())
 
-	return []repositorymodels.PartitionKeyRange{
+	return []datastore.PartitionKeyRange{
 		{
 			ResourceID:         pkrResourceId,
 			ID:                 "0",
@@ -45,5 +45,5 @@ func (r *DataRepository) GetPartitionKeyRanges(databaseId string, collectionId s
 			TimeStamp:          timestamp,
 			Lsn:                17,
 		},
-	}, repositorymodels.StatusOk
+	}, datastore.StatusOk
 }

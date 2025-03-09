@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 )
 
 func (h *Handlers) GetAllUserDefinedFunctions(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
-	udfs, status := h.repository.GetAllUserDefinedFunctions(databaseId, collectionId)
+	udfs, status := h.dataStore.GetAllUserDefinedFunctions(databaseId, collectionId)
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(udfs)))
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "UserDefinedFunctions": udfs, "_count": len(udfs)})
 		return
@@ -28,14 +28,14 @@ func (h *Handlers) GetUserDefinedFunction(c *gin.Context) {
 	collectionId := c.Param("collId")
 	udfId := c.Param("udfId")
 
-	udf, status := h.repository.GetUserDefinedFunction(databaseId, collectionId, udfId)
+	udf, status := h.dataStore.GetUserDefinedFunction(databaseId, collectionId, udfId)
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusOK, udf)
 		return
 	}
 
-	if status == repositorymodels.StatusNotFound {
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -48,13 +48,13 @@ func (h *Handlers) DeleteUserDefinedFunction(c *gin.Context) {
 	collectionId := c.Param("collId")
 	udfId := c.Param("udfId")
 
-	status := h.repository.DeleteUserDefinedFunction(databaseId, collectionId, udfId)
-	if status == repositorymodels.StatusOk {
+	status := h.dataStore.DeleteUserDefinedFunction(databaseId, collectionId, udfId)
+	if status == datastore.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
 	}
 
-	if status == repositorymodels.StatusNotFound {
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -67,25 +67,25 @@ func (h *Handlers) ReplaceUserDefinedFunction(c *gin.Context) {
 	collectionId := c.Param("collId")
 	udfId := c.Param("udfId")
 
-	var udf repositorymodels.UserDefinedFunction
+	var udf datastore.UserDefinedFunction
 	if err := c.BindJSON(&udf); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid body"})
 		return
 	}
 
-	status := h.repository.DeleteUserDefinedFunction(databaseId, collectionId, udfId)
-	if status == repositorymodels.StatusNotFound {
+	status := h.dataStore.DeleteUserDefinedFunction(databaseId, collectionId, udfId)
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
 
-	createdUdf, status := h.repository.CreateUserDefinedFunction(databaseId, collectionId, udf)
-	if status == repositorymodels.Conflict {
+	createdUdf, status := h.dataStore.CreateUserDefinedFunction(databaseId, collectionId, udf)
+	if status == datastore.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusOK, createdUdf)
 		return
 	}
@@ -97,19 +97,19 @@ func (h *Handlers) CreateUserDefinedFunction(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
-	var udf repositorymodels.UserDefinedFunction
+	var udf datastore.UserDefinedFunction
 	if err := c.BindJSON(&udf); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid body"})
 		return
 	}
 
-	createdUdf, status := h.repository.CreateUserDefinedFunction(databaseId, collectionId, udf)
-	if status == repositorymodels.Conflict {
+	createdUdf, status := h.dataStore.CreateUserDefinedFunction(databaseId, collectionId, udf)
+	if status == datastore.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusCreated, createdUdf)
 		return
 	}

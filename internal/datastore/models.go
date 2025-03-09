@@ -1,6 +1,4 @@
-package repositorymodels
-
-import "sync"
+package datastore
 
 type Database struct {
 	ID         string `json:"id"`
@@ -10,7 +8,7 @@ type Database struct {
 	Self       string `json:"_self"`
 }
 
-type RepositoryStatus int
+type DataStoreStatus int
 
 const (
 	StatusOk       = 1
@@ -116,26 +114,4 @@ type PartitionKeyRange struct {
 	Parents            []any  `json:"parents"`
 	TimeStamp          int64  `json:"_ts"`
 	Lsn                int    `json:"lsn"`
-}
-
-type State struct {
-	sync.RWMutex
-
-	// Map databaseId -> Database
-	Databases map[string]Database `json:"databases"`
-
-	// Map databaseId -> collectionId -> Collection
-	Collections map[string]map[string]Collection `json:"collections"`
-
-	// Map databaseId -> collectionId -> documentId -> Documents
-	Documents map[string]map[string]map[string]Document `json:"documents"`
-
-	// Map databaseId -> collectionId -> triggerId -> Trigger
-	Triggers map[string]map[string]map[string]Trigger `json:"triggers"`
-
-	// Map databaseId -> collectionId -> spId -> StoredProcedure
-	StoredProcedures map[string]map[string]map[string]StoredProcedure `json:"sprocs"`
-
-	// Map databaseId -> collectionId -> udfId -> UserDefinedFunction
-	UserDefinedFunctions map[string]map[string]map[string]UserDefinedFunction `json:"udfs"`
 }

@@ -17,7 +17,7 @@ func Test_Authentication(t *testing.T) {
 	defer ts.Server.Close()
 
 	t.Run("Should get 200 when correct account key is used", func(t *testing.T) {
-		ts.Repository.DeleteDatabase(testDatabaseName)
+		ts.DataStore.DeleteDatabase(testDatabaseName)
 		client, err := azcosmos.NewClientFromConnectionString(
 			fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.DefaultAccountKey),
 			&azcosmos.ClientOptions{},
@@ -33,7 +33,7 @@ func Test_Authentication(t *testing.T) {
 	})
 
 	t.Run("Should get 401 when wrong account key is used", func(t *testing.T) {
-		ts.Repository.DeleteDatabase(testDatabaseName)
+		ts.DataStore.DeleteDatabase(testDatabaseName)
 		client, err := azcosmos.NewClientFromConnectionString(
 			fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, "AAAA"),
 			&azcosmos.ClientOptions{},
@@ -70,7 +70,7 @@ func Test_Authentication_Disabled(t *testing.T) {
 	defer ts.Server.Close()
 
 	t.Run("Should get 200 when wrong account key is used, but authentication is dissabled", func(t *testing.T) {
-		ts.Repository.DeleteDatabase(testDatabaseName)
+		ts.DataStore.DeleteDatabase(testDatabaseName)
 		client, err := azcosmos.NewClientFromConnectionString(
 			fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, "AAAA"),
 			&azcosmos.ClientOptions{},

@@ -14,7 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/api/config"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -56,8 +56,8 @@ func testCosmosQuery(t *testing.T,
 func documents_InitializeDb(t *testing.T) (*TestServer, *azcosmos.ContainerClient) {
 	ts := runTestServer()
 
-	ts.Repository.CreateDatabase(repositorymodels.Database{ID: testDatabaseName})
-	ts.Repository.CreateCollection(testDatabaseName, repositorymodels.Collection{
+	ts.DataStore.CreateDatabase(datastore.Database{ID: testDatabaseName})
+	ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
 		ID: testCollectionName,
 		PartitionKey: struct {
 			Paths   []string "json:\"paths\""
@@ -67,8 +67,8 @@ func documents_InitializeDb(t *testing.T) (*TestServer, *azcosmos.ContainerClien
 			Paths: []string{"/pk"},
 		},
 	})
-	ts.Repository.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}})
-	ts.Repository.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "67890", "pk": "456", "isCool": true, "arr": []int{6, 7, 8}})
+	ts.DataStore.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}})
+	ts.DataStore.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "67890", "pk": "456", "isCool": true, "arr": []int{6, 7, 8}})
 
 	client, err := azcosmos.NewClientFromConnectionString(
 		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.DefaultAccountKey),
@@ -408,7 +408,7 @@ func Test_Documents_TransactionalBatch(t *testing.T) {
 		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
 		assert.Equal(t, newItem["id"], itemResponseBody["id"])
 
-		createdDoc, _ := ts.Repository.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+		createdDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
 		assert.Equal(t, newItem["id"], createdDoc["id"])
 	})
 
@@ -426,8 +426,8 @@ func Test_Documents_TransactionalBatch(t *testing.T) {
 		assert.NotNil(t, operationResponse)
 		assert.Equal(t, int32(http.StatusNoContent), operationResponse.StatusCode)
 
-		_, status := ts.Repository.GetDocument(testDatabaseName, testCollectionName, "12345")
-		assert.Equal(t, repositorymodels.StatusNotFound, int(status))
+		_, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "12345")
+		assert.Equal(t, datastore.StatusNotFound, int(status))
 	})
 
 	t.Run("Should execute REPLACE transactional batch", func(t *testing.T) {
@@ -457,7 +457,7 @@ func Test_Documents_TransactionalBatch(t *testing.T) {
 		assert.Equal(t, newItem["id"], itemResponseBody["id"])
 		assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
 
-		updatedDoc, _ := ts.Repository.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+		updatedDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
 		assert.Equal(t, newItem["id"], updatedDoc["id"])
 		assert.Equal(t, newItem["pk"], updatedDoc["pk"])
 	})
@@ -489,7 +489,7 @@ func Test_Documents_TransactionalBatch(t *testing.T) {
 		assert.Equal(t, newItem["id"], itemResponseBody["id"])
 		assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
 
-		updatedDoc, _ := ts.Repository.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+		updatedDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
 		assert.Equal(t, newItem["id"], updatedDoc["id"])
 		assert.Equal(t, newItem["pk"], updatedDoc["pk"])
 	})

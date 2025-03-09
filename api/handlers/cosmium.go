@@ -7,11 +7,11 @@ import (
 )
 
 func (h *Handlers) CosmiumExport(c *gin.Context) {
-	repositoryState, err := h.repository.GetState()
+	dataStoreState, err := h.dataStore.DumpToJson()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", []byte(repositoryState))
+	c.Data(http.StatusOK, "application/json", []byte(dataStoreState))
 }

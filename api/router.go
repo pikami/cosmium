@@ -10,15 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/api/handlers"
 	"github.com/pikami/cosmium/api/handlers/middleware"
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/logger"
-	"github.com/pikami/cosmium/internal/repositories"
 	tlsprovider "github.com/pikami/cosmium/internal/tls_provider"
 )
 
 var ginMux sync.Mutex
 
-func (s *ApiServer) CreateRouter(repository *repositories.DataRepository) {
-	routeHandlers := handlers.NewHandlers(repository, s.config)
+func (s *ApiServer) CreateRouter(dataStore datastore.DataStore) {
+	routeHandlers := handlers.NewHandlers(dataStore, s.config)
 
 	ginMux.Lock()
 	gin.DefaultWriter = logger.InfoWriter()

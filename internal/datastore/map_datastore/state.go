@@ -1,16 +1,39 @@
-package repositories
+package mapdatastore
 
 import (
 	"encoding/json"
 	"log"
 	"os"
 	"reflect"
+	"sync"
 
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/logger"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
 )
 
-func (r *DataRepository) InitializeRepository() {
+type State struct {
+	sync.RWMutex
+
+	// Map databaseId -> Database
+	Databases map[string]datastore.Database `json:"databases"`
+
+	// Map databaseId -> collectionId -> Collection
+	Collections map[string]map[string]datastore.Collection `json:"collections"`
+
+	// Map databaseId -> collectionId -> documentId -> Documents
+	Documents map[string]map[string]map[string]datastore.Document `json:"documents"`
+
+	// Map databaseId -> collectionId -> triggerId -> Trigger
+	Triggers map[string]map[string]map[string]datastore.Trigger `json:"triggers"`
+
+	// Map databaseId -> collectionId -> spId -> StoredProcedure
+	StoredProcedures map[string]map[string]map[string]datastore.StoredProcedure `json:"sprocs"`
+
+	// Map databaseId -> collectionId -> udfId -> UserDefinedFunction
+	UserDefinedFunctions map[string]map[string]map[string]datastore.UserDefinedFunction `json:"udfs"`
+}
+
+func (r *MapDataStore) InitializeDataStore() {
 	if r.initialDataFilePath != "" {
 		r.LoadStateFS(r.initialDataFilePath)
 		return
@@ -32,7 +55,7 @@ func (r *DataRepository) InitializeRepository() {
 	}
 }
 
-func (r *DataRepository) LoadStateFS(filePath string) {
+func (r *MapDataStore) LoadStateFS(filePath string) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Error reading state JSON file: %v", err)
@@ -45,11 +68,11 @@ func (r *DataRepository) LoadStateFS(filePath string) {
 	}
 }
 
-func (r *DataRepository) LoadStateJSON(jsonData string) error {
+func (r *MapDataStore) LoadStateJSON(jsonData string) error {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
-	var state repositorymodels.State
+	var state State
 	if err := json.Unmarshal([]byte(jsonData), &state); err != nil {
 		return err
 	}
@@ -71,7 +94,7 @@ func (r *DataRepository) LoadStateJSON(jsonData string) error {
 	return nil
 }
 
-func (r *DataRepository) SaveStateFS(filePath string) {
+func (r *MapDataStore) SaveStateFS(filePath string) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -92,7 +115,7 @@ func (r *DataRepository) SaveStateFS(filePath string) {
 	logger.Infof("User defined functions: %d\n", getLength(r.storeState.UserDefinedFunctions))
 }
 
-func (r *DataRepository) GetState() (string, error) {
+func (r *MapDataStore) DumpToJson() (string, error) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -103,16 +126,23 @@ func (r *DataRepository) GetState() (string, error) {
 	}
 
 	return string(data), nil
+
+}
+
+func (r *MapDataStore) Close() {
+	if r.persistDataFilePath != "" {
+		r.SaveStateFS(r.persistDataFilePath)
+	}
 }
 
 func getLength(v interface{}) int {
 	switch v.(type) {
-	case repositorymodels.Database,
-		repositorymodels.Collection,
-		repositorymodels.Document,
-		repositorymodels.Trigger,
-		repositorymodels.StoredProcedure,
-		repositorymodels.UserDefinedFunction:
+	case datastore.Database,
+		datastore.Collection,
+		datastore.Document,
+		datastore.Trigger,
+		datastore.StoredProcedure,
+		datastore.UserDefinedFunction:
 		return 1
 	}
 
@@ -133,55 +163,55 @@ func getLength(v interface{}) int {
 	return count
 }
 
-func (r *DataRepository) ensureStoreStateNoNullReferences() {
+func (r *MapDataStore) ensureStoreStateNoNullReferences() {
 	if r.storeState.Databases == nil {
-		r.storeState.Databases = make(map[string]repositorymodels.Database)
+		r.storeState.Databases = make(map[string]datastore.Database)
 	}
 
 	if r.storeState.Collections == nil {
-		r.storeState.Collections = make(map[string]map[string]repositorymodels.Collection)
+		r.storeState.Collections = make(map[string]map[string]datastore.Collection)
 	}
 
 	if r.storeState.Documents == nil {
-		r.storeState.Documents = make(map[string]map[string]map[string]repositorymodels.Document)
+		r.storeState.Documents = make(map[string]map[string]map[string]datastore.Document)
 	}
 
 	if r.storeState.Triggers == nil {
-		r.storeState.Triggers = make(map[string]map[string]map[string]repositorymodels.Trigger)
+		r.storeState.Triggers = make(map[string]map[string]map[string]datastore.Trigger)
 	}
 
 	if r.storeState.StoredProcedures == nil {
-		r.storeState.StoredProcedures = make(map[string]map[string]map[string]repositorymodels.StoredProcedure)
+		r.storeState.StoredProcedures = make(map[string]map[string]map[string]datastore.StoredProcedure)
 	}
 
 	if r.storeState.UserDefinedFunctions == nil {
-		r.storeState.UserDefinedFunctions = make(map[string]map[string]map[string]repositorymodels.UserDefinedFunction)
+		r.storeState.UserDefinedFunctions = make(map[string]map[string]map[string]datastore.UserDefinedFunction)
 	}
 
 	for database := range r.storeState.Databases {
 		if r.storeState.Collections[database] == nil {
-			r.storeState.Collections[database] = make(map[string]repositorymodels.Collection)
+			r.storeState.Collections[database] = make(map[string]datastore.Collection)
 		}
 
 		if r.storeState.Documents[database] == nil {
-			r.storeState.Documents[database] = make(map[string]map[string]repositorymodels.Document)
+			r.storeState.Documents[database] = make(map[string]map[string]datastore.Document)
 		}
 
 		if r.storeState.Triggers[database] == nil {
-			r.storeState.Triggers[database] = make(map[string]map[string]repositorymodels.Trigger)
+			r.storeState.Triggers[database] = make(map[string]map[string]datastore.Trigger)
 		}
 
 		if r.storeState.StoredProcedures[database] == nil {
-			r.storeState.StoredProcedures[database] = make(map[string]map[string]repositorymodels.StoredProcedure)
+			r.storeState.StoredProcedures[database] = make(map[string]map[string]datastore.StoredProcedure)
 		}
 
 		if r.storeState.UserDefinedFunctions[database] == nil {
-			r.storeState.UserDefinedFunctions[database] = make(map[string]map[string]repositorymodels.UserDefinedFunction)
+			r.storeState.UserDefinedFunctions[database] = make(map[string]map[string]datastore.UserDefinedFunction)
 		}
 
 		for collection := range r.storeState.Collections[database] {
 			if r.storeState.Documents[database][collection] == nil {
-				r.storeState.Documents[database][collection] = make(map[string]repositorymodels.Document)
+				r.storeState.Documents[database][collection] = make(map[string]datastore.Document)
 			}
 
 			for document := range r.storeState.Documents[database][collection] {
@@ -191,15 +221,15 @@ func (r *DataRepository) ensureStoreStateNoNullReferences() {
 			}
 
 			if r.storeState.Triggers[database][collection] == nil {
-				r.storeState.Triggers[database][collection] = make(map[string]repositorymodels.Trigger)
+				r.storeState.Triggers[database][collection] = make(map[string]datastore.Trigger)
 			}
 
 			if r.storeState.StoredProcedures[database][collection] == nil {
-				r.storeState.StoredProcedures[database][collection] = make(map[string]repositorymodels.StoredProcedure)
+				r.storeState.StoredProcedures[database][collection] = make(map[string]datastore.StoredProcedure)
 			}
 
 			if r.storeState.UserDefinedFunctions[database][collection] == nil {
-				r.storeState.UserDefinedFunctions[database][collection] = make(map[string]repositorymodels.UserDefinedFunction)
+				r.storeState.UserDefinedFunctions[database][collection] = make(map[string]datastore.UserDefinedFunction)
 			}
 		}
 	}

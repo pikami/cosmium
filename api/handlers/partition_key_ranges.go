@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/resourceid"
 )
 
@@ -18,8 +18,8 @@ func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
 		return
 	}
 
-	partitionKeyRanges, status := h.repository.GetPartitionKeyRanges(databaseId, collectionId)
-	if status == repositorymodels.StatusOk {
+	partitionKeyRanges, status := h.dataStore.GetPartitionKeyRanges(databaseId, collectionId)
+	if status == datastore.StatusOk {
 		c.Header("etag", "\"420\"")
 		c.Header("lsn", "420")
 		c.Header("x-ms-cosmos-llsn", "420")
@@ -27,7 +27,7 @@ func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(partitionKeyRanges)))
 
 		collectionRid := collectionId
-		collection, _ := h.repository.GetCollection(databaseId, collectionId)
+		collection, _ := h.dataStore.GetCollection(databaseId, collectionId)
 		if collection.ResourceID != "" {
 			collectionRid = collection.ResourceID
 		}
@@ -41,7 +41,7 @@ func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
 		return
 	}
 
-	if status == repositorymodels.StatusNotFound {
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}

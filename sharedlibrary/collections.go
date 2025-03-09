@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 )
 
 //export CreateCollection
@@ -20,15 +20,15 @@ func CreateCollection(serverName *C.char, databaseId *C.char, collectionJson *C.
 		return ResponseServerInstanceNotFound
 	}
 
-	var collection repositorymodels.Collection
+	var collection datastore.Collection
 	err := json.NewDecoder(strings.NewReader(collectionStr)).Decode(&collection)
 	if err != nil {
 		return ResponseFailedToParseRequest
 	}
 
-	_, code := serverInstance.repository.CreateCollection(databaseIdStr, collection)
+	_, code := serverInstance.dataStore.CreateCollection(databaseIdStr, collection)
 
-	return repositoryStatusToResponseCode(code)
+	return dataStoreStatusToResponseCode(code)
 }
 
 //export GetCollection
@@ -43,8 +43,8 @@ func GetCollection(serverName *C.char, databaseId *C.char, collectionId *C.char)
 		return C.CString("")
 	}
 
-	collection, code := serverInstance.repository.GetCollection(databaseIdStr, collectionIdStr)
-	if code != repositorymodels.StatusOk {
+	collection, code := serverInstance.dataStore.GetCollection(databaseIdStr, collectionIdStr)
+	if code != datastore.StatusOk {
 		return C.CString("")
 	}
 
@@ -66,8 +66,8 @@ func GetAllCollections(serverName *C.char, databaseId *C.char) *C.char {
 		return C.CString("")
 	}
 
-	collections, code := serverInstance.repository.GetAllCollections(databaseIdStr)
-	if code != repositorymodels.StatusOk {
+	collections, code := serverInstance.dataStore.GetAllCollections(databaseIdStr)
+	if code != datastore.StatusOk {
 		return C.CString("")
 	}
 
@@ -90,7 +90,7 @@ func DeleteCollection(serverName *C.char, databaseId *C.char, collectionId *C.ch
 		return ResponseServerInstanceNotFound
 	}
 
-	code := serverInstance.repository.DeleteCollection(databaseIdStr, collectionIdStr)
+	code := serverInstance.dataStore.DeleteCollection(databaseIdStr, collectionIdStr)
 
-	return repositoryStatusToResponseCode(code)
+	return dataStoreStatusToResponseCode(code)
 }

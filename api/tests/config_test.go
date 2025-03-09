@@ -5,29 +5,30 @@ import (
 
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
+	"github.com/pikami/cosmium/internal/datastore"
+	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
 	"github.com/pikami/cosmium/internal/logger"
-	"github.com/pikami/cosmium/internal/repositories"
 )
 
 type TestServer struct {
-	Server     *httptest.Server
-	Repository *repositories.DataRepository
-	URL        string
+	Server    *httptest.Server
+	DataStore datastore.DataStore
+	URL       string
 }
 
 func runTestServerCustomConfig(config *config.ServerConfig) *TestServer {
-	repository := repositories.NewDataRepository(repositories.RepositoryOptions{})
+	dataStore := mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{})
 
-	api := api.NewApiServer(repository, config)
+	api := api.NewApiServer(dataStore, config)
 
 	server := httptest.NewServer(api.GetRouter())
 
 	config.DatabaseEndpoint = server.URL
 
 	return &TestServer{
-		Server:     server,
-		Repository: repository,
-		URL:        server.URL,
+		Server:    server,
+		DataStore: dataStore,
+		URL:       server.URL,
 	}
 }
 

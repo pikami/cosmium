@@ -5,12 +5,12 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 )
 
 func (h *Handlers) GetAllDatabases(c *gin.Context) {
-	databases, status := h.repository.GetAllDatabases()
-	if status == repositorymodels.StatusOk {
+	databases, status := h.dataStore.GetAllDatabases()
+	if status == datastore.StatusOk {
 		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(databases)))
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":      "",
@@ -26,13 +26,13 @@ func (h *Handlers) GetAllDatabases(c *gin.Context) {
 func (h *Handlers) GetDatabase(c *gin.Context) {
 	id := c.Param("databaseId")
 
-	database, status := h.repository.GetDatabase(id)
-	if status == repositorymodels.StatusOk {
+	database, status := h.dataStore.GetDatabase(id)
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusOK, database)
 		return
 	}
 
-	if status == repositorymodels.StatusNotFound {
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -43,13 +43,13 @@ func (h *Handlers) GetDatabase(c *gin.Context) {
 func (h *Handlers) DeleteDatabase(c *gin.Context) {
 	id := c.Param("databaseId")
 
-	status := h.repository.DeleteDatabase(id)
-	if status == repositorymodels.StatusOk {
+	status := h.dataStore.DeleteDatabase(id)
+	if status == datastore.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
 	}
 
-	if status == repositorymodels.StatusNotFound {
+	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
 		return
 	}
@@ -58,7 +58,7 @@ func (h *Handlers) DeleteDatabase(c *gin.Context) {
 }
 
 func (h *Handlers) CreateDatabase(c *gin.Context) {
-	var newDatabase repositorymodels.Database
+	var newDatabase datastore.Database
 
 	if err := c.BindJSON(&newDatabase); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -70,13 +70,13 @@ func (h *Handlers) CreateDatabase(c *gin.Context) {
 		return
 	}
 
-	createdDatabase, status := h.repository.CreateDatabase(newDatabase)
-	if status == repositorymodels.Conflict {
+	createdDatabase, status := h.dataStore.CreateDatabase(newDatabase)
+	if status == datastore.Conflict {
 		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
 		return
 	}
 
-	if status == repositorymodels.StatusOk {
+	if status == datastore.StatusOk {
 		c.IndentedJSON(http.StatusCreated, createdDatabase)
 		return
 	}

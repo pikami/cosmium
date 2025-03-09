@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/api/config"
-	"github.com/pikami/cosmium/internal/repositories"
+	"github.com/pikami/cosmium/internal/datastore"
 )
 
 type ApiServer struct {
@@ -14,7 +14,7 @@ type ApiServer struct {
 	config           *config.ServerConfig
 }
 
-func NewApiServer(dataRepository *repositories.DataRepository, config *config.ServerConfig) *ApiServer {
+func NewApiServer(dataStore datastore.DataStore, config *config.ServerConfig) *ApiServer {
 	stopChan := make(chan interface{})
 	onServerShutdownChan := make(chan interface{})
 
@@ -24,7 +24,7 @@ func NewApiServer(dataRepository *repositories.DataRepository, config *config.Se
 		config:           config,
 	}
 
-	apiServer.CreateRouter(dataRepository)
+	apiServer.CreateRouter(dataStore)
 
 	return apiServer
 }

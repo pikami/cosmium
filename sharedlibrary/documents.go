@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 )
 
 //export CreateDocument
@@ -21,15 +21,15 @@ func CreateDocument(serverName *C.char, databaseId *C.char, collectionId *C.char
 		return ResponseServerInstanceNotFound
 	}
 
-	var document repositorymodels.Document
+	var document datastore.Document
 	err := json.NewDecoder(strings.NewReader(documentStr)).Decode(&document)
 	if err != nil {
 		return ResponseFailedToParseRequest
 	}
 
-	_, code := serverInstance.repository.CreateDocument(databaseIdStr, collectionIdStr, document)
+	_, code := serverInstance.dataStore.CreateDocument(databaseIdStr, collectionIdStr, document)
 
-	return repositoryStatusToResponseCode(code)
+	return dataStoreStatusToResponseCode(code)
 }
 
 //export GetDocument
@@ -45,8 +45,8 @@ func GetDocument(serverName *C.char, databaseId *C.char, collectionId *C.char, d
 		return C.CString("")
 	}
 
-	document, code := serverInstance.repository.GetDocument(databaseIdStr, collectionIdStr, documentIdStr)
-	if code != repositorymodels.StatusOk {
+	document, code := serverInstance.dataStore.GetDocument(databaseIdStr, collectionIdStr, documentIdStr)
+	if code != datastore.StatusOk {
 		return C.CString("")
 	}
 
@@ -69,8 +69,8 @@ func GetAllDocuments(serverName *C.char, databaseId *C.char, collectionId *C.cha
 		return C.CString("")
 	}
 
-	documents, code := serverInstance.repository.GetAllDocuments(databaseIdStr, collectionIdStr)
-	if code != repositorymodels.StatusOk {
+	documents, code := serverInstance.dataStore.GetAllDocuments(databaseIdStr, collectionIdStr)
+	if code != datastore.StatusOk {
 		return C.CString("")
 	}
 
@@ -95,19 +95,19 @@ func UpdateDocument(serverName *C.char, databaseId *C.char, collectionId *C.char
 		return ResponseServerInstanceNotFound
 	}
 
-	var document repositorymodels.Document
+	var document datastore.Document
 	err := json.Unmarshal([]byte(documentStr), &document)
 	if err != nil {
 		return ResponseFailedToParseRequest
 	}
 
-	code := serverInstance.repository.DeleteDocument(databaseIdStr, collectionIdStr, documentIdStr)
-	if code != repositorymodels.StatusOk {
-		return repositoryStatusToResponseCode(code)
+	code := serverInstance.dataStore.DeleteDocument(databaseIdStr, collectionIdStr, documentIdStr)
+	if code != datastore.StatusOk {
+		return dataStoreStatusToResponseCode(code)
 	}
 
-	_, code = serverInstance.repository.CreateDocument(databaseIdStr, collectionIdStr, document)
-	return repositoryStatusToResponseCode(code)
+	_, code = serverInstance.dataStore.CreateDocument(databaseIdStr, collectionIdStr, document)
+	return dataStoreStatusToResponseCode(code)
 }
 
 //export DeleteDocument
@@ -123,7 +123,7 @@ func DeleteDocument(serverName *C.char, databaseId *C.char, collectionId *C.char
 		return ResponseServerInstanceNotFound
 	}
 
-	code := serverInstance.repository.DeleteDocument(databaseIdStr, collectionIdStr, documentIdStr)
+	code := serverInstance.dataStore.DeleteDocument(databaseIdStr, collectionIdStr, documentIdStr)
 
-	return repositoryStatusToResponseCode(code)
+	return dataStoreStatusToResponseCode(code)
 }

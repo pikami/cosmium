@@ -10,7 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/api/config"
-	repositorymodels "github.com/pikami/cosmium/internal/repository_models"
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +24,7 @@ func Test_Collections(t *testing.T) {
 	)
 	assert.Nil(t, err)
 
-	ts.Repository.CreateDatabase(repositorymodels.Database{ID: testDatabaseName})
+	ts.DataStore.CreateDatabase(datastore.Database{ID: testDatabaseName})
 	databaseClient, err := client.NewDatabase(testDatabaseName)
 	assert.Nil(t, err)
 
@@ -39,7 +39,7 @@ func Test_Collections(t *testing.T) {
 		})
 
 		t.Run("Should return conflict when collection exists", func(t *testing.T) {
-			ts.Repository.CreateCollection(testDatabaseName, repositorymodels.Collection{
+			ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
 				ID: testCollectionName,
 			})
 
@@ -59,7 +59,7 @@ func Test_Collections(t *testing.T) {
 
 	t.Run("Collection Read", func(t *testing.T) {
 		t.Run("Should read collection", func(t *testing.T) {
-			ts.Repository.CreateCollection(testDatabaseName, repositorymodels.Collection{
+			ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
 				ID: testCollectionName,
 			})
 
@@ -73,7 +73,7 @@ func Test_Collections(t *testing.T) {
 		})
 
 		t.Run("Should return not found when collection does not exist", func(t *testing.T) {
-			ts.Repository.DeleteCollection(testDatabaseName, testCollectionName)
+			ts.DataStore.DeleteCollection(testDatabaseName, testCollectionName)
 
 			collectionResponse, err := databaseClient.NewContainer(testCollectionName)
 			assert.Nil(t, err)
@@ -92,7 +92,7 @@ func Test_Collections(t *testing.T) {
 
 	t.Run("Collection Delete", func(t *testing.T) {
 		t.Run("Should delete collection", func(t *testing.T) {
-			ts.Repository.CreateCollection(testDatabaseName, repositorymodels.Collection{
+			ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
 				ID: testCollectionName,
 			})
 
@@ -105,7 +105,7 @@ func Test_Collections(t *testing.T) {
 		})
 
 		t.Run("Should return not found when collection does not exist", func(t *testing.T) {
-			ts.Repository.DeleteCollection(testDatabaseName, testCollectionName)
+			ts.DataStore.DeleteCollection(testDatabaseName, testCollectionName)
 
 			collectionResponse, err := databaseClient.NewContainer(testCollectionName)
 			assert.Nil(t, err)
