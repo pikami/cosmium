@@ -4,10 +4,32 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/parsers"
 	memoryexecutor "github.com/pikami/cosmium/query_executors/memory_executor"
 	testutils "github.com/pikami/cosmium/test_utils"
 )
+
+type TestDocumentIterator struct {
+	documents []memoryexecutor.RowType
+	index     int
+}
+
+func NewTestDocumentIterator(documents []memoryexecutor.RowType) *TestDocumentIterator {
+	return &TestDocumentIterator{
+		documents: documents,
+		index:     -1,
+	}
+}
+
+func (i *TestDocumentIterator) Next() (memoryexecutor.RowType, datastore.DataStoreStatus) {
+	i.index++
+	if i.index >= len(i.documents) {
+		return nil, datastore.IterEOF
+	}
+
+	return i.documents[i.index], datastore.StatusOk
+}
 
 func testQueryExecute(
 	t *testing.T,
@@ -15,7 +37,8 @@ func testQueryExecute(
 	data []memoryexecutor.RowType,
 	expectedData []memoryexecutor.RowType,
 ) {
-	result := memoryexecutor.ExecuteQuery(query, data)
+	iter := NewTestDocumentIterator(data)
+	result := memoryexecutor.ExecuteQuery(query, iter)
 
 	if !reflect.DeepEqual(result, expectedData) {
 		t.Errorf("execution result does not match expected data.\nExpected: %+v\nGot: %+v", expectedData, result)

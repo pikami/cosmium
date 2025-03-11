@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	apimodels "github.com/pikami/cosmium/api/api_models"
 	"github.com/pikami/cosmium/internal/constants"
+	"github.com/pikami/cosmium/internal/converters"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/logger"
 	"github.com/pikami/cosmium/parsers"
@@ -378,20 +379,16 @@ func (h *Handlers) executeQueryDocuments(databaseId string, collectionId string,
 		return nil, datastore.BadRequest
 	}
 
-	collectionDocuments, status := h.dataStore.GetAllDocuments(databaseId, collectionId)
+	allDocumentsIterator, status := h.dataStore.GetDocumentIterator(databaseId, collectionId)
 	if status != datastore.StatusOk {
 		return nil, status
 	}
 
-	// TODO: Investigate, this could cause unnecessary memory usage
-	covDocs := make([]memoryexecutor.RowType, 0)
-	for _, doc := range collectionDocuments {
-		covDocs = append(covDocs, map[string]interface{}(doc))
-	}
+	rowsIterator := converters.NewDocumentToRowTypeIterator(allDocumentsIterator)
 
 	if typedQuery, ok := parsedQuery.(parsers.SelectStmt); ok {
 		typedQuery.Parameters = queryParameters
-		return memoryexecutor.ExecuteQuery(typedQuery, covDocs), datastore.StatusOk
+		return memoryexecutor.ExecuteQuery(typedQuery, rowsIterator), datastore.StatusOk
 	}
 
 	return nil, datastore.BadRequest

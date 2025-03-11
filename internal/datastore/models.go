@@ -15,6 +15,7 @@ const (
 	StatusNotFound = 2
 	Conflict       = 3
 	BadRequest     = 4
+	IterEOF        = 5
 )
 
 type TriggerOperation string

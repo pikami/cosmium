@@ -15,7 +15,3 @@ func (i *ArrayDocumentIterator) Next() (datastore.Document, datastore.DataStoreS
 
 	return i.documents[i.index], datastore.StatusOk
 }
-
-func (i *ArrayDocumentIterator) HasMore() bool {
-	return i.index < len(i.documents)-1
-}

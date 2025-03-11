@@ -196,6 +196,10 @@ func (r rowContext) parseArray(argument interface{}) []interface{} {
 	ex := r.resolveSelectItem(exItem)
 
 	arrValue := reflect.ValueOf(ex)
+	if arrValue.Kind() == reflect.Invalid {
+		return nil
+	}
+
 	if arrValue.Kind() != reflect.Slice {
 		logger.ErrorLn("parseArray got parameters of wrong type")
 		return nil
