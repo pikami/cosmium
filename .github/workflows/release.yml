@@ -24,7 +24,7 @@ jobs:
           go-version: 1.24.0
 
       - name: Cross-Compile with xgo
-        uses: crazy-max/ghaction-xgo@v3.1.0
+        uses: crazy-max/ghaction-xgo@e22d3c8b089adba750d5a74738b8e95d96f0c991 # v3.1.0
         with:
           xgo_version: latest
           go_version: 1.24.0
@@ -44,7 +44,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@5742e2a039330cbb23ebf35f046f814d4c6ff811 # v5
         with:
           distribution: goreleaser
           version: ${{ env.GITHUB_REF_NAME }}
