@@ -16,6 +16,7 @@ const (
 	Conflict       = 3
 	BadRequest     = 4
 	IterEOF        = 5
+	Unknown        = 6
 )
 
 type TriggerOperation string

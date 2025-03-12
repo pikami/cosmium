@@ -40,4 +40,5 @@ type DataStore interface {
 
 type DocumentIterator interface {
 	Next() (Document, DataStoreStatus)
+	Close()
 }

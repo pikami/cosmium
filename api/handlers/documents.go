@@ -383,6 +383,7 @@ func (h *Handlers) executeQueryDocuments(databaseId string, collectionId string,
 	if status != datastore.StatusOk {
 		return nil, status
 	}
+	defer allDocumentsIterator.Close()
 
 	rowsIterator := converters.NewDocumentToRowTypeIterator(allDocumentsIterator)
 

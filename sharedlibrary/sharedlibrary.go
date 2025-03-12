@@ -11,6 +11,8 @@ import (
 
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
+	"github.com/pikami/cosmium/internal/datastore"
+	badgerdatastore "github.com/pikami/cosmium/internal/datastore/badger_datastore"
 	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
 )
 
@@ -32,10 +34,16 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 	configuration.ApplyDefaultsToEmptyFields()
 	configuration.PopulateCalculatedFields()
 
-	dataStore := mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
-		InitialDataFilePath: configuration.InitialDataFilePath,
-		PersistDataFilePath: configuration.PersistDataFilePath,
-	})
+	var dataStore datastore.DataStore
+	switch configuration.DataStore {
+	case config.DataStoreBadger:
+		dataStore = badgerdatastore.NewBadgerDataStore()
+	default:
+		dataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
+			InitialDataFilePath: configuration.InitialDataFilePath,
+			PersistDataFilePath: configuration.PersistDataFilePath,
+		})
+	}
 
 	server := api.NewApiServer(dataStore, &configuration)
 	err = server.Start()

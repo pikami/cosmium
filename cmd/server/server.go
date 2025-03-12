@@ -8,16 +8,23 @@ import (
 	"github.com/pikami/cosmium/api"
 	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/datastore"
+	badgerdatastore "github.com/pikami/cosmium/internal/datastore/badger_datastore"
 	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
 )
 
 func main() {
 	configuration := config.ParseFlags()
 
-	var dataStore datastore.DataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
-		InitialDataFilePath: configuration.InitialDataFilePath,
-		PersistDataFilePath: configuration.PersistDataFilePath,
-	})
+	var dataStore datastore.DataStore
+	switch configuration.DataStore {
+	case config.DataStoreBadger:
+		dataStore = badgerdatastore.NewBadgerDataStore()
+	default:
+		dataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
+			InitialDataFilePath: configuration.InitialDataFilePath,
+			PersistDataFilePath: configuration.PersistDataFilePath,
+		})
+	}
 
 	server := api.NewApiServer(dataStore, &configuration)
 	err := server.Start()
@@ -25,10 +32,10 @@ func main() {
 		panic(err)
 	}
 
-	waitForExit(server, dataStore, configuration)
+	waitForExit(server, dataStore)
 }
 
-func waitForExit(server *api.ApiServer, dataStore datastore.DataStore, config config.ServerConfig) {
+func waitForExit(server *api.ApiServer, dataStore datastore.DataStore) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 

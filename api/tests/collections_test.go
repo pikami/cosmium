@@ -3,32 +3,29 @@ package tests_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
-	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_Collections(t *testing.T) {
-	ts := runTestServer()
-	defer ts.Server.Close()
+	presets := []testPreset{PresetMapStore, PresetBadgerStore}
 
-	client, err := azcosmos.NewClientFromConnectionString(
-		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.DefaultAccountKey),
-		&azcosmos.ClientOptions{},
-	)
-	assert.Nil(t, err)
+	setUp := func(ts *TestServer, client *azcosmos.Client) *azcosmos.DatabaseClient {
+		ts.DataStore.CreateDatabase(datastore.Database{ID: testDatabaseName})
+		databaseClient, err := client.NewDatabase(testDatabaseName)
+		assert.Nil(t, err)
 
-	ts.DataStore.CreateDatabase(datastore.Database{ID: testDatabaseName})
-	databaseClient, err := client.NewDatabase(testDatabaseName)
-	assert.Nil(t, err)
+		return databaseClient
+	}
 
-	t.Run("Collection Create", func(t *testing.T) {
+	runTestsWithPresets(t, "Collection Create", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		databaseClient := setUp(ts, client)
+
 		t.Run("Should create collection", func(t *testing.T) {
 			createResponse, err := databaseClient.CreateContainer(context.TODO(), azcosmos.ContainerProperties{
 				ID: testCollectionName,
@@ -57,7 +54,9 @@ func Test_Collections(t *testing.T) {
 		})
 	})
 
-	t.Run("Collection Read", func(t *testing.T) {
+	runTestsWithPresets(t, "Collection Read", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		databaseClient := setUp(ts, client)
+
 		t.Run("Should read collection", func(t *testing.T) {
 			ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
 				ID: testCollectionName,
@@ -90,7 +89,9 @@ func Test_Collections(t *testing.T) {
 		})
 	})
 
-	t.Run("Collection Delete", func(t *testing.T) {
+	runTestsWithPresets(t, "Collection Delete", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		databaseClient := setUp(ts, client)
+
 		t.Run("Should delete collection", func(t *testing.T) {
 			ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
 				ID: testCollectionName,

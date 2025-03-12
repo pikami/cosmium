@@ -17,4 +17,6 @@ type ServerConfig struct {
 	DisableTls              bool   `json:"disableTls"`
 	LogLevel                string `json:"logLevel"`
 	ExplorerBaseUrlLocation string `json:"explorerBaseUrlLocation"`
+
+	DataStore string `json:"dataStore"`
 }

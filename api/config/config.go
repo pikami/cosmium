@@ -15,6 +15,11 @@ const (
 	ExplorerBaseUrlLocation = "/_explorer"
 )
 
+const (
+	DataStoreMap    = "map"
+	DataStoreBadger = "badger"
+)
+
 func ParseFlags() ServerConfig {
 	host := flag.String("Host", "localhost", "Hostname")
 	port := flag.Int("Port", 8081, "Listen port")
@@ -28,6 +33,8 @@ func ParseFlags() ServerConfig {
 	persistDataPath := flag.String("Persist", "", "Saves data to given path on application exit")
 	logLevel := NewEnumValue("info", []string{"debug", "info", "error", "silent"})
 	flag.Var(logLevel, "LogLevel", fmt.Sprintf("Sets the logging level %s", logLevel.AllowedValuesList()))
+	dataStore := NewEnumValue("map", []string{DataStoreMap, DataStoreBadger})
+	flag.Var(dataStore, "DataStore", fmt.Sprintf("Sets the data store %s, (badger is currently in the experimental phase)", dataStore.AllowedValuesList()))
 
 	flag.Parse()
 	setFlagsFromEnvironment()
@@ -44,6 +51,7 @@ func ParseFlags() ServerConfig {
 	config.DisableTls = *disableTls
 	config.AccountKey = *accountKey
 	config.LogLevel = logLevel.value
+	config.DataStore = dataStore.value
 
 	config.PopulateCalculatedFields()
 
@@ -67,6 +75,13 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 		logger.SetLogLevel(logger.LogLevelSilent)
 	default:
 		logger.SetLogLevel(logger.LogLevelInfo)
+	}
+
+	if c.DataStore == DataStoreBadger &&
+		(c.InitialDataFilePath != "" || c.PersistDataFilePath != "") {
+		logger.ErrorLn("InitialData and Persist options are currently not supported with Badger data store")
+		c.InitialDataFilePath = ""
+		c.PersistDataFilePath = ""
 	}
 }
 

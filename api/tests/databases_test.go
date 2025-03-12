@@ -3,28 +3,19 @@ package tests_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
-	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_Databases(t *testing.T) {
-	ts := runTestServer()
-	defer ts.Server.Close()
+	presets := []testPreset{PresetMapStore, PresetBadgerStore}
 
-	client, err := azcosmos.NewClientFromConnectionString(
-		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.DefaultAccountKey),
-		&azcosmos.ClientOptions{},
-	)
-	assert.Nil(t, err)
-
-	t.Run("Database Create", func(t *testing.T) {
+	runTestsWithPresets(t, "Database Create", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
 		t.Run("Should create database", func(t *testing.T) {
 			ts.DataStore.DeleteDatabase(testDatabaseName)
 
@@ -55,7 +46,7 @@ func Test_Databases(t *testing.T) {
 		})
 	})
 
-	t.Run("Database Read", func(t *testing.T) {
+	runTestsWithPresets(t, "Database Read", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
 		t.Run("Should read database", func(t *testing.T) {
 			ts.DataStore.CreateDatabase(datastore.Database{
 				ID: testDatabaseName,
@@ -88,7 +79,7 @@ func Test_Databases(t *testing.T) {
 		})
 	})
 
-	t.Run("Database Delete", func(t *testing.T) {
+	runTestsWithPresets(t, "Database Delete", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
 		t.Run("Should delete database", func(t *testing.T) {
 			ts.DataStore.CreateDatabase(datastore.Database{
 				ID: testDatabaseName,

@@ -14,7 +14,8 @@ import (
 
 // Request document with trailing slash like python cosmosdb client does.
 func Test_Documents_Read_Trailing_Slash(t *testing.T) {
-	ts, _ := documents_InitializeDb(t)
+	ts := runTestServer()
+	documents_InitializeDb(t, ts)
 	defer ts.Server.Close()
 
 	t.Run("Read doc with client that appends slash to path", func(t *testing.T) {

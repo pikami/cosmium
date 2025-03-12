@@ -53,9 +53,7 @@ func testCosmosQuery(t *testing.T,
 	}
 }
 
-func documents_InitializeDb(t *testing.T) (*TestServer, *azcosmos.ContainerClient) {
-	ts := runTestServer()
-
+func documents_InitializeDb(t *testing.T, ts *TestServer) *azcosmos.ContainerClient {
 	ts.DataStore.CreateDatabase(datastore.Database{ID: testDatabaseName})
 	ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
 		ID: testCollectionName,
@@ -79,438 +77,439 @@ func documents_InitializeDb(t *testing.T) (*TestServer, *azcosmos.ContainerClien
 	collectionClient, err := client.NewContainer(testDatabaseName, testCollectionName)
 	assert.Nil(t, err)
 
-	return ts, collectionClient
+	return collectionClient
 }
 
 func Test_Documents(t *testing.T) {
-	ts, collectionClient := documents_InitializeDb(t)
-	defer ts.Server.Close()
+	presets := []testPreset{PresetMapStore, PresetBadgerStore}
 
-	t.Run("Should query document", func(t *testing.T) {
-		testCosmosQuery(t, collectionClient,
-			"SELECT c.id, c[\"pk\"] FROM c ORDER BY c.id",
-			nil,
-			[]interface{}{
-				map[string]interface{}{"id": "12345", "pk": "123"},
-				map[string]interface{}{"id": "67890", "pk": "456"},
-			},
-		)
+	runTestsWithPresets(t, "Test_Documents", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		collectionClient := documents_InitializeDb(t, ts)
+
+		t.Run("Should query document", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				"SELECT c.id, c[\"pk\"] FROM c ORDER BY c.id",
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "12345", "pk": "123"},
+					map[string]interface{}{"id": "67890", "pk": "456"},
+				},
+			)
+		})
+
+		t.Run("Should query VALUE array", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				"SELECT VALUE [c.id, c[\"pk\"]] FROM c ORDER BY c.id",
+				nil,
+				[]interface{}{
+					[]interface{}{"12345", "123"},
+					[]interface{}{"67890", "456"},
+				},
+			)
+		})
+
+		t.Run("Should query VALUE object", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				"SELECT VALUE { id: c.id, _pk: c.pk } FROM c ORDER BY c.id",
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "12345", "_pk": "123"},
+					map[string]interface{}{"id": "67890", "_pk": "456"},
+				},
+			)
+		})
+
+		t.Run("Should query document with single WHERE condition", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				`select c.id
+				FROM c
+				WHERE c.isCool=true
+				ORDER BY c.id`,
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "67890"},
+				},
+			)
+		})
+
+		t.Run("Should query document with query parameters", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				`select c.id
+				FROM c
+				WHERE c.id=@param_id
+				ORDER BY c.id`,
+				[]azcosmos.QueryParameter{
+					{Name: "@param_id", Value: "67890"},
+				},
+				[]interface{}{
+					map[string]interface{}{"id": "67890"},
+				},
+			)
+		})
+
+		t.Run("Should query document with query parameters as accessor", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				`select c.id
+				FROM c
+				WHERE c[@param]="67890"
+				ORDER BY c.id`,
+				[]azcosmos.QueryParameter{
+					{Name: "@param", Value: "id"},
+				},
+				[]interface{}{
+					map[string]interface{}{"id": "67890"},
+				},
+			)
+		})
+
+		t.Run("Should query array accessor", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				`SELECT c.id,
+					c["arr"][0] AS arr0,
+					c["arr"][1] AS arr1,
+					c["arr"][2] AS arr2,
+					c["arr"][3] AS arr3
+				FROM c ORDER BY c.id`,
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "12345", "arr0": 1.0, "arr1": 2.0, "arr2": 3.0, "arr3": nil},
+					map[string]interface{}{"id": "67890", "arr0": 6.0, "arr1": 7.0, "arr2": 8.0, "arr3": nil},
+				},
+			)
+		})
+
+		t.Run("Should handle parallel writes", func(t *testing.T) {
+			var wg sync.WaitGroup
+			rutineCount := 100
+			results := make(chan error, rutineCount)
+
+			createCall := func(i int) {
+				defer wg.Done()
+				item := map[string]interface{}{
+					"id":  fmt.Sprintf("id-%d", i),
+					"pk":  fmt.Sprintf("pk-%d", i),
+					"val": i,
+				}
+				bytes, err := json.Marshal(item)
+				if err != nil {
+					results <- err
+					return
+				}
+
+				ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+				defer cancel()
+
+				_, err = collectionClient.CreateItem(
+					ctx,
+					azcosmos.PartitionKey{},
+					bytes,
+					&azcosmos.ItemOptions{
+						EnableContentResponseOnWrite: false,
+					},
+				)
+				results <- err
+
+				collectionClient.ReadItem(ctx, azcosmos.PartitionKey{}, fmt.Sprintf("id-%d", i), nil)
+				collectionClient.DeleteItem(ctx, azcosmos.PartitionKey{}, fmt.Sprintf("id-%d", i), nil)
+			}
+
+			for i := 0; i < rutineCount; i++ {
+				wg.Add(1)
+				go createCall(i)
+			}
+
+			wg.Wait()
+			close(results)
+
+			for err := range results {
+				if err != nil {
+					t.Errorf("Error creating item: %v", err)
+				}
+			}
+		})
 	})
 
-	t.Run("Should query VALUE array", func(t *testing.T) {
-		testCosmosQuery(t, collectionClient,
-			"SELECT VALUE [c.id, c[\"pk\"]] FROM c ORDER BY c.id",
-			nil,
-			[]interface{}{
-				[]interface{}{"12345", "123"},
-				[]interface{}{"67890", "456"},
-			},
-		)
-	})
+	runTestsWithPresets(t, "Test_Documents_Patch", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		collectionClient := documents_InitializeDb(t, ts)
 
-	t.Run("Should query VALUE object", func(t *testing.T) {
-		testCosmosQuery(t, collectionClient,
-			"SELECT VALUE { id: c.id, _pk: c.pk } FROM c ORDER BY c.id",
-			nil,
-			[]interface{}{
-				map[string]interface{}{"id": "12345", "_pk": "123"},
-				map[string]interface{}{"id": "67890", "_pk": "456"},
-			},
-		)
-	})
+		t.Run("Should PATCH document", func(t *testing.T) {
+			context := context.TODO()
+			expectedData := map[string]interface{}{"id": "67890", "pk": "666", "newField": "newValue", "incr": 15., "setted": "isSet"}
 
-	t.Run("Should query document with single WHERE condition", func(t *testing.T) {
-		testCosmosQuery(t, collectionClient,
-			`select c.id
-			FROM c
-			WHERE c.isCool=true
-			ORDER BY c.id`,
-			nil,
-			[]interface{}{
-				map[string]interface{}{"id": "67890"},
-			},
-		)
-	})
+			patch := azcosmos.PatchOperations{}
+			patch.AppendAdd("/newField", "newValue")
+			patch.AppendIncrement("/incr", 15)
+			patch.AppendRemove("/isCool")
+			patch.AppendReplace("/pk", "666")
+			patch.AppendSet("/setted", "isSet")
 
-	t.Run("Should query document with query parameters", func(t *testing.T) {
-		testCosmosQuery(t, collectionClient,
-			`select c.id
-			FROM c
-			WHERE c.id=@param_id
-			ORDER BY c.id`,
-			[]azcosmos.QueryParameter{
-				{Name: "@param_id", Value: "67890"},
-			},
-			[]interface{}{
-				map[string]interface{}{"id": "67890"},
-			},
-		)
-	})
+			itemResponse, err := collectionClient.PatchItem(
+				context,
+				azcosmos.PartitionKey{},
+				"67890",
+				patch,
+				&azcosmos.ItemOptions{
+					EnableContentResponseOnWrite: false,
+				},
+			)
+			assert.Nil(t, err)
 
-	t.Run("Should query document with query parameters as accessor", func(t *testing.T) {
-		testCosmosQuery(t, collectionClient,
-			`select c.id
-			FROM c
-			WHERE c[@param]="67890"
-			ORDER BY c.id`,
-			[]azcosmos.QueryParameter{
-				{Name: "@param", Value: "id"},
-			},
-			[]interface{}{
-				map[string]interface{}{"id": "67890"},
-			},
-		)
-	})
+			var itemResponseBody map[string]interface{}
+			json.Unmarshal(itemResponse.Value, &itemResponseBody)
 
-	t.Run("Should query array accessor", func(t *testing.T) {
-		testCosmosQuery(t, collectionClient,
-			`SELECT c.id,
-				c["arr"][0] AS arr0,
-				c["arr"][1] AS arr1,
-				c["arr"][2] AS arr2,
-				c["arr"][3] AS arr3
-			FROM c ORDER BY c.id`,
-			nil,
-			[]interface{}{
-				map[string]interface{}{"id": "12345", "arr0": 1.0, "arr1": 2.0, "arr2": 3.0, "arr3": nil},
-				map[string]interface{}{"id": "67890", "arr0": 6.0, "arr1": 7.0, "arr2": 8.0, "arr3": nil},
-			},
-		)
-	})
+			assert.Equal(t, expectedData["id"], itemResponseBody["id"])
+			assert.Equal(t, expectedData["pk"], itemResponseBody["pk"])
+			assert.Empty(t, itemResponseBody["isCool"])
+			assert.Equal(t, expectedData["newField"], itemResponseBody["newField"])
+			assert.Equal(t, expectedData["incr"], itemResponseBody["incr"])
+			assert.Equal(t, expectedData["setted"], itemResponseBody["setted"])
+		})
 
-	t.Run("Should handle parallel writes", func(t *testing.T) {
-		var wg sync.WaitGroup
-		rutineCount := 100
-		results := make(chan error, rutineCount)
+		t.Run("Should not allow to PATCH document ID", func(t *testing.T) {
+			context := context.TODO()
 
-		createCall := func(i int) {
-			defer wg.Done()
+			patch := azcosmos.PatchOperations{}
+			patch.AppendReplace("/id", "newValue")
+
+			_, err := collectionClient.PatchItem(
+				context,
+				azcosmos.PartitionKey{},
+				"67890",
+				patch,
+				&azcosmos.ItemOptions{
+					EnableContentResponseOnWrite: false,
+				},
+			)
+			assert.NotNil(t, err)
+
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) {
+				assert.Equal(t, http.StatusUnprocessableEntity, respErr.StatusCode)
+			} else {
+				panic(err)
+			}
+		})
+
+		t.Run("CreateItem", func(t *testing.T) {
+			context := context.TODO()
+
 			item := map[string]interface{}{
-				"id":  fmt.Sprintf("id-%d", i),
-				"pk":  fmt.Sprintf("pk-%d", i),
-				"val": i,
+				"Id":       "6789011",
+				"pk":       "456",
+				"newField": "newValue2",
 			}
 			bytes, err := json.Marshal(item)
-			if err != nil {
-				results <- err
-				return
-			}
+			assert.Nil(t, err)
 
-			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-			defer cancel()
-
-			_, err = collectionClient.CreateItem(
-				ctx,
+			r, err2 := collectionClient.CreateItem(
+				context,
 				azcosmos.PartitionKey{},
 				bytes,
 				&azcosmos.ItemOptions{
 					EnableContentResponseOnWrite: false,
 				},
 			)
-			results <- err
+			assert.NotNil(t, r)
+			assert.Nil(t, err2)
+		})
 
-			collectionClient.ReadItem(ctx, azcosmos.PartitionKey{}, fmt.Sprintf("id-%d", i), nil)
-			collectionClient.DeleteItem(ctx, azcosmos.PartitionKey{}, fmt.Sprintf("id-%d", i), nil)
-		}
+		t.Run("CreateItem that already exists", func(t *testing.T) {
+			context := context.TODO()
 
-		for i := 0; i < rutineCount; i++ {
-			wg.Add(1)
-			go createCall(i)
-		}
+			item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}}
+			bytes, err := json.Marshal(item)
+			assert.Nil(t, err)
 
-		wg.Wait()
-		close(results)
+			r, err := collectionClient.CreateItem(
+				context,
+				azcosmos.PartitionKey{},
+				bytes,
+				&azcosmos.ItemOptions{
+					EnableContentResponseOnWrite: false,
+				},
+			)
+			assert.NotNil(t, r)
+			assert.NotNil(t, err)
 
-		for err := range results {
-			if err != nil {
-				t.Errorf("Error creating item: %v", err)
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) {
+				assert.Equal(t, http.StatusConflict, respErr.StatusCode)
+			} else {
+				panic(err)
 			}
-		}
-	})
-}
+		})
 
-func Test_Documents_Patch(t *testing.T) {
-	ts, collectionClient := documents_InitializeDb(t)
-	defer ts.Server.Close()
+		t.Run("UpsertItem new", func(t *testing.T) {
+			context := context.TODO()
 
-	t.Run("Should PATCH document", func(t *testing.T) {
-		context := context.TODO()
-		expectedData := map[string]interface{}{"id": "67890", "pk": "666", "newField": "newValue", "incr": 15., "setted": "isSet"}
+			item := map[string]interface{}{"id": "123456", "pk": "1234", "isCool": false, "arr": []int{1, 2, 3}}
+			bytes, err := json.Marshal(item)
+			assert.Nil(t, err)
 
-		patch := azcosmos.PatchOperations{}
-		patch.AppendAdd("/newField", "newValue")
-		patch.AppendIncrement("/incr", 15)
-		patch.AppendRemove("/isCool")
-		patch.AppendReplace("/pk", "666")
-		patch.AppendSet("/setted", "isSet")
+			r, err2 := collectionClient.UpsertItem(
+				context,
+				azcosmos.PartitionKey{},
+				bytes,
+				&azcosmos.ItemOptions{
+					EnableContentResponseOnWrite: false,
+				},
+			)
+			assert.NotNil(t, r)
+			assert.Nil(t, err2)
+		})
 
-		itemResponse, err := collectionClient.PatchItem(
-			context,
-			azcosmos.PartitionKey{},
-			"67890",
-			patch,
-			&azcosmos.ItemOptions{
-				EnableContentResponseOnWrite: false,
-			},
-		)
-		assert.Nil(t, err)
+		t.Run("UpsertItem that already exists", func(t *testing.T) {
+			context := context.TODO()
 
-		var itemResponseBody map[string]interface{}
-		json.Unmarshal(itemResponse.Value, &itemResponseBody)
+			item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3, 4}}
+			bytes, err := json.Marshal(item)
+			assert.Nil(t, err)
 
-		assert.Equal(t, expectedData["id"], itemResponseBody["id"])
-		assert.Equal(t, expectedData["pk"], itemResponseBody["pk"])
-		assert.Empty(t, itemResponseBody["isCool"])
-		assert.Equal(t, expectedData["newField"], itemResponseBody["newField"])
-		assert.Equal(t, expectedData["incr"], itemResponseBody["incr"])
-		assert.Equal(t, expectedData["setted"], itemResponseBody["setted"])
-	})
-
-	t.Run("Should not allow to PATCH document ID", func(t *testing.T) {
-		context := context.TODO()
-
-		patch := azcosmos.PatchOperations{}
-		patch.AppendReplace("/id", "newValue")
-
-		_, err := collectionClient.PatchItem(
-			context,
-			azcosmos.PartitionKey{},
-			"67890",
-			patch,
-			&azcosmos.ItemOptions{
-				EnableContentResponseOnWrite: false,
-			},
-		)
-		assert.NotNil(t, err)
-
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
-			assert.Equal(t, http.StatusUnprocessableEntity, respErr.StatusCode)
-		} else {
-			panic(err)
-		}
+			r, err2 := collectionClient.UpsertItem(
+				context,
+				azcosmos.PartitionKey{},
+				bytes,
+				&azcosmos.ItemOptions{
+					EnableContentResponseOnWrite: false,
+				},
+			)
+			assert.NotNil(t, r)
+			assert.Nil(t, err2)
+		})
 	})
 
-	t.Run("CreateItem", func(t *testing.T) {
-		context := context.TODO()
+	runTestsWithPresets(t, "Test_Documents_TransactionalBatch", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		collectionClient := documents_InitializeDb(t, ts)
 
-		item := map[string]interface{}{
-			"Id":       "6789011",
-			"pk":       "456",
-			"newField": "newValue2",
-		}
-		bytes, err := json.Marshal(item)
-		assert.Nil(t, err)
+		t.Run("Should execute CREATE transactional batch", func(t *testing.T) {
+			context := context.TODO()
+			batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
 
-		r, err2 := collectionClient.CreateItem(
-			context,
-			azcosmos.PartitionKey{},
-			bytes,
-			&azcosmos.ItemOptions{
-				EnableContentResponseOnWrite: false,
-			},
-		)
-		assert.NotNil(t, r)
-		assert.Nil(t, err2)
-	})
+			newItem := map[string]interface{}{
+				"id": "678901",
+			}
+			bytes, err := json.Marshal(newItem)
+			assert.Nil(t, err)
 
-	t.Run("CreateItem that already exists", func(t *testing.T) {
-		context := context.TODO()
+			batch.CreateItem(bytes, nil)
+			response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+			assert.Nil(t, err)
+			assert.True(t, response.Success)
+			assert.Equal(t, 1, len(response.OperationResults))
 
-		item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3}}
-		bytes, err := json.Marshal(item)
-		assert.Nil(t, err)
+			operationResponse := response.OperationResults[0]
+			assert.NotNil(t, operationResponse)
+			assert.NotNil(t, operationResponse.ResourceBody)
+			assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
 
-		r, err := collectionClient.CreateItem(
-			context,
-			azcosmos.PartitionKey{},
-			bytes,
-			&azcosmos.ItemOptions{
-				EnableContentResponseOnWrite: false,
-			},
-		)
-		assert.NotNil(t, r)
-		assert.NotNil(t, err)
+			var itemResponseBody map[string]interface{}
+			json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+			assert.Equal(t, newItem["id"], itemResponseBody["id"])
 
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
-			assert.Equal(t, http.StatusConflict, respErr.StatusCode)
-		} else {
-			panic(err)
-		}
-	})
+			createdDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+			assert.Equal(t, newItem["id"], createdDoc["id"])
+		})
 
-	t.Run("UpsertItem new", func(t *testing.T) {
-		context := context.TODO()
+		t.Run("Should execute DELETE transactional batch", func(t *testing.T) {
+			context := context.TODO()
+			batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
 
-		item := map[string]interface{}{"id": "123456", "pk": "1234", "isCool": false, "arr": []int{1, 2, 3}}
-		bytes, err := json.Marshal(item)
-		assert.Nil(t, err)
+			batch.DeleteItem("12345", nil)
+			response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+			assert.Nil(t, err)
+			assert.True(t, response.Success)
+			assert.Equal(t, 1, len(response.OperationResults))
 
-		r, err2 := collectionClient.UpsertItem(
-			context,
-			azcosmos.PartitionKey{},
-			bytes,
-			&azcosmos.ItemOptions{
-				EnableContentResponseOnWrite: false,
-			},
-		)
-		assert.NotNil(t, r)
-		assert.Nil(t, err2)
-	})
+			operationResponse := response.OperationResults[0]
+			assert.NotNil(t, operationResponse)
+			assert.Equal(t, int32(http.StatusNoContent), operationResponse.StatusCode)
 
-	t.Run("UpsertItem that already exists", func(t *testing.T) {
-		context := context.TODO()
+			_, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "12345")
+			assert.Equal(t, datastore.StatusNotFound, int(status))
+		})
 
-		item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": false, "arr": []int{1, 2, 3, 4}}
-		bytes, err := json.Marshal(item)
-		assert.Nil(t, err)
+		t.Run("Should execute REPLACE transactional batch", func(t *testing.T) {
+			context := context.TODO()
+			batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
 
-		r, err2 := collectionClient.UpsertItem(
-			context,
-			azcosmos.PartitionKey{},
-			bytes,
-			&azcosmos.ItemOptions{
-				EnableContentResponseOnWrite: false,
-			},
-		)
-		assert.NotNil(t, r)
-		assert.Nil(t, err2)
-	})
-}
+			newItem := map[string]interface{}{
+				"id": "67890",
+				"pk": "666",
+			}
+			bytes, err := json.Marshal(newItem)
+			assert.Nil(t, err)
 
-func Test_Documents_TransactionalBatch(t *testing.T) {
-	ts, collectionClient := documents_InitializeDb(t)
-	defer ts.Server.Close()
+			batch.ReplaceItem("67890", bytes, nil)
+			response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+			assert.Nil(t, err)
+			assert.True(t, response.Success)
+			assert.Equal(t, 1, len(response.OperationResults))
 
-	t.Run("Should execute CREATE transactional batch", func(t *testing.T) {
-		context := context.TODO()
-		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+			operationResponse := response.OperationResults[0]
+			assert.NotNil(t, operationResponse)
+			assert.NotNil(t, operationResponse.ResourceBody)
+			assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
 
-		newItem := map[string]interface{}{
-			"id": "678901",
-		}
-		bytes, err := json.Marshal(newItem)
-		assert.Nil(t, err)
+			var itemResponseBody map[string]interface{}
+			json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+			assert.Equal(t, newItem["id"], itemResponseBody["id"])
+			assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
 
-		batch.CreateItem(bytes, nil)
-		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
-		assert.Nil(t, err)
-		assert.True(t, response.Success)
-		assert.Equal(t, 1, len(response.OperationResults))
+			updatedDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+			assert.Equal(t, newItem["id"], updatedDoc["id"])
+			assert.Equal(t, newItem["pk"], updatedDoc["pk"])
+		})
 
-		operationResponse := response.OperationResults[0]
-		assert.NotNil(t, operationResponse)
-		assert.NotNil(t, operationResponse.ResourceBody)
-		assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
+		t.Run("Should execute UPSERT transactional batch", func(t *testing.T) {
+			context := context.TODO()
+			batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
 
-		var itemResponseBody map[string]interface{}
-		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
-		assert.Equal(t, newItem["id"], itemResponseBody["id"])
+			newItem := map[string]interface{}{
+				"id": "678901",
+				"pk": "666",
+			}
+			bytes, err := json.Marshal(newItem)
+			assert.Nil(t, err)
 
-		createdDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
-		assert.Equal(t, newItem["id"], createdDoc["id"])
-	})
+			batch.UpsertItem(bytes, nil)
+			response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+			assert.Nil(t, err)
+			assert.True(t, response.Success)
+			assert.Equal(t, 1, len(response.OperationResults))
 
-	t.Run("Should execute DELETE transactional batch", func(t *testing.T) {
-		context := context.TODO()
-		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+			operationResponse := response.OperationResults[0]
+			assert.NotNil(t, operationResponse)
+			assert.NotNil(t, operationResponse.ResourceBody)
+			assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
 
-		batch.DeleteItem("12345", nil)
-		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
-		assert.Nil(t, err)
-		assert.True(t, response.Success)
-		assert.Equal(t, 1, len(response.OperationResults))
+			var itemResponseBody map[string]interface{}
+			json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+			assert.Equal(t, newItem["id"], itemResponseBody["id"])
+			assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
 
-		operationResponse := response.OperationResults[0]
-		assert.NotNil(t, operationResponse)
-		assert.Equal(t, int32(http.StatusNoContent), operationResponse.StatusCode)
+			updatedDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
+			assert.Equal(t, newItem["id"], updatedDoc["id"])
+			assert.Equal(t, newItem["pk"], updatedDoc["pk"])
+		})
 
-		_, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "12345")
-		assert.Equal(t, datastore.StatusNotFound, int(status))
-	})
+		t.Run("Should execute READ transactional batch", func(t *testing.T) {
+			context := context.TODO()
+			batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
 
-	t.Run("Should execute REPLACE transactional batch", func(t *testing.T) {
-		context := context.TODO()
-		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
+			batch.ReadItem("67890", nil)
+			response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
+			assert.Nil(t, err)
+			assert.True(t, response.Success)
+			assert.Equal(t, 1, len(response.OperationResults))
 
-		newItem := map[string]interface{}{
-			"id": "67890",
-			"pk": "666",
-		}
-		bytes, err := json.Marshal(newItem)
-		assert.Nil(t, err)
+			operationResponse := response.OperationResults[0]
+			assert.NotNil(t, operationResponse)
+			assert.NotNil(t, operationResponse.ResourceBody)
+			assert.Equal(t, int32(http.StatusOK), operationResponse.StatusCode)
 
-		batch.ReplaceItem("67890", bytes, nil)
-		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
-		assert.Nil(t, err)
-		assert.True(t, response.Success)
-		assert.Equal(t, 1, len(response.OperationResults))
-
-		operationResponse := response.OperationResults[0]
-		assert.NotNil(t, operationResponse)
-		assert.NotNil(t, operationResponse.ResourceBody)
-		assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
-
-		var itemResponseBody map[string]interface{}
-		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
-		assert.Equal(t, newItem["id"], itemResponseBody["id"])
-		assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
-
-		updatedDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
-		assert.Equal(t, newItem["id"], updatedDoc["id"])
-		assert.Equal(t, newItem["pk"], updatedDoc["pk"])
-	})
-
-	t.Run("Should execute UPSERT transactional batch", func(t *testing.T) {
-		context := context.TODO()
-		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
-
-		newItem := map[string]interface{}{
-			"id": "678901",
-			"pk": "666",
-		}
-		bytes, err := json.Marshal(newItem)
-		assert.Nil(t, err)
-
-		batch.UpsertItem(bytes, nil)
-		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
-		assert.Nil(t, err)
-		assert.True(t, response.Success)
-		assert.Equal(t, 1, len(response.OperationResults))
-
-		operationResponse := response.OperationResults[0]
-		assert.NotNil(t, operationResponse)
-		assert.NotNil(t, operationResponse.ResourceBody)
-		assert.Equal(t, int32(http.StatusCreated), operationResponse.StatusCode)
-
-		var itemResponseBody map[string]interface{}
-		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
-		assert.Equal(t, newItem["id"], itemResponseBody["id"])
-		assert.Equal(t, newItem["pk"], itemResponseBody["pk"])
-
-		updatedDoc, _ := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, newItem["id"].(string))
-		assert.Equal(t, newItem["id"], updatedDoc["id"])
-		assert.Equal(t, newItem["pk"], updatedDoc["pk"])
-	})
-
-	t.Run("Should execute READ transactional batch", func(t *testing.T) {
-		context := context.TODO()
-		batch := collectionClient.NewTransactionalBatch(azcosmos.NewPartitionKeyString("pk"))
-
-		batch.ReadItem("67890", nil)
-		response, err := collectionClient.ExecuteTransactionalBatch(context, batch, &azcosmos.TransactionalBatchOptions{})
-		assert.Nil(t, err)
-		assert.True(t, response.Success)
-		assert.Equal(t, 1, len(response.OperationResults))
-
-		operationResponse := response.OperationResults[0]
-		assert.NotNil(t, operationResponse)
-		assert.NotNil(t, operationResponse.ResourceBody)
-		assert.Equal(t, int32(http.StatusOK), operationResponse.StatusCode)
-
-		var itemResponseBody map[string]interface{}
-		json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
-		assert.Equal(t, "67890", itemResponseBody["id"])
+			var itemResponseBody map[string]interface{}
+			json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
+			assert.Equal(t, "67890", itemResponseBody["id"])
+		})
 	})
 }

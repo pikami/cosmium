@@ -15,3 +15,7 @@ func (i *ArrayDocumentIterator) Next() (datastore.Document, datastore.DataStoreS
 
 	return i.documents[i.index], datastore.StatusOk
 }
+
+func (i *ArrayDocumentIterator) Close() {
+	i.documents = []datastore.Document{}
+}
