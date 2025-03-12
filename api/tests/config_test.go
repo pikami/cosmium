@@ -90,6 +90,7 @@ func runTestsWithPreset(t *testing.T, name string, testPreset testPreset, f test
 
 	ts := runTestServerCustomConfig(serverConfig)
 	defer ts.Server.Close()
+	defer ts.DataStore.Close()
 
 	client, err := azcosmos.NewClientFromConnectionString(
 		fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.DefaultAccountKey),

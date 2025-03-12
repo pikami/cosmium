@@ -20,14 +20,14 @@ var (
 const (
 	ResponseSuccess = 0
 
-	ResponseUnknown                                   = 100
-	ResponseFailedToParseConfiguration                = 101
-	ResponseFailedToLoadState                         = 102
-	ResponseFailedToParseRequest                      = 103
-	ResponseServerInstanceAlreadyExists               = 104
-	ResponseServerInstanceNotFound                    = 105
-	ResponseFailedToStartServer                       = 106
-	ResponseCurentDataStoreDoesNotSupportStateLoading = 107
+	ResponseUnknown                                    = 100
+	ResponseFailedToParseConfiguration                 = 101
+	ResponseFailedToLoadState                          = 102
+	ResponseFailedToParseRequest                       = 103
+	ResponseServerInstanceAlreadyExists                = 104
+	ResponseServerInstanceNotFound                     = 105
+	ResponseFailedToStartServer                        = 106
+	ResponseCurrentDataStoreDoesNotSupportStateLoading = 107
 
 	ResponseDataStoreNotFound   = 200
 	ResponseDataStoreConflict   = 201

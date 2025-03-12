@@ -10,6 +10,7 @@ import (
 	"github.com/pikami/cosmium/internal/datastore"
 	badgerdatastore "github.com/pikami/cosmium/internal/datastore/badger_datastore"
 	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
+	"github.com/pikami/cosmium/internal/logger"
 )
 
 func main() {
@@ -19,11 +20,13 @@ func main() {
 	switch configuration.DataStore {
 	case config.DataStoreBadger:
 		dataStore = badgerdatastore.NewBadgerDataStore()
+		logger.InfoLn("Using Badger data store")
 	default:
 		dataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
 			InitialDataFilePath: configuration.InitialDataFilePath,
 			PersistDataFilePath: configuration.PersistDataFilePath,
 		})
+		logger.InfoLn("Using in-memory data store")
 	}
 
 	server := api.NewApiServer(dataStore, &configuration)

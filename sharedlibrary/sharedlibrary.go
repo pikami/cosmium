@@ -65,6 +65,7 @@ func StopServerInstance(serverName *C.char) int {
 
 	if serverInstance, ok := getInstance(serverNameStr); ok {
 		serverInstance.server.Stop()
+		serverInstance.dataStore.Close()
 		removeInstance(serverNameStr)
 		return ResponseSuccess
 	}
@@ -100,7 +101,7 @@ func LoadServerInstanceState(serverName *C.char, stateJSON *C.char) int {
 			}
 			return ResponseSuccess
 		}
-		return ResponseCurentDataStoreDoesNotSupportStateLoading
+		return ResponseCurrentDataStoreDoesNotSupportStateLoading
 	}
 
 	return ResponseServerInstanceNotFound

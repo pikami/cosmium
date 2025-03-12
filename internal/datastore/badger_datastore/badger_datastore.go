@@ -28,6 +28,7 @@ func NewBadgerDataStore() *BadgerDataStore {
 
 func (r *BadgerDataStore) Close() {
 	r.db.Close()
+	r.db = nil
 }
 
 func (r *BadgerDataStore) DumpToJson() (string, error) {
