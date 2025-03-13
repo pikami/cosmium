@@ -1,8 +1,6 @@
 package badgerdatastore
 
 import (
-	"encoding/gob"
-
 	"github.com/dgraph-io/badger/v4"
 	"github.com/pikami/cosmium/internal/logger"
 )
@@ -11,10 +9,15 @@ type BadgerDataStore struct {
 	db *badger.DB
 }
 
-func NewBadgerDataStore() *BadgerDataStore {
-	gob.Register([]interface{}{})
+type BadgerDataStoreOptions struct {
+	PersistDataFilePath string
+}
 
-	badgerOpts := badger.DefaultOptions("").WithInMemory(true)
+func NewBadgerDataStore(options BadgerDataStoreOptions) *BadgerDataStore {
+	badgerOpts := badger.DefaultOptions(options.PersistDataFilePath)
+	if options.PersistDataFilePath == "" {
+		badgerOpts = badgerOpts.WithInMemory(true)
+	}
 
 	db, err := badger.Open(badgerOpts)
 	if err != nil {

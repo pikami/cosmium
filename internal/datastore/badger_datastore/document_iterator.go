@@ -1,12 +1,10 @@
 package badgerdatastore
 
 import (
-	"bytes"
-	"encoding/gob"
-
 	"github.com/dgraph-io/badger/v4"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/logger"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 type BadgerDocumentIterator struct {
@@ -43,7 +41,7 @@ func (i *BadgerDocumentIterator) Next() (datastore.Document, datastore.DataStore
 	}
 
 	current := &datastore.Document{}
-	err = gob.NewDecoder(bytes.NewReader(val)).Decode(current)
+	err = msgpack.Unmarshal(val, &current)
 	if err != nil {
 		logger.ErrorLn("Error while decoding value:", err)
 		return datastore.Document{}, datastore.Unknown

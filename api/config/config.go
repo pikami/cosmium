@@ -77,11 +77,22 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 		logger.SetLogLevel(logger.LogLevelInfo)
 	}
 
-	if c.DataStore == DataStoreBadger &&
-		(c.InitialDataFilePath != "" || c.PersistDataFilePath != "") {
-		logger.ErrorLn("InitialData and Persist options are currently not supported with Badger data store")
-		c.InitialDataFilePath = ""
-		c.PersistDataFilePath = ""
+	if c.PersistDataFilePath != "" {
+		fileInfo, _ := os.Stat(c.PersistDataFilePath)
+		if c.DataStore == DataStoreMap && fileInfo.IsDir() {
+			logger.ErrorLn("--Persist cannot be a directory when using default data store")
+			os.Exit(1)
+		}
+
+		if c.DataStore == DataStoreBadger && !fileInfo.IsDir() {
+			logger.ErrorLn("--Persist must be a directory when using Badger data store")
+			os.Exit(1)
+		}
+	}
+
+	if c.DataStore == DataStoreBadger && c.InitialDataFilePath != "" {
+		logger.ErrorLn("InitialData option is currently not supported with Badger data store")
+		os.Exit(1)
 	}
 }
 

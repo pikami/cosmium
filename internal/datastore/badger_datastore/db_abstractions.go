@@ -1,13 +1,11 @@
 package badgerdatastore
 
 import (
-	"bytes"
-	"encoding/gob"
-
 	"github.com/dgraph-io/badger/v4"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/logger"
 	"github.com/pikami/cosmium/internal/resourceid"
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 const (
@@ -92,14 +90,13 @@ func insertKey(txn *badger.Txn, key string, value interface{}) datastore.DataSto
 		return datastore.Unknown
 	}
 
-	var buf bytes.Buffer
-	err = gob.NewEncoder(&buf).Encode(value)
+	buf, err := msgpack.Marshal(value)
 	if err != nil {
 		logger.ErrorLn("Error while encoding value:", err)
 		return datastore.Unknown
 	}
 
-	err = txn.Set([]byte(key), buf.Bytes())
+	err = txn.Set([]byte(key), buf)
 	if err != nil {
 		logger.ErrorLn("Error while setting key:", err)
 		return datastore.Unknown
@@ -135,7 +132,7 @@ func getKey(txn *badger.Txn, key string, value interface{}) datastore.DataStoreS
 		return datastore.Unknown
 	}
 
-	err = gob.NewDecoder(bytes.NewReader(val)).Decode(value)
+	err = msgpack.Unmarshal(val, &value)
 	if err != nil {
 		logger.ErrorLn("Error while decoding value:", err)
 		return datastore.Unknown
@@ -158,7 +155,7 @@ func keyExists(txn *badger.Txn, key string) (bool, error) {
 }
 
 func listByPrefix[T any](db *badger.DB, prefix string) ([]T, datastore.DataStoreStatus) {
-	var results []T
+	results := make([]T, 0)
 
 	err := db.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions

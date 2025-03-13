@@ -19,7 +19,9 @@ func main() {
 	var dataStore datastore.DataStore
 	switch configuration.DataStore {
 	case config.DataStoreBadger:
-		dataStore = badgerdatastore.NewBadgerDataStore()
+		dataStore = badgerdatastore.NewBadgerDataStore(badgerdatastore.BadgerDataStoreOptions{
+			PersistDataFilePath: configuration.PersistDataFilePath,
+		})
 		logger.InfoLn("Using Badger data store")
 	default:
 		dataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
