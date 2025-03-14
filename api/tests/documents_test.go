@@ -81,7 +81,7 @@ func documents_InitializeDb(t *testing.T, ts *TestServer) *azcosmos.ContainerCli
 }
 
 func Test_Documents(t *testing.T) {
-	presets := []testPreset{PresetMapStore, PresetBadgerStore}
+	presets := []testPreset{PresetJsonStore, PresetBadgerStore}
 
 	runTestsWithPresets(t, "Test_Documents", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
 		collectionClient := documents_InitializeDb(t, ts)

@@ -13,7 +13,7 @@ import (
 )
 
 func Test_Collections(t *testing.T) {
-	presets := []testPreset{PresetMapStore, PresetBadgerStore}
+	presets := []testPreset{PresetJsonStore, PresetBadgerStore}
 
 	setUp := func(ts *TestServer, client *azcosmos.Client) *azcosmos.DatabaseClient {
 		ts.DataStore.CreateDatabase(datastore.Database{ID: testDatabaseName})

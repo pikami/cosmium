@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 )
 
 // I have no idea what this is tbh
-func (r *MapDataStore) GetPartitionKeyRanges(databaseId string, collectionId string) ([]datastore.PartitionKeyRange, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetPartitionKeyRanges(databaseId string, collectionId string) ([]datastore.PartitionKeyRange, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 

@@ -13,7 +13,7 @@ import (
 	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/datastore"
 	badgerdatastore "github.com/pikami/cosmium/internal/datastore/badger_datastore"
-	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
+	jsondatastore "github.com/pikami/cosmium/internal/datastore/json_datastore"
 )
 
 //export CreateServerInstance
@@ -41,7 +41,7 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 			PersistDataFilePath: configuration.PersistDataFilePath,
 		})
 	default:
-		dataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
+		dataStore = jsondatastore.NewJsonDataStore(jsondatastore.JsonDataStoreOptions{
 			InitialDataFilePath: configuration.InitialDataFilePath,
 			PersistDataFilePath: configuration.PersistDataFilePath,
 		})
@@ -96,8 +96,8 @@ func LoadServerInstanceState(serverName *C.char, stateJSON *C.char) int {
 	stateJSONStr := C.GoString(stateJSON)
 
 	if serverInstance, ok := getInstance(serverNameStr); ok {
-		if mapDS, ok := serverInstance.dataStore.(*mapdatastore.MapDataStore); ok {
-			err := mapDS.LoadStateJSON(stateJSONStr)
+		if jsonDS, ok := serverInstance.dataStore.(*jsondatastore.JsonDataStore); ok {
+			err := jsonDS.LoadStateJSON(stateJSONStr)
 			if err != nil {
 				return ResponseFailedToLoadState
 			}

@@ -86,6 +86,7 @@ To disable SSL and run Cosmium on HTTP instead, you can use the `-DisableTls` fl
 - **-Persist**: Saves data to the given path on application exit (When `-InitialData` argument is not supplied, it will try to load data from path supplied in `-Persist`)
 - **-Port**: Listen port (default 8081)
 - **-LogLevel**: Sets the logging level (one of: debug, info, error, silent) (default info)
+- **-DataStore**: Allows selecting [storage backend](#data-storage-backends) (default "json")
 
 These arguments allow you to configure various aspects of Cosmium's behavior according to your requirements.
 
@@ -98,6 +99,18 @@ All mentioned arguments can also be set using environment variables:
 - **COSMIUM_PERSIST** for `-Persist`
 - **COSMIUM_PORT** for `-Port`
 - **COSMIUM_LOGLEVEL** for `-LogLevel`
+
+### Data Storage Backends
+
+Cosmium supports multiple storage backends for saving, loading, and managing data at runtime.
+
+| Backend  | Storage Location         | Write Behavior           | Memory Usage         | Supports Initial JSON Load |
+|----------|--------------------------|--------------------------|----------------------|----------------------------|
+| `json` (default) | JSON file on disk 📄 | On application exit ⏳ | 🛑 More than Badger | ✅ Yes                      |
+| `badger`  | BadgerDB database on disk ⚡ | Immediately on write 🚀 | ✅ Less than JSON  | ❌ No                       |
+
+
+The `badger` backend is generally recommended as it uses less memory and writes data to disk immediately. However, if you need to load initial data from a JSON file, use the `json` backend.
 
 # License
 

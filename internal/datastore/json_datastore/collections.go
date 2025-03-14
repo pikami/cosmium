@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import (
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (r *MapDataStore) GetAllCollections(databaseId string) ([]datastore.Collection, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetAllCollections(databaseId string) ([]datastore.Collection, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -22,7 +22,7 @@ func (r *MapDataStore) GetAllCollections(databaseId string) ([]datastore.Collect
 	return maps.Values(r.storeState.Collections[databaseId]), datastore.StatusOk
 }
 
-func (r *MapDataStore) GetCollection(databaseId string, collectionId string) (datastore.Collection, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetCollection(databaseId string, collectionId string) (datastore.Collection, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -37,7 +37,7 @@ func (r *MapDataStore) GetCollection(databaseId string, collectionId string) (da
 	return r.storeState.Collections[databaseId][collectionId], datastore.StatusOk
 }
 
-func (r *MapDataStore) DeleteCollection(databaseId string, collectionId string) datastore.DataStoreStatus {
+func (r *JsonDataStore) DeleteCollection(databaseId string, collectionId string) datastore.DataStoreStatus {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -58,7 +58,7 @@ func (r *MapDataStore) DeleteCollection(databaseId string, collectionId string) 
 	return datastore.StatusOk
 }
 
-func (r *MapDataStore) CreateCollection(databaseId string, newCollection datastore.Collection) (datastore.Collection, datastore.DataStoreStatus) {
+func (r *JsonDataStore) CreateCollection(databaseId string, newCollection datastore.Collection) (datastore.Collection, datastore.DataStoreStatus) {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 

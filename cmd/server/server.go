@@ -9,7 +9,7 @@ import (
 	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/datastore"
 	badgerdatastore "github.com/pikami/cosmium/internal/datastore/badger_datastore"
-	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
+	jsondatastore "github.com/pikami/cosmium/internal/datastore/json_datastore"
 	"github.com/pikami/cosmium/internal/logger"
 )
 
@@ -24,7 +24,7 @@ func main() {
 		})
 		logger.InfoLn("Using Badger data store")
 	default:
-		dataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{
+		dataStore = jsondatastore.NewJsonDataStore(jsondatastore.JsonDataStoreOptions{
 			InitialDataFilePath: configuration.InitialDataFilePath,
 			PersistDataFilePath: configuration.PersistDataFilePath,
 		})

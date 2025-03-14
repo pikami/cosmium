@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import (
 	"encoding/json"
@@ -33,7 +33,7 @@ type State struct {
 	UserDefinedFunctions map[string]map[string]map[string]datastore.UserDefinedFunction `json:"udfs"`
 }
 
-func (r *MapDataStore) InitializeDataStore() {
+func (r *JsonDataStore) InitializeDataStore() {
 	if r.initialDataFilePath != "" {
 		r.LoadStateFS(r.initialDataFilePath)
 		return
@@ -55,7 +55,7 @@ func (r *MapDataStore) InitializeDataStore() {
 	}
 }
 
-func (r *MapDataStore) LoadStateFS(filePath string) {
+func (r *JsonDataStore) LoadStateFS(filePath string) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		log.Fatalf("Error reading state JSON file: %v", err)
@@ -68,7 +68,7 @@ func (r *MapDataStore) LoadStateFS(filePath string) {
 	}
 }
 
-func (r *MapDataStore) LoadStateJSON(jsonData string) error {
+func (r *JsonDataStore) LoadStateJSON(jsonData string) error {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -94,7 +94,7 @@ func (r *MapDataStore) LoadStateJSON(jsonData string) error {
 	return nil
 }
 
-func (r *MapDataStore) SaveStateFS(filePath string) {
+func (r *JsonDataStore) SaveStateFS(filePath string) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -115,7 +115,7 @@ func (r *MapDataStore) SaveStateFS(filePath string) {
 	logger.Infof("User defined functions: %d\n", getLength(r.storeState.UserDefinedFunctions))
 }
 
-func (r *MapDataStore) DumpToJson() (string, error) {
+func (r *JsonDataStore) DumpToJson() (string, error) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -129,7 +129,7 @@ func (r *MapDataStore) DumpToJson() (string, error) {
 
 }
 
-func (r *MapDataStore) Close() {
+func (r *JsonDataStore) Close() {
 	if r.persistDataFilePath != "" {
 		r.SaveStateFS(r.persistDataFilePath)
 	}
@@ -163,7 +163,7 @@ func getLength(v interface{}) int {
 	return count
 }
 
-func (r *MapDataStore) ensureStoreStateNoNullReferences() {
+func (r *JsonDataStore) ensureStoreStateNoNullReferences() {
 	if r.storeState.Databases == nil {
 		r.storeState.Databases = make(map[string]datastore.Database)
 	}

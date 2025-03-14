@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import (
 	"fmt"
@@ -10,14 +10,14 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (r *MapDataStore) GetAllTriggers(databaseId string, collectionId string) ([]datastore.Trigger, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetAllTriggers(databaseId string, collectionId string) ([]datastore.Trigger, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
 	return maps.Values(r.storeState.Triggers[databaseId][collectionId]), datastore.StatusOk
 }
 
-func (r *MapDataStore) GetTrigger(databaseId string, collectionId string, triggerId string) (datastore.Trigger, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetTrigger(databaseId string, collectionId string, triggerId string) (datastore.Trigger, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -36,7 +36,7 @@ func (r *MapDataStore) GetTrigger(databaseId string, collectionId string, trigge
 	return datastore.Trigger{}, datastore.StatusNotFound
 }
 
-func (r *MapDataStore) DeleteTrigger(databaseId string, collectionId string, triggerId string) datastore.DataStoreStatus {
+func (r *JsonDataStore) DeleteTrigger(databaseId string, collectionId string, triggerId string) datastore.DataStoreStatus {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -57,7 +57,7 @@ func (r *MapDataStore) DeleteTrigger(databaseId string, collectionId string, tri
 	return datastore.StatusOk
 }
 
-func (r *MapDataStore) CreateTrigger(databaseId string, collectionId string, trigger datastore.Trigger) (datastore.Trigger, datastore.DataStoreStatus) {
+func (r *JsonDataStore) CreateTrigger(databaseId string, collectionId string, trigger datastore.Trigger) (datastore.Trigger, datastore.DataStoreStatus) {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 

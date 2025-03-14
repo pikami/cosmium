@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import "github.com/pikami/cosmium/internal/datastore"
 

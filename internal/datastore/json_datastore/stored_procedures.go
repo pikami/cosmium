@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import (
 	"fmt"
@@ -10,14 +10,14 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (r *MapDataStore) GetAllStoredProcedures(databaseId string, collectionId string) ([]datastore.StoredProcedure, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetAllStoredProcedures(databaseId string, collectionId string) ([]datastore.StoredProcedure, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
 	return maps.Values(r.storeState.StoredProcedures[databaseId][collectionId]), datastore.StatusOk
 }
 
-func (r *MapDataStore) GetStoredProcedure(databaseId string, collectionId string, spId string) (datastore.StoredProcedure, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetStoredProcedure(databaseId string, collectionId string, spId string) (datastore.StoredProcedure, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -36,7 +36,7 @@ func (r *MapDataStore) GetStoredProcedure(databaseId string, collectionId string
 	return datastore.StoredProcedure{}, datastore.StatusNotFound
 }
 
-func (r *MapDataStore) DeleteStoredProcedure(databaseId string, collectionId string, spId string) datastore.DataStoreStatus {
+func (r *JsonDataStore) DeleteStoredProcedure(databaseId string, collectionId string, spId string) datastore.DataStoreStatus {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -57,7 +57,7 @@ func (r *MapDataStore) DeleteStoredProcedure(databaseId string, collectionId str
 	return datastore.StatusOk
 }
 
-func (r *MapDataStore) CreateStoredProcedure(databaseId string, collectionId string, sp datastore.StoredProcedure) (datastore.StoredProcedure, datastore.DataStoreStatus) {
+func (r *JsonDataStore) CreateStoredProcedure(databaseId string, collectionId string, sp datastore.StoredProcedure) (datastore.StoredProcedure, datastore.DataStoreStatus) {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 

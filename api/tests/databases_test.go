@@ -13,7 +13,7 @@ import (
 )
 
 func Test_Databases(t *testing.T) {
-	presets := []testPreset{PresetMapStore, PresetBadgerStore}
+	presets := []testPreset{PresetJsonStore, PresetBadgerStore}
 
 	runTestsWithPresets(t, "Database Create", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
 		t.Run("Should create database", func(t *testing.T) {

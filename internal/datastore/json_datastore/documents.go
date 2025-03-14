@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (r *MapDataStore) GetAllDocuments(databaseId string, collectionId string) ([]datastore.Document, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetAllDocuments(databaseId string, collectionId string) ([]datastore.Document, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -25,7 +25,7 @@ func (r *MapDataStore) GetAllDocuments(databaseId string, collectionId string) (
 	return maps.Values(r.storeState.Documents[databaseId][collectionId]), datastore.StatusOk
 }
 
-func (r *MapDataStore) GetDocument(databaseId string, collectionId string, documentId string) (datastore.Document, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetDocument(databaseId string, collectionId string, documentId string) (datastore.Document, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -44,7 +44,7 @@ func (r *MapDataStore) GetDocument(databaseId string, collectionId string, docum
 	return r.storeState.Documents[databaseId][collectionId][documentId], datastore.StatusOk
 }
 
-func (r *MapDataStore) DeleteDocument(databaseId string, collectionId string, documentId string) datastore.DataStoreStatus {
+func (r *JsonDataStore) DeleteDocument(databaseId string, collectionId string, documentId string) datastore.DataStoreStatus {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -65,7 +65,7 @@ func (r *MapDataStore) DeleteDocument(databaseId string, collectionId string, do
 	return datastore.StatusOk
 }
 
-func (r *MapDataStore) CreateDocument(databaseId string, collectionId string, document map[string]interface{}) (datastore.Document, datastore.DataStoreStatus) {
+func (r *JsonDataStore) CreateDocument(databaseId string, collectionId string, document map[string]interface{}) (datastore.Document, datastore.DataStoreStatus) {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -100,7 +100,7 @@ func (r *MapDataStore) CreateDocument(databaseId string, collectionId string, do
 	return document, datastore.StatusOk
 }
 
-func (r *MapDataStore) GetDocumentIterator(databaseId string, collectionId string) (datastore.DocumentIterator, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetDocumentIterator(databaseId string, collectionId string) (datastore.DocumentIterator, datastore.DataStoreStatus) {
 	documents, status := r.GetAllDocuments(databaseId, collectionId)
 	if status != datastore.StatusOk {
 		return nil, status

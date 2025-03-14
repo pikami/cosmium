@@ -1,21 +1,21 @@
-package mapdatastore
+package jsondatastore
 
 import "github.com/pikami/cosmium/internal/datastore"
 
-type MapDataStore struct {
+type JsonDataStore struct {
 	storeState State
 
 	initialDataFilePath string
 	persistDataFilePath string
 }
 
-type MapDataStoreOptions struct {
+type JsonDataStoreOptions struct {
 	InitialDataFilePath string
 	PersistDataFilePath string
 }
 
-func NewMapDataStore(options MapDataStoreOptions) *MapDataStore {
-	dataStore := &MapDataStore{
+func NewJsonDataStore(options JsonDataStoreOptions) *JsonDataStore {
+	dataStore := &JsonDataStore{
 		storeState: State{
 			Databases:            make(map[string]datastore.Database),
 			Collections:          make(map[string]map[string]datastore.Collection),

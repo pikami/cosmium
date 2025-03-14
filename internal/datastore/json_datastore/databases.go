@@ -1,4 +1,4 @@
-package mapdatastore
+package jsondatastore
 
 import (
 	"fmt"
@@ -10,14 +10,14 @@ import (
 	"golang.org/x/exp/maps"
 )
 
-func (r *MapDataStore) GetAllDatabases() ([]datastore.Database, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetAllDatabases() ([]datastore.Database, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
 	return maps.Values(r.storeState.Databases), datastore.StatusOk
 }
 
-func (r *MapDataStore) GetDatabase(id string) (datastore.Database, datastore.DataStoreStatus) {
+func (r *JsonDataStore) GetDatabase(id string) (datastore.Database, datastore.DataStoreStatus) {
 	r.storeState.RLock()
 	defer r.storeState.RUnlock()
 
@@ -28,7 +28,7 @@ func (r *MapDataStore) GetDatabase(id string) (datastore.Database, datastore.Dat
 	return datastore.Database{}, datastore.StatusNotFound
 }
 
-func (r *MapDataStore) DeleteDatabase(id string) datastore.DataStoreStatus {
+func (r *JsonDataStore) DeleteDatabase(id string) datastore.DataStoreStatus {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -46,7 +46,7 @@ func (r *MapDataStore) DeleteDatabase(id string) datastore.DataStoreStatus {
 	return datastore.StatusOk
 }
 
-func (r *MapDataStore) CreateDatabase(newDatabase datastore.Database) (datastore.Database, datastore.DataStoreStatus) {
+func (r *JsonDataStore) CreateDatabase(newDatabase datastore.Database) (datastore.Database, datastore.DataStoreStatus) {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 

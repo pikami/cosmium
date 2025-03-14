@@ -10,7 +10,7 @@ import (
 	"github.com/pikami/cosmium/api/config"
 	"github.com/pikami/cosmium/internal/datastore"
 	badgerdatastore "github.com/pikami/cosmium/internal/datastore/badger_datastore"
-	mapdatastore "github.com/pikami/cosmium/internal/datastore/map_datastore"
+	jsondatastore "github.com/pikami/cosmium/internal/datastore/json_datastore"
 	"github.com/pikami/cosmium/internal/logger"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,7 +26,7 @@ func getDefaultTestServerConfig() *config.ServerConfig {
 		AccountKey:              config.DefaultAccountKey,
 		ExplorerPath:            "/tmp/nothing",
 		ExplorerBaseUrlLocation: config.ExplorerBaseUrlLocation,
-		DataStore:               "map",
+		DataStore:               "json",
 	}
 }
 
@@ -34,9 +34,9 @@ func runTestServerCustomConfig(configuration *config.ServerConfig) *TestServer {
 	var dataStore datastore.DataStore
 	switch configuration.DataStore {
 	case config.DataStoreBadger:
-		dataStore = badgerdatastore.NewBadgerDataStore()
+		dataStore = badgerdatastore.NewBadgerDataStore(badgerdatastore.BadgerDataStoreOptions{})
 	default:
-		dataStore = mapdatastore.NewMapDataStore(mapdatastore.MapDataStoreOptions{})
+		dataStore = jsondatastore.NewJsonDataStore(jsondatastore.JsonDataStoreOptions{})
 	}
 
 	api := api.NewApiServer(dataStore, configuration)
@@ -71,7 +71,7 @@ type testFunc func(t *testing.T, ts *TestServer, cosmosClient *azcosmos.Client)
 type testPreset string
 
 const (
-	PresetMapStore    testPreset = "MapDS"
+	PresetJsonStore   testPreset = "JsonDS"
 	PresetBadgerStore testPreset = "BadgerDS"
 )
 
@@ -84,8 +84,8 @@ func runTestsWithPreset(t *testing.T, name string, testPreset testPreset, f test
 	switch testPreset {
 	case PresetBadgerStore:
 		serverConfig.DataStore = config.DataStoreBadger
-	case PresetMapStore:
-		serverConfig.DataStore = config.DataStoreMap
+	case PresetJsonStore:
+		serverConfig.DataStore = config.DataStoreJson
 	}
 
 	ts := runTestServerCustomConfig(serverConfig)

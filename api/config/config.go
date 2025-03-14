@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	DataStoreMap    = "map"
+	DataStoreJson   = "json"
 	DataStoreBadger = "badger"
 )
 
@@ -33,8 +33,8 @@ func ParseFlags() ServerConfig {
 	persistDataPath := flag.String("Persist", "", "Saves data to given path on application exit")
 	logLevel := NewEnumValue("info", []string{"debug", "info", "error", "silent"})
 	flag.Var(logLevel, "LogLevel", fmt.Sprintf("Sets the logging level %s", logLevel.AllowedValuesList()))
-	dataStore := NewEnumValue("map", []string{DataStoreMap, DataStoreBadger})
-	flag.Var(dataStore, "DataStore", fmt.Sprintf("Sets the data store %s, (badger is currently in the experimental phase)", dataStore.AllowedValuesList()))
+	dataStore := NewEnumValue("json", []string{DataStoreJson, DataStoreBadger})
+	flag.Var(dataStore, "DataStore", fmt.Sprintf("Sets the data store %s", dataStore.AllowedValuesList()))
 
 	flag.Parse()
 	setFlagsFromEnvironment()
@@ -79,8 +79,8 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 
 	if c.PersistDataFilePath != "" {
 		fileInfo, _ := os.Stat(c.PersistDataFilePath)
-		if c.DataStore == DataStoreMap && fileInfo.IsDir() {
-			logger.ErrorLn("--Persist cannot be a directory when using default data store")
+		if c.DataStore == DataStoreJson && fileInfo.IsDir() {
+			logger.ErrorLn("--Persist cannot be a directory when using json data store")
 			os.Exit(1)
 		}
 
