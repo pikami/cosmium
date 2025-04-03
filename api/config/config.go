@@ -77,8 +77,13 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 		logger.SetLogLevel(logger.LogLevelInfo)
 	}
 
-	if c.PersistDataFilePath != "" {
-		fileInfo, _ := os.Stat(c.PersistDataFilePath)
+	fileInfo, err := os.Stat(c.PersistDataFilePath)
+	if c.PersistDataFilePath != "" && !os.IsNotExist(err) {
+		if err != nil {
+			logger.ErrorLn("Failed to get file info for persist path:", err)
+			os.Exit(1)
+		}
+
 		if c.DataStore == DataStoreJson && fileInfo.IsDir() {
 			logger.ErrorLn("--Persist cannot be a directory when using json data store")
 			os.Exit(1)

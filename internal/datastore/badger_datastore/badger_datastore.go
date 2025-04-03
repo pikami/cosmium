@@ -15,6 +15,7 @@ type BadgerDataStoreOptions struct {
 
 func NewBadgerDataStore(options BadgerDataStoreOptions) *BadgerDataStore {
 	badgerOpts := badger.DefaultOptions(options.PersistDataFilePath)
+	badgerOpts = badgerOpts.WithLogger(newBadgerLogger())
 	if options.PersistDataFilePath == "" {
 		badgerOpts = badgerOpts.WithInMemory(true)
 	}
