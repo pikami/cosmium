@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 )
 
@@ -20,7 +21,7 @@ func (h *Handlers) GetAllUserDefinedFunctions(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) GetUserDefinedFunction(c *gin.Context) {
@@ -36,11 +37,11 @@ func (h *Handlers) GetUserDefinedFunction(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) DeleteUserDefinedFunction(c *gin.Context) {
@@ -55,11 +56,11 @@ func (h *Handlers) DeleteUserDefinedFunction(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) ReplaceUserDefinedFunction(c *gin.Context) {
@@ -69,19 +70,19 @@ func (h *Handlers) ReplaceUserDefinedFunction(c *gin.Context) {
 
 	var udf datastore.UserDefinedFunction
 	if err := c.BindJSON(&udf); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid body"})
+		c.IndentedJSON(http.StatusBadRequest, constants.BadRequestResponse)
 		return
 	}
 
 	status := h.dataStore.DeleteUserDefinedFunction(databaseId, collectionId, udfId)
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
 	createdUdf, status := h.dataStore.CreateUserDefinedFunction(databaseId, collectionId, udf)
 	if status == datastore.Conflict {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		c.IndentedJSON(http.StatusConflict, constants.ConflictResponse)
 		return
 	}
 
@@ -90,7 +91,7 @@ func (h *Handlers) ReplaceUserDefinedFunction(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) CreateUserDefinedFunction(c *gin.Context) {
@@ -99,13 +100,13 @@ func (h *Handlers) CreateUserDefinedFunction(c *gin.Context) {
 
 	var udf datastore.UserDefinedFunction
 	if err := c.BindJSON(&udf); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid body"})
+		c.IndentedJSON(http.StatusBadRequest, constants.BadRequestResponse)
 		return
 	}
 
 	createdUdf, status := h.dataStore.CreateUserDefinedFunction(databaseId, collectionId, udf)
 	if status == datastore.Conflict {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		c.IndentedJSON(http.StatusConflict, constants.ConflictResponse)
 		return
 	}
 
@@ -114,5 +115,5 @@ func (h *Handlers) CreateUserDefinedFunction(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }

@@ -35,7 +35,7 @@ func (h *Handlers) GetAllDocuments(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) GetDocument(c *gin.Context) {
@@ -50,11 +50,11 @@ func (h *Handlers) GetDocument(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) DeleteDocument(c *gin.Context) {
@@ -69,11 +69,11 @@ func (h *Handlers) DeleteDocument(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 // TODO: Maybe move "replace" logic to data store
@@ -90,13 +90,13 @@ func (h *Handlers) ReplaceDocument(c *gin.Context) {
 
 	status := h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
 	createdDocument, status := h.dataStore.CreateDocument(databaseId, collectionId, requestBody)
 	if status == datastore.Conflict {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		c.IndentedJSON(http.StatusConflict, constants.ConflictResponse)
 		return
 	}
 
@@ -105,7 +105,7 @@ func (h *Handlers) ReplaceDocument(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) PatchDocument(c *gin.Context) {
@@ -115,7 +115,7 @@ func (h *Handlers) PatchDocument(c *gin.Context) {
 
 	document, status := h.dataStore.GetDocument(databaseId, collectionId, documentId)
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
@@ -166,13 +166,13 @@ func (h *Handlers) PatchDocument(c *gin.Context) {
 
 	status = h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
 	createdDocument, status := h.dataStore.CreateDocument(databaseId, collectionId, modifiedDocument)
 	if status == datastore.Conflict {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		c.IndentedJSON(http.StatusConflict, constants.ConflictResponse)
 		return
 	}
 
@@ -181,7 +181,7 @@ func (h *Handlers) PatchDocument(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) DocumentsPost(c *gin.Context) {
@@ -208,7 +208,7 @@ func (h *Handlers) DocumentsPost(c *gin.Context) {
 	}
 
 	if requestBody["id"] == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
+		c.JSON(http.StatusBadRequest, constants.BadRequestResponse)
 		return
 	}
 
@@ -219,7 +219,7 @@ func (h *Handlers) DocumentsPost(c *gin.Context) {
 
 	createdDocument, status := h.dataStore.CreateDocument(databaseId, collectionId, requestBody)
 	if status == datastore.Conflict {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		c.IndentedJSON(http.StatusConflict, constants.ConflictResponse)
 		return
 	}
 
@@ -228,7 +228,7 @@ func (h *Handlers) DocumentsPost(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func parametersToMap(pairs []interface{}) map[string]interface{} {

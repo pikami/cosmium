@@ -30,3 +30,8 @@ var QueryPlanResponse = gin.H{
 		},
 	},
 }
+
+var UnknownErrorResponse = gin.H{"message": "Unknown error"}
+var NotFoundResponse = gin.H{"message": "NotFound"}
+var ConflictResponse = gin.H{"message": "Conflict"}
+var BadRequestResponse = gin.H{"message": "BadRequest"}

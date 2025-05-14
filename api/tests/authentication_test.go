@@ -19,7 +19,7 @@ func Test_Authentication(t *testing.T) {
 	t.Run("Should get 200 when correct account key is used", func(t *testing.T) {
 		ts.DataStore.DeleteDatabase(testDatabaseName)
 		client, err := azcosmos.NewClientFromConnectionString(
-			fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, config.DefaultAccountKey),
+			formatConnectionString(ts.URL, config.DefaultAccountKey),
 			&azcosmos.ClientOptions{},
 		)
 		assert.Nil(t, err)
@@ -35,7 +35,7 @@ func Test_Authentication(t *testing.T) {
 	t.Run("Should get 401 when wrong account key is used", func(t *testing.T) {
 		ts.DataStore.DeleteDatabase(testDatabaseName)
 		client, err := azcosmos.NewClientFromConnectionString(
-			fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, "AAAA"),
+			formatConnectionString(ts.URL, "AAAA"),
 			&azcosmos.ClientOptions{},
 		)
 		assert.Nil(t, err)
@@ -72,7 +72,7 @@ func Test_Authentication_Disabled(t *testing.T) {
 	t.Run("Should get 200 when wrong account key is used, but authentication is dissabled", func(t *testing.T) {
 		ts.DataStore.DeleteDatabase(testDatabaseName)
 		client, err := azcosmos.NewClientFromConnectionString(
-			fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", ts.URL, "AAAA"),
+			formatConnectionString(ts.URL, "AAAA"),
 			&azcosmos.ClientOptions{},
 		)
 		assert.Nil(t, err)
@@ -84,4 +84,8 @@ func Test_Authentication_Disabled(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, createResponse.DatabaseProperties.ID, testDatabaseName)
 	})
+}
+
+func formatConnectionString(endpoint, key string) string {
+	return fmt.Sprintf("AccountEndpoint=%s;AccountKey=%s", endpoint, key)
 }

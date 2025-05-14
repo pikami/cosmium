@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/resourceid"
 )
@@ -42,9 +43,9 @@ func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 )
 
@@ -24,7 +25,7 @@ func (h *Handlers) GetAllCollections(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) GetCollection(c *gin.Context) {
@@ -38,11 +39,11 @@ func (h *Handlers) GetCollection(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) DeleteCollection(c *gin.Context) {
@@ -56,11 +57,11 @@ func (h *Handlers) DeleteCollection(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) CreateCollection(c *gin.Context) {
@@ -73,13 +74,13 @@ func (h *Handlers) CreateCollection(c *gin.Context) {
 	}
 
 	if newCollection.ID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
+		c.JSON(http.StatusBadRequest, constants.BadRequestResponse)
 		return
 	}
 
 	createdCollection, status := h.dataStore.CreateCollection(databaseId, newCollection)
 	if status == datastore.Conflict {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		c.IndentedJSON(http.StatusConflict, constants.ConflictResponse)
 		return
 	}
 
@@ -88,5 +89,5 @@ func (h *Handlers) CreateCollection(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }

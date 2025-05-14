@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 )
 
@@ -20,7 +21,7 @@ func (h *Handlers) GetAllDatabases(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) GetDatabase(c *gin.Context) {
@@ -33,11 +34,11 @@ func (h *Handlers) GetDatabase(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) DeleteDatabase(c *gin.Context) {
@@ -50,11 +51,11 @@ func (h *Handlers) DeleteDatabase(c *gin.Context) {
 	}
 
 	if status == datastore.StatusNotFound {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "NotFound"})
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
 
 func (h *Handlers) CreateDatabase(c *gin.Context) {
@@ -66,13 +67,13 @@ func (h *Handlers) CreateDatabase(c *gin.Context) {
 	}
 
 	if newDatabase.ID == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "BadRequest"})
+		c.JSON(http.StatusBadRequest, constants.BadRequestResponse)
 		return
 	}
 
 	createdDatabase, status := h.dataStore.CreateDatabase(newDatabase)
 	if status == datastore.Conflict {
-		c.IndentedJSON(http.StatusConflict, gin.H{"message": "Conflict"})
+		c.IndentedJSON(http.StatusConflict, constants.ConflictResponse)
 		return
 	}
 
@@ -81,5 +82,5 @@ func (h *Handlers) CreateDatabase(c *gin.Context) {
 		return
 	}
 
-	c.IndentedJSON(http.StatusInternalServerError, gin.H{"message": "Unknown error"})
+	c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
 }
