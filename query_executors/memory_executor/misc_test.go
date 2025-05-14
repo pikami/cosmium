@@ -210,4 +210,35 @@ func Test_Execute(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should execute function IIF()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					testutils.SelectItem_Path("c", "id"),
+					{
+						Alias: "coolness",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallIif,
+							Arguments: []interface{}{
+								testutils.SelectItem_Path("c", "isCool"),
+								testutils.SelectItem_Constant_String("real cool"),
+								testutils.SelectItem_Constant_String("not cool"),
+							},
+						},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "12345", "coolness": "not cool"},
+				map[string]interface{}{"id": "67890", "coolness": "real cool"},
+				map[string]interface{}{"id": "456", "coolness": "real cool"},
+				map[string]interface{}{"id": "123", "coolness": "real cool"},
+			},
+		)
+	})
 }

@@ -79,7 +79,7 @@ Cosmium strives to support the core features of Cosmos DB, including:
 
 | Function | Implemented |
 | -------- | ----------- |
-| IIF      | No          |
+| IIF      | Yes         |
 
 ### Date and time Functions
 

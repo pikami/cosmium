@@ -209,6 +209,9 @@ func (r rowContext) selectItem_SelectItemTypeFunctionCall(functionCall parsers.F
 	case parsers.FunctionCallSetUnion:
 		return r.set_Union(functionCall.Arguments)
 
+	case parsers.FunctionCallIif:
+		return r.misc_Iif(functionCall.Arguments)
+
 	case parsers.FunctionCallMathAbs:
 		return r.math_Abs(functionCall.Arguments)
 	case parsers.FunctionCallMathAcos:

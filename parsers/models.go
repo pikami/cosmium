@@ -134,6 +134,8 @@ const (
 	FunctionCallSetIntersect     FunctionCallType = "SetIntersect"
 	FunctionCallSetUnion         FunctionCallType = "SetUnion"
 
+	FunctionCallIif FunctionCallType = "Iif"
+
 	FunctionCallMathAbs              FunctionCallType = "MathAbs"
 	FunctionCallMathAcos             FunctionCallType = "MathAcos"
 	FunctionCallMathAsin             FunctionCallType = "MathAsin"

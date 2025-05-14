@@ -163,4 +163,27 @@ func Test_Parse(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse IIF function", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT IIF(true, c.pk, c.id) FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallIif,
+							Arguments: []interface{}{
+								testutils.SelectItem_Constant_Bool(true),
+								testutils.SelectItem_Path("c", "pk"),
+								testutils.SelectItem_Path("c", "id"),
+							},
+						},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+		)
+	})
 }

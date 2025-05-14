@@ -178,4 +178,21 @@ func Test_Parse_Select(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse SELECT empty object", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT {} AS obj FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias:       "obj",
+						Type:        parsers.SelectItemTypeObject,
+						SelectItems: []parsers.SelectItem{},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+		)
+	})
 }

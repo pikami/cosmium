@@ -205,4 +205,27 @@ func Test_Execute_Select(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should execute SELECT empty object", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Alias:       "obj",
+						Type:        parsers.SelectItemTypeObject,
+						SelectItems: []parsers.SelectItem{},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"obj": map[string]interface{}{}},
+				map[string]interface{}{"obj": map[string]interface{}{}},
+				map[string]interface{}{"obj": map[string]interface{}{}},
+				map[string]interface{}{"obj": map[string]interface{}{}},
+			},
+		)
+	})
 }

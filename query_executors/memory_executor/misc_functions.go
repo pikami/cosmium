@@ -16,3 +16,16 @@ func (r rowContext) misc_In(arguments []interface{}) bool {
 
 	return false
 }
+
+func (r rowContext) misc_Iif(arguments []interface{}) interface{} {
+	if len(arguments) != 3 {
+		return nil
+	}
+
+	condition := r.resolveSelectItem(arguments[0].(parsers.SelectItem))
+	if condition != nil && condition == true {
+		return r.resolveSelectItem(arguments[1].(parsers.SelectItem))
+	}
+
+	return r.resolveSelectItem(arguments[2].(parsers.SelectItem))
+}

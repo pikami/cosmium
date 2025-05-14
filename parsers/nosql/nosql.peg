@@ -289,6 +289,11 @@ SelectArray <- "[" ws columns:ColumnList ws "]" {
 
 SelectObject <- "{" ws field:SelectObjectField ws other_fields:(ws "," ws coll:SelectObjectField {return coll, nil })* ws "}" {
     return makeSelectObject(field, other_fields)
+} / "{" ws "}" {
+    return parsers.SelectItem{
+		SelectItems: []parsers.SelectItem{},
+		Type:        parsers.SelectItemTypeObject,
+	}, nil
 }
 
 SelectObjectField <- name:(Identifier / "\"" key:Identifier "\"" { return key, nil }) ws ":" ws selectItem:SelectItem {
@@ -442,6 +447,7 @@ BooleanLiteral <- ("true"i / "false"i) {
 FunctionCall <- StringFunctions
     / TypeCheckingFunctions
     / ArrayFunctions
+    / ConditionalFunctions
     / InFunction
     / AggregateFunctions
     / MathFunctions
@@ -488,6 +494,8 @@ ArrayFunctions <- ArrayConcatExpression
     / ArraySliceExpression
     / SetIntersectExpression
     / SetUnionExpression
+
+ConditionalFunctions <- IifExpression
 
 MathFunctions <- MathAbsExpression
     / MathAcosExpression
@@ -679,6 +687,10 @@ SetIntersectExpression <- "SetIntersect"i ws "(" ws set1:SelectItem ws "," ws se
 
 SetUnionExpression <- "SetUnion"i ws "(" ws set1:SelectItem ws "," ws set2:SelectItem ws ")" {
     return createFunctionCall(parsers.FunctionCallSetUnion, []interface{}{set1, set2})
+}
+
+IifExpression <- "IIF"i ws "(" ws condition:SelectItem ws "," ws trueValue:SelectItem ws "," ws falseValue:SelectItem ws ")" {
+    return createFunctionCall(parsers.FunctionCallIif, []interface{}{condition, trueValue, falseValue})
 }
 
 MathAbsExpression <- "ABS"i ws "(" ws ex:SelectItem ws ")" { return createFunctionCall(parsers.FunctionCallMathAbs, []interface{}{ex}) }
