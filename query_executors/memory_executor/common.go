@@ -69,6 +69,19 @@ func (r rowContext) resolveSelectItem(selectItem parsers.SelectItem) interface{}
 		return nil
 	}
 
+	if selectItem.Type == parsers.SelectItemTypeExpression {
+		if typedExpression, ok := selectItem.Value.(parsers.ComparisonExpression); ok {
+			return r.filters_ComparisonExpression(typedExpression)
+		}
+
+		if typedExpression, ok := selectItem.Value.(parsers.LogicalExpression); ok {
+			return r.filters_LogicalExpression(typedExpression)
+		}
+
+		logger.ErrorLn("parsers.SelectItem has incorrect Value type (expected parsers.ComparisonExpression)")
+		return nil
+	}
+
 	return r.selectItem_SelectItemTypeField(selectItem)
 }
 

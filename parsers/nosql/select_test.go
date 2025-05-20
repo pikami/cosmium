@@ -195,4 +195,73 @@ func Test_Parse_Select(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse comparison expressions in SELECT", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c["id"] = "123", c["pk"] > 456 FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeExpression,
+						Value: parsers.ComparisonExpression{
+							Operation: "=",
+							Left:      testutils.SelectItem_Path("c", "id"),
+							Right:     testutils.SelectItem_Constant_String("123"),
+						},
+					},
+					{
+						Type: parsers.SelectItemTypeExpression,
+						Value: parsers.ComparisonExpression{
+							Operation: ">",
+							Left:      testutils.SelectItem_Path("c", "pk"),
+							Right:     testutils.SelectItem_Constant_Int(456),
+						},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+		)
+	})
+
+	t.Run("Should parse logical expressions in SELECT", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c["id"] = "123" OR c["pk"] > 456, c["isCool"] AND c["hasRizz"] AS isRizzler FROM c`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Type: parsers.SelectItemTypeExpression,
+						Value: parsers.LogicalExpression{
+							Operation: parsers.LogicalExpressionTypeOr,
+							Expressions: []interface{}{
+								parsers.ComparisonExpression{
+									Operation: "=",
+									Left:      testutils.SelectItem_Path("c", "id"),
+									Right:     testutils.SelectItem_Constant_String("123"),
+								},
+								parsers.ComparisonExpression{
+									Operation: ">",
+									Left:      testutils.SelectItem_Path("c", "pk"),
+									Right:     testutils.SelectItem_Constant_Int(456),
+								},
+							},
+						},
+					},
+					{
+						Type:  parsers.SelectItemTypeExpression,
+						Alias: "isRizzler",
+						Value: parsers.LogicalExpression{
+							Operation: parsers.LogicalExpressionTypeAnd,
+							Expressions: []interface{}{
+								testutils.SelectItem_Path("c", "isCool"),
+								testutils.SelectItem_Path("c", "hasRizz"),
+							},
+						},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+		)
+	})
 }

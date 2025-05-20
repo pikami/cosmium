@@ -204,7 +204,7 @@ TopClause <- Top ws count:Integer {
     return count, nil
 }
 
-FromClause <- From ws table:TableName selectItem:(ws In ws column:SelectItem { return column, nil }) {
+FromClause <- From ws table:TableName selectItem:(ws In ws column:SelectItemWithAlias { return column, nil }) {
     tableTyped := table.(parsers.Table)
 
     if selectItem != nil {
@@ -213,7 +213,7 @@ FromClause <- From ws table:TableName selectItem:(ws In ws column:SelectItem { r
 	}
 
 	return tableTyped, nil
-} / From ws column:SelectItem {
+} / From ws column:SelectItemWithAlias {
     tableSelectItem := column.(parsers.SelectItem)
     table := parsers.Table{
         Value: tableSelectItem.Alias,
@@ -251,7 +251,7 @@ SubQuerySelectItem <- subQuery:SubQuery asClause:(ws alias:AsClause { return ali
     return selectItem, nil
 }
 
-JoinClause <- Join ws table:TableName ws In ws column:SelectItem {
+JoinClause <- Join ws table:TableName ws In ws column:SelectItemWithAlias {
     return makeJoin(table, column)
 } / Join ws subQuery:SubQuerySelectItem {
     return makeJoin(nil, subQuery)
@@ -269,11 +269,34 @@ SelectAsterisk <- "*" {
     return makeColumnList(selectItem, make([]interface{}, 0))
 }
 
-ColumnList <- column:SelectItem other_columns:(ws "," ws coll:SelectItem {return coll, nil })* {
+ColumnList <- column:ExpressionOrSelectItem other_columns:(ws "," ws coll:ExpressionOrSelectItem {return coll, nil })* {
     return makeColumnList(column, other_columns)
 }
 
-SelectValueSpec <- "VALUE"i ws column:SelectItem {
+ExpressionOrSelectItem <- expression:OrExpression asClause:AsClause? {
+    switch typedValue := expression.(type) {
+    case parsers.ComparisonExpression, parsers.LogicalExpression:
+        selectItem := parsers.SelectItem{
+            Type: parsers.SelectItemTypeExpression,
+            Value: typedValue,
+        }
+
+        if aliasValue, ok := asClause.(string); ok {
+            selectItem.Alias = aliasValue
+        }
+
+        return selectItem, nil
+    case parsers.SelectItem:
+        if aliasValue, ok := asClause.(string); ok {
+            typedValue.Alias = aliasValue
+        }
+        return typedValue, nil
+    default:
+        return typedValue, nil
+    }
+} / item:SelectItemWithAlias { return item, nil }
+
+SelectValueSpec <- "VALUE"i ws column:SelectItemWithAlias {
     selectItem := column.(parsers.SelectItem)
 	selectItem.IsTopLevel = true
     return makeColumnList(selectItem, make([]interface{}, 0))
@@ -306,7 +329,15 @@ SelectProperty <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)* {
     return makeSelectItem(name, path, parsers.SelectItemTypeField)
 }
 
-SelectItem <- selectItem:(SubQuerySelectItem / Literal / FunctionCall / SelectArray / SelectObject / SelectProperty) asClause:AsClause? {
+SelectItemWithAlias <- selectItem:SelectItem asClause:AsClause? {
+    item := selectItem.(parsers.SelectItem)
+    if aliasValue, ok := asClause.(string); ok {
+        item.Alias = aliasValue
+    }
+    return item, nil
+}
+
+SelectItem <- selectItem:(SubQuerySelectItem / Literal / FunctionCall / SelectArray / SelectObject / SelectProperty) {
     var itemResult parsers.SelectItem
     switch typedValue := selectItem.(type) {
     case parsers.SelectItem:
@@ -322,10 +353,6 @@ SelectItem <- selectItem:(SubQuerySelectItem / Literal / FunctionCall / SelectAr
             Value: typedValue,
         }
     }
-
-	if aliasValue, ok := asClause.(string); ok {
-		itemResult.Alias = aliasValue
-	}
 
 	return itemResult, nil
 }

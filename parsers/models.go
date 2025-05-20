@@ -34,6 +34,7 @@ const (
 	SelectItemTypeConstant
 	SelectItemTypeFunctionCall
 	SelectItemTypeSubQuery
+	SelectItemTypeExpression
 )
 
 type SelectItem struct {
