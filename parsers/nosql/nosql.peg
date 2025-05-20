@@ -4,137 +4,137 @@ package nosql
 import "github.com/pikami/cosmium/parsers"
 
 func makeSelectStmt(
-	columns, fromClause, joinItems,
-	whereClause interface{}, distinctClause interface{},
-	count interface{}, groupByClause interface{}, orderList interface{},
-	offsetClause interface{},
+    columns, fromClause, joinItems,
+    whereClause interface{}, distinctClause interface{},
+    count interface{}, groupByClause interface{}, orderList interface{},
+    offsetClause interface{},
 ) (parsers.SelectStmt, error) {
-	selectStmt := parsers.SelectStmt{
-		SelectItems: columns.([]parsers.SelectItem),
-	}
+    selectStmt := parsers.SelectStmt{
+        SelectItems: columns.([]parsers.SelectItem),
+    }
 
     if fromTable, ok := fromClause.(parsers.Table); ok {
         selectStmt.Table = fromTable
     }
 
     if joinItemsArray, ok := joinItems.([]interface{}); ok && len(joinItemsArray) > 0 {
-		selectStmt.JoinItems = make([]parsers.JoinItem, len(joinItemsArray))
-		for i, joinItem := range joinItemsArray {
-			selectStmt.JoinItems[i] = joinItem.(parsers.JoinItem)
-		}
-	}
+        selectStmt.JoinItems = make([]parsers.JoinItem, len(joinItemsArray))
+        for i, joinItem := range joinItemsArray {
+            selectStmt.JoinItems[i] = joinItem.(parsers.JoinItem)
+        }
+    }
 
-	switch v := whereClause.(type) {
-	case parsers.ComparisonExpression, parsers.LogicalExpression, parsers.Constant, parsers.SelectItem:
-		selectStmt.Filters = v
-	}
+    switch v := whereClause.(type) {
+    case parsers.ComparisonExpression, parsers.LogicalExpression, parsers.Constant, parsers.SelectItem:
+        selectStmt.Filters = v
+    }
 
-	if distinctClause != nil {
-		selectStmt.Distinct = true
-	}
+    if distinctClause != nil {
+        selectStmt.Distinct = true
+    }
 
-	if n, ok := count.(int); ok {
-		selectStmt.Count = n
-	}
+    if n, ok := count.(int); ok {
+        selectStmt.Count = n
+    }
 
-	if offsetArr, ok := offsetClause.([]interface{}); ok && len(offsetArr) == 2 {
-		if n, ok := offsetArr[0].(int); ok {
-			selectStmt.Offset = n
-		}
+    if offsetArr, ok := offsetClause.([]interface{}); ok && len(offsetArr) == 2 {
+        if n, ok := offsetArr[0].(int); ok {
+            selectStmt.Offset = n
+        }
 
-		if n, ok := offsetArr[1].(int); ok {
-			selectStmt.Count = n
-		}
-	}
+        if n, ok := offsetArr[1].(int); ok {
+            selectStmt.Count = n
+        }
+    }
 
-	if orderExpressions, ok := orderList.([]parsers.OrderExpression); ok {
-		selectStmt.OrderExpressions = orderExpressions
-	}
+    if orderExpressions, ok := orderList.([]parsers.OrderExpression); ok {
+        selectStmt.OrderExpressions = orderExpressions
+    }
 
-	if groupByClause != nil {
-		selectStmt.GroupBy = groupByClause.([]parsers.SelectItem)
-	}
+    if groupByClause != nil {
+        selectStmt.GroupBy = groupByClause.([]parsers.SelectItem)
+    }
 
-	return selectStmt, nil
+    return selectStmt, nil
 }
 
 func makeJoin(table interface{}, column interface{}) (parsers.JoinItem, error) {
-	joinItem := parsers.JoinItem{}
+    joinItem := parsers.JoinItem{}
 
-	if selectItem, isSelectItem := column.(parsers.SelectItem); isSelectItem {
-		joinItem.SelectItem = selectItem
-		joinItem.Table.Value = selectItem.Alias
-	}
+    if selectItem, isSelectItem := column.(parsers.SelectItem); isSelectItem {
+        joinItem.SelectItem = selectItem
+        joinItem.Table.Value = selectItem.Alias
+    }
 
-	if tableTyped, isTable := table.(parsers.Table); isTable {
-		joinItem.Table = tableTyped
-	}
+    if tableTyped, isTable := table.(parsers.Table); isTable {
+        joinItem.Table = tableTyped
+    }
 
-	return joinItem, nil
+    return joinItem, nil
 }
 
 func makeSelectItem(name interface{}, path interface{}, selectItemType parsers.SelectItemType) (parsers.SelectItem, error) {
-	ps := path.([]interface{})
+    ps := path.([]interface{})
 
-	paths := make([]string, 1)
+    paths := make([]string, 1)
     paths[0] = name.(string)
-	for _, p := range ps {
+    for _, p := range ps {
         paths = append(paths, p.(string))
-	}
+    }
 
-	return parsers.SelectItem{Path: paths, Type: selectItemType}, nil
+    return parsers.SelectItem{Path: paths, Type: selectItemType}, nil
 }
 
 func makeColumnList(column interface{}, other_columns interface{}) ([]parsers.SelectItem, error) {
     collsAsArray := other_columns.([]interface{})
-	columnList := make([]parsers.SelectItem, len(collsAsArray) + 1)
-	columnList[0] = column.(parsers.SelectItem)
+    columnList := make([]parsers.SelectItem, len(collsAsArray) + 1)
+    columnList[0] = column.(parsers.SelectItem)
 
-	for i, v := range collsAsArray {
+    for i, v := range collsAsArray {
         if col, ok := v.(parsers.SelectItem); ok {
-			columnList[i+1] = col
+            columnList[i+1] = col
         }
     }
 
-	return columnList, nil
+    return columnList, nil
 }
 
 func makeSelectArray(columns interface{}) (parsers.SelectItem, error) {
-	return parsers.SelectItem{
-		SelectItems: columns.([]parsers.SelectItem),
-		Type:        parsers.SelectItemTypeArray,
-	}, nil
+    return parsers.SelectItem{
+        SelectItems: columns.([]parsers.SelectItem),
+        Type:        parsers.SelectItemTypeArray,
+    }, nil
 }
 
 func makeSelectObject(field interface{}, other_fields interface{}) (parsers.SelectItem, error) {
     fieldsAsArray := other_fields.([]interface{})
-	fieldsList := make([]parsers.SelectItem, len(fieldsAsArray)+1)
-	fieldsList[0] = field.(parsers.SelectItem)
+    fieldsList := make([]parsers.SelectItem, len(fieldsAsArray)+1)
+    fieldsList[0] = field.(parsers.SelectItem)
 
-	for i, v := range fieldsAsArray {
-		if col, ok := v.(parsers.SelectItem); ok {
-			fieldsList[i+1] = col
-		}
-	}
+    for i, v := range fieldsAsArray {
+        if col, ok := v.(parsers.SelectItem); ok {
+            fieldsList[i+1] = col
+        }
+    }
 
-	return parsers.SelectItem{
-		SelectItems: fieldsList,
-		Type:        parsers.SelectItemTypeObject,
-	}, nil
+    return parsers.SelectItem{
+        SelectItems: fieldsList,
+        Type:        parsers.SelectItemTypeObject,
+    }, nil
 }
 
 func makeOrderByClause(ex1 interface{}, others interface{}) ([]parsers.OrderExpression, error) {
     othersArray := others.([]interface{})
-	orderList := make([]parsers.OrderExpression, len(othersArray)+1)
-	orderList[0] = ex1.(parsers.OrderExpression)
+    orderList := make([]parsers.OrderExpression, len(othersArray)+1)
+    orderList[0] = ex1.(parsers.OrderExpression)
 
-	for i, v := range othersArray {
-		if col, ok := v.(parsers.OrderExpression); ok {
-			orderList[i+1] = col
-		}
-	}
+    for i, v := range othersArray {
+        if col, ok := v.(parsers.OrderExpression); ok {
+            orderList[i+1] = col
+        }
+    }
 
-	return orderList, nil
+    return orderList, nil
 }
 
 func makeOrderExpression(field interface{}, order interface{}) (parsers.OrderExpression, error) {
@@ -144,8 +144,8 @@ func makeOrderExpression(field interface{}, order interface{}) (parsers.OrderExp
     }
 
     if orderValue, ok := order.(parsers.OrderDirection); ok {
-		value.Direction = orderValue
-	}
+        value.Direction = orderValue
+    }
 
     return value, nil
 }
@@ -169,13 +169,13 @@ func joinStrings(array []interface{}) string {
 
 func combineExpressions(ex1 interface{}, exs interface{}, operation parsers.LogicalExpressionType) (interface{}, error) {
     if exs == nil || len(exs.([]interface{})) < 1 {
-		return ex1, nil
-	}
+        return ex1, nil
+    }
 
-	return parsers.LogicalExpression{
-		Expressions: append([]interface{}{ex1}, exs.([]interface{})...),
-		Operation:   operation,
-	}, nil
+    return parsers.LogicalExpression{
+        Expressions: append([]interface{}{ex1}, exs.([]interface{})...),
+        Operation:   operation,
+    }, nil
 }
 
 }
@@ -208,11 +208,11 @@ FromClause <- From ws table:TableName selectItem:(ws In ws column:SelectItemWith
     tableTyped := table.(parsers.Table)
 
     if selectItem != nil {
-	    tableTyped.SelectItem = selectItem.(parsers.SelectItem)
+        tableTyped.SelectItem = selectItem.(parsers.SelectItem)
         tableTyped.IsInSelect = true
-	}
+    }
 
-	return tableTyped, nil
+    return tableTyped, nil
 } / From ws column:SelectItemWithAlias {
     tableSelectItem := column.(parsers.SelectItem)
     table := parsers.Table{
@@ -222,11 +222,11 @@ FromClause <- From ws table:TableName selectItem:(ws In ws column:SelectItemWith
     return table, nil
 } / From ws subQuery:SubQuerySelectItem {
     subQueryTyped := subQuery.(parsers.SelectItem)
-	table := parsers.Table{
-		Value: subQueryTyped.Alias,
-		SelectItem: subQueryTyped,
-	}
-	return table, nil
+    table := parsers.Table{
+        Value: subQueryTyped.Alias,
+        SelectItem: subQueryTyped,
+    }
+    return table, nil
 }
 
 SubQuery <- exists:(exists:Exists ws { return exists, nil })? "(" ws selectStmt:SelectStmt ws ")" {
@@ -265,7 +265,7 @@ Selection <- SelectValueSpec / ColumnList / SelectAsterisk
 
 SelectAsterisk <- "*" {
     selectItem, _ := makeSelectItem("c", make([]interface{}, 0), parsers.SelectItemTypeField)
-	selectItem.IsTopLevel = true
+    selectItem.IsTopLevel = true
     return makeColumnList(selectItem, make([]interface{}, 0))
 }
 
@@ -298,7 +298,7 @@ ExpressionOrSelectItem <- expression:OrExpression asClause:AsClause? {
 
 SelectValueSpec <- "VALUE"i ws column:SelectItemWithAlias {
     selectItem := column.(parsers.SelectItem)
-	selectItem.IsTopLevel = true
+    selectItem.IsTopLevel = true
     return makeColumnList(selectItem, make([]interface{}, 0))
 }
 
@@ -314,15 +314,15 @@ SelectObject <- "{" ws field:SelectObjectField ws other_fields:(ws "," ws coll:S
     return makeSelectObject(field, other_fields)
 } / "{" ws "}" {
     return parsers.SelectItem{
-		SelectItems: []parsers.SelectItem{},
-		Type:        parsers.SelectItemTypeObject,
-	}, nil
+        SelectItems: []parsers.SelectItem{},
+        Type:        parsers.SelectItemTypeObject,
+    }, nil
 }
 
 SelectObjectField <- name:(Identifier / "\"" key:Identifier "\"" { return key, nil }) ws ":" ws selectItem:SelectItem {
     item := selectItem.(parsers.SelectItem)
-	item.Alias = name.(string)
-	return item, nil
+    item.Alias = name.(string)
+    return item, nil
 }
 
 SelectProperty <- name:Identifier path:(DotFieldAccess / ArrayFieldAccess)* {
@@ -354,7 +354,7 @@ SelectItem <- selectItem:(SubQuerySelectItem / Literal / FunctionCall / SelectAr
         }
     }
 
-	return itemResult, nil
+    return itemResult, nil
 }
 
 AsClause <- (ws As)? ws !ExcludedKeywords alias:Identifier {
@@ -392,10 +392,10 @@ ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:op.(string)}, nil
 } / inv:(Not ws)? ex:SelectItem {
     if inv != nil {
-		ex1 := ex.(parsers.SelectItem)
-		ex1.Invert = true
-		return ex1, nil
-	}
+        ex1 := ex.(parsers.SelectItem)
+        ex1.Invert = true
+        return ex1, nil
+    }
     return ex, nil
 } / ex:BooleanLiteral { return ex, nil }
 
@@ -409,10 +409,10 @@ OrderExpression <- field:SelectProperty ws order:OrderDirection? {
 
 OrderDirection <- ("ASC"i / "DESC"i) {
     if strings.EqualFold(string(c.text), "DESC") {
-		return parsers.OrderDirectionDesc, nil
+        return parsers.OrderDirectionDesc, nil
     }
 
-	return parsers.OrderDirectionAsc, nil
+    return parsers.OrderDirectionAsc, nil
 }
 
 Select <- "SELECT"i
