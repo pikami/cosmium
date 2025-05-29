@@ -82,6 +82,15 @@ func (r rowContext) resolveSelectItem(selectItem parsers.SelectItem) interface{}
 		return nil
 	}
 
+	if selectItem.Type == parsers.SelectItemTypeBinaryExpression {
+		if typedSelectItem, ok := selectItem.Value.(parsers.BinaryExpression); ok {
+			return r.selectItem_SelectItemTypeBinaryExpression(typedSelectItem)
+		}
+
+		logger.ErrorLn("parsers.SelectItem has incorrect Value type (expected parsers.BinaryExpression)")
+		return nil
+	}
+
 	return r.selectItem_SelectItemTypeField(selectItem)
 }
 
@@ -317,6 +326,45 @@ func (r rowContext) selectItem_SelectItemTypeFunctionCall(functionCall parsers.F
 	return nil
 }
 
+func (r rowContext) selectItem_SelectItemTypeBinaryExpression(binaryExpression parsers.BinaryExpression) interface{} {
+	if binaryExpression.Left == nil || binaryExpression.Right == nil {
+		logger.Debug("parsers.BinaryExpression has nil Left or Right value")
+		return nil
+	}
+
+	leftValue := r.resolveSelectItem(binaryExpression.Left.(parsers.SelectItem))
+	rightValue := r.resolveSelectItem(binaryExpression.Right.(parsers.SelectItem))
+
+	if leftValue == nil || rightValue == nil {
+		return nil
+	}
+
+	leftNumber, leftIsNumber := numToFloat64(leftValue)
+	rightNumber, rightIsNumber := numToFloat64(rightValue)
+
+	if !leftIsNumber || !rightIsNumber {
+		logger.Debug("Binary expression operands are not numbers, returning nil")
+		return nil
+	}
+
+	switch binaryExpression.Operation {
+	case "+":
+		return leftNumber + rightNumber
+	case "-":
+		return leftNumber - rightNumber
+	case "*":
+		return leftNumber * rightNumber
+	case "/":
+		if rightNumber == 0 {
+			logger.Debug("Division by zero in binary expression")
+			return nil
+		}
+		return leftNumber / rightNumber
+	default:
+		return nil
+	}
+}
+
 func (r rowContext) selectItem_SelectItemTypeField(selectItem parsers.SelectItem) interface{} {
 	value := r.tables[selectItem.Path[0]]
 
@@ -352,6 +400,7 @@ func (r rowContext) selectItem_SelectItemTypeField(selectItem parsers.SelectItem
 }
 
 func compareValues(val1, val2 interface{}) int {
+	// Handle nil values
 	if val1 == nil && val2 == nil {
 		return 0
 	} else if val1 == nil {
@@ -360,27 +409,24 @@ func compareValues(val1, val2 interface{}) int {
 		return 1
 	}
 
+	// Handle number values
+	val1Number, val1IsNumber := numToFloat64(val1)
+	val2Number, val2IsNumber := numToFloat64(val2)
+	if val1IsNumber && val2IsNumber {
+		if val1Number < val2Number {
+			return -1
+		} else if val1Number > val2Number {
+			return 1
+		}
+		return 0
+	}
+
+	// Handle different types
 	if reflect.TypeOf(val1) != reflect.TypeOf(val2) {
 		return 1
 	}
 
 	switch val1 := val1.(type) {
-	case int:
-		val2 := val2.(int)
-		if val1 < val2 {
-			return -1
-		} else if val1 > val2 {
-			return 1
-		}
-		return 0
-	case float64:
-		val2 := val2.(float64)
-		if val1 < val2 {
-			return -1
-		} else if val1 > val2 {
-			return 1
-		}
-		return 0
 	case string:
 		val2 := val2.(string)
 		return strings.Compare(val1, val2)

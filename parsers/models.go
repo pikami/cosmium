@@ -35,6 +35,7 @@ const (
 	SelectItemTypeFunctionCall
 	SelectItemTypeSubQuery
 	SelectItemTypeExpression
+	SelectItemTypeBinaryExpression
 )
 
 type SelectItem struct {
@@ -60,6 +61,12 @@ type LogicalExpression struct {
 }
 
 type ComparisonExpression struct {
+	Left      interface{}
+	Right     interface{}
+	Operation string
+}
+
+type BinaryExpression struct {
 	Left      interface{}
 	Right     interface{}
 	Operation string

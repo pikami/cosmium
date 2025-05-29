@@ -178,6 +178,32 @@ func combineExpressions(ex1 interface{}, exs interface{}, operation parsers.Logi
     }, nil
 }
 
+func makeMathExpression(left interface{}, operations interface{}) (interface{}, error) {
+    if operations == nil || len(operations.([]interface{})) == 0 {
+        return left, nil
+    }
+
+    result := left.(parsers.SelectItem)
+    ops := operations.([]interface{})
+    
+    for _, op := range ops {
+        opData := op.([]interface{})
+        operation := opData[0].(string)
+        right := opData[1].(parsers.SelectItem)
+
+        result = parsers.SelectItem{
+			Type: parsers.SelectItemTypeBinaryExpression,
+			Value: parsers.BinaryExpression{
+				Left: result,
+				Right: right,
+				Operation: operation,
+			},
+		}
+    }
+    
+    return result, nil
+}
+
 }
 
 Input <- selectStmt:SelectStmt {
@@ -387,10 +413,20 @@ AndExpression <- ex1:ComparisonExpression ex2:(ws And ws ex:ComparisonExpression
     return combineExpressions(ex1, ex2, parsers.LogicalExpressionTypeAnd)
 }
 
-ComparisonExpression <- "(" ws ex:OrExpression ws ")" { return ex, nil }
-    / left:SelectItem ws op:ComparisonOperator ws right:SelectItem {
+ComparisonExpression <- left:AddSubExpression ws op:ComparisonOperator ws right:AddSubExpression {
     return parsers.ComparisonExpression{Left:left,Right:right,Operation:op.(string)}, nil
-} / inv:(Not ws)? ex:SelectItem {
+} / ex:AddSubExpression { return ex, nil }
+
+AddSubExpression <- left:MulDivExpression operations:(ws op:AddOrSubtractOperation ws right:MulDivExpression { return []interface{}{op, right}, nil })* {
+    return makeMathExpression(left, operations)
+}
+
+MulDivExpression <- left:SelectItemWithParentheses operations:(ws op:MultiplyOrDivideOperation ws right:SelectItemWithParentheses { return []interface{}{op, right}, nil })* {
+    return makeMathExpression(left, operations)
+}
+
+SelectItemWithParentheses <- "(" ws ex:OrExpression ws ")" { return ex, nil }
+    / inv:(Not ws)? ex:SelectItem {
     if inv != nil {
         ex1 := ex.(parsers.SelectItem)
         ex1.Invert = true
@@ -446,6 +482,10 @@ Offset <- "OFFSET"i
 ComparisonOperator <- ("<=" / ">=" / "=" / "!=" / "<" / ">") {
     return string(c.text), nil
 }
+
+AddOrSubtractOperation <- ("+" / "-") { return string(c.text), nil }
+
+MultiplyOrDivideOperation <- ("*" / "/") { return string(c.text), nil }
 
 Literal <- FloatLiteral / IntegerLiteral / StringLiteral / BooleanLiteral / ParameterConstant / NullConstant
 
