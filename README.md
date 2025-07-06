@@ -64,7 +64,8 @@ There are two docker tags available:
 If you wan to run the application using docker, configure it using environment variables see example:
 
 ```sh
-docker run --rm \
+# Ensure save.json exists so Docker volume mounts correctly
+[ -f save.json ] || echo '{}' > save.json && docker run --rm \
   -e COSMIUM_PERSIST=/save.json \
   -v ./save.json:/save.json \
   -p 8081:8081 \
