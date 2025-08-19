@@ -60,6 +60,9 @@ func requestToResourceId(c *gin.Context) string {
 	databaseId, _ := c.Params.Get("databaseId")
 	collId, _ := c.Params.Get("collId")
 	docId, _ := c.Params.Get("docId")
+	triggerId, _ := c.Params.Get("triggerId")
+	sprocId, _ := c.Params.Get("sprocId")
+	udfId, _ := c.Params.Get("udfId")
 	resourceType := urlToResourceType(c.Request.URL.String())
 
 	var resourceId string
@@ -71,6 +74,15 @@ func requestToResourceId(c *gin.Context) string {
 	}
 	if docId != "" {
 		resourceId += "/docs/" + docId
+	}
+	if triggerId != "" {
+		resourceId += "/triggers/" + triggerId
+	}
+	if sprocId != "" {
+		resourceId += "/sprocs/" + sprocId
+	}
+	if udfId != "" {
+		resourceId += "/udfs/" + udfId
 	}
 
 	isFeed := c.Request.Header.Get("A-Im") == "Incremental Feed"
