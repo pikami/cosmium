@@ -142,8 +142,6 @@ const (
 	FunctionCallSetIntersect     FunctionCallType = "SetIntersect"
 	FunctionCallSetUnion         FunctionCallType = "SetUnion"
 
-	FunctionCallIif FunctionCallType = "Iif"
-
 	FunctionCallMathAbs              FunctionCallType = "MathAbs"
 	FunctionCallMathAcos             FunctionCallType = "MathAcos"
 	FunctionCallMathAsin             FunctionCallType = "MathAsin"
@@ -187,7 +185,9 @@ const (
 	FunctionCallAggregateMin   FunctionCallType = "AggregateMin"
 	FunctionCallAggregateSum   FunctionCallType = "AggregateSum"
 
-	FunctionCallIn FunctionCallType = "In"
+	FunctionCallIif FunctionCallType = "Iif"
+	FunctionCallIn  FunctionCallType = "In"
+	FunctionCallUDF FunctionCallType = "UDF"
 )
 
 var AggregateFunctions = []FunctionCallType{
@@ -200,5 +200,6 @@ var AggregateFunctions = []FunctionCallType{
 
 type FunctionCall struct {
 	Arguments []interface{}
+	UdfName   string
 	Type      FunctionCallType
 }

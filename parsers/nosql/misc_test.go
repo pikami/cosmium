@@ -186,4 +186,55 @@ func Test_Parse(t *testing.T) {
 			},
 		)
 	})
+
+	t.Run("Should parse SELECT with UDF function", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT t.name, udf.CalculateTax(t.income, t.category) FROM t`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					testutils.SelectItem_Path("t", "name"),
+					{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type:    parsers.FunctionCallUDF,
+							UdfName: "CalculateTax",
+							Arguments: []interface{}{
+								testutils.SelectItem_Path("t", "income"),
+								testutils.SelectItem_Path("t", "category"),
+							},
+						},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("t")},
+			},
+		)
+	})
+
+	t.Run("Should parse WHERE with UDF function", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id FROM c WHERE udf.IsEligible(c.status) = true`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					testutils.SelectItem_Path("c", "id"),
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.ComparisonExpression{
+					Left: parsers.SelectItem{
+						Type: parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type:    parsers.FunctionCallUDF,
+							UdfName: "IsEligible",
+							Arguments: []interface{}{
+								testutils.SelectItem_Path("c", "status"),
+							},
+						},
+					},
+					Operation: "=",
+					Right:     testutils.SelectItem_Constant_Bool(true),
+				},
+			},
+		)
+	})
 }

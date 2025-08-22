@@ -154,6 +154,14 @@ func createFunctionCall(functionType parsers.FunctionCallType, arguments []inter
     return parsers.FunctionCall{Type: functionType, Arguments: arguments}, nil
 }
 
+func createUDFCall(functionName interface{}, arguments []interface{}) (parsers.FunctionCall, error) {
+    return parsers.FunctionCall{
+        Type: parsers.FunctionCallUDF, 
+        UdfName: functionName.(string),
+        Arguments: arguments,
+    }, nil
+}
+
 func joinStrings(array []interface{}) string {
     var stringsArray []string
     for _, elem := range array {
@@ -511,13 +519,28 @@ BooleanLiteral <- ("true"i / "false"i) {
     return parsers.Constant{Type: parsers.ConstantTypeBoolean, Value: boolValue}, nil
 }
 
-FunctionCall <- StringFunctions
+FunctionCall <- UDFFunction
+    / StringFunctions
     / TypeCheckingFunctions
     / ArrayFunctions
     / ConditionalFunctions
     / InFunction
     / AggregateFunctions
     / MathFunctions
+
+UDFFunction <- "udf"i ws "." ws functionName:Identifier ws "(" ws arguments:UDFArgumentList? ws ")" {
+    if arguments == nil {
+        return createUDFCall(functionName, []interface{}{})
+    }
+    return createUDFCall(functionName, arguments.([]interface{}))
+}
+
+UDFArgumentList <- arg1:SelectItem others:(ws "," ws arg:SelectItem { return arg, nil })* {
+    if others == nil {
+        return []interface{}{arg1}, nil
+    }
+    return append([]interface{}{arg1}, others.([]interface{})...), nil
+}
 
 StringFunctions <- StringEqualsExpression
     / ToStringExpression

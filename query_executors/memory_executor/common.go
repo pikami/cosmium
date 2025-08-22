@@ -231,9 +231,6 @@ func (r rowContext) selectItem_SelectItemTypeFunctionCall(functionCall parsers.F
 	case parsers.FunctionCallSetUnion:
 		return r.set_Union(functionCall.Arguments)
 
-	case parsers.FunctionCallIif:
-		return r.misc_Iif(functionCall.Arguments)
-
 	case parsers.FunctionCallMathAbs:
 		return r.math_Abs(functionCall.Arguments)
 	case parsers.FunctionCallMathAcos:
@@ -320,6 +317,10 @@ func (r rowContext) selectItem_SelectItemTypeFunctionCall(functionCall parsers.F
 
 	case parsers.FunctionCallIn:
 		return r.misc_In(functionCall.Arguments)
+	case parsers.FunctionCallIif:
+		return r.misc_Iif(functionCall.Arguments)
+	case parsers.FunctionCallUDF:
+		return r.misc_UDF(functionCall.Arguments)
 	}
 
 	logger.Errorf("Unknown function call type: %v", functionCall.Type)

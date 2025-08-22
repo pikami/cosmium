@@ -29,3 +29,7 @@ func (r rowContext) misc_Iif(arguments []interface{}) interface{} {
 
 	return r.resolveSelectItem(arguments[2].(parsers.SelectItem))
 }
+
+func (r rowContext) misc_UDF(arguments []interface{}) interface{} {
+	return "TODO"
+}
