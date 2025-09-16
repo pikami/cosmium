@@ -15,7 +15,7 @@ jobs:
         uses: crazy-max/ghaction-xgo@e22d3c8b089adba750d5a74738b8e95d96f0c991 # v3.1.0
         with:
           xgo_version: latest
-          go_version: 1.24.0
+          go_version: 1.25.1
           dest: dist
           pkg: sharedlibrary
           prefix: cosmium
