@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/pikami/cosmium/api/config"
+	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/authentication"
 	"github.com/pikami/cosmium/internal/logger"
 )
@@ -22,8 +23,8 @@ func Authentication(config *config.ServerConfig) gin.HandlerFunc {
 		resourceType := urlToResourceType(requestUrl)
 		resourceId := requestToResourceId(c)
 
-		authHeader := c.Request.Header.Get("authorization")
-		date := c.Request.Header.Get("x-ms-date")
+		authHeader := c.Request.Header.Get(headers.Authorization)
+		date := c.Request.Header.Get(headers.XDate)
 		expectedSignature := authentication.GenerateSignature(
 			c.Request.Method, resourceType, resourceId, date, config.AccountKey)
 
@@ -85,7 +86,7 @@ func requestToResourceId(c *gin.Context) string {
 		resourceId += "/udfs/" + udfId
 	}
 
-	isFeed := c.Request.Header.Get("A-Im") == "Incremental Feed"
+	isFeed := c.Request.Header.Get(headers.AIM) == "Incremental Feed"
 	if resourceType == "pkranges" && isFeed {
 		resourceId = collId
 	}

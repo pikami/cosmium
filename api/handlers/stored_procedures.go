@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 )
@@ -16,7 +17,7 @@ func (h *Handlers) GetAllStoredProcedures(c *gin.Context) {
 	sps, status := h.dataStore.GetAllStoredProcedures(databaseId, collectionId)
 
 	if status == datastore.StatusOk {
-		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(sps)))
+		c.Header(headers.ItemCount, fmt.Sprintf("%d", len(sps)))
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "StoredProcedures": sps, "_count": len(sps)})
 		return
 	}

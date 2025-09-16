@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/pikami/cosmium/api/config"
+	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/authentication"
 	"github.com/stretchr/testify/assert"
 )
@@ -26,8 +27,8 @@ func Test_Documents_Read_Trailing_Slash(t *testing.T) {
 		signature := authentication.GenerateSignature("GET", "docs", path, date, config.DefaultAccountKey)
 		httpClient := &http.Client{}
 		req, _ := http.NewRequest("GET", testUrl, nil)
-		req.Header.Add("x-ms-date", date)
-		req.Header.Add("authorization", "sig="+url.QueryEscape(signature))
+		req.Header.Add(headers.XDate, date)
+		req.Header.Add(headers.Authorization, "sig="+url.QueryEscape(signature))
 		res, err := httpClient.Do(req)
 
 		assert.Nil(t, err)

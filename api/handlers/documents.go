@@ -9,6 +9,7 @@ import (
 	jsonpatch "github.com/cosmiumdev/json-patch/v5"
 	"github.com/gin-gonic/gin"
 	apimodels "github.com/pikami/cosmium/api/api_models"
+	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/converters"
 	"github.com/pikami/cosmium/internal/datastore"
@@ -26,7 +27,7 @@ func (h *Handlers) GetAllDocuments(c *gin.Context) {
 	if status == datastore.StatusOk {
 		collection, _ := h.dataStore.GetCollection(databaseId, collectionId)
 
-		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(documents)))
+		c.Header(headers.ItemCount, fmt.Sprintf("%d", len(documents)))
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":      collection.ID,
 			"Documents": documents,
@@ -189,7 +190,7 @@ func (h *Handlers) DocumentsPost(c *gin.Context) {
 	collectionId := c.Param("collId")
 
 	// Handle batch requests
-	isBatchRequest, _ := strconv.ParseBool(c.GetHeader("x-ms-cosmos-is-batch-request"))
+	isBatchRequest, _ := strconv.ParseBool(c.GetHeader(headers.IsBatchRequest))
 	if isBatchRequest {
 		h.handleBatchRequest(c)
 		return
@@ -201,8 +202,17 @@ func (h *Handlers) DocumentsPost(c *gin.Context) {
 		return
 	}
 
-	query := requestBody["query"]
-	if query != nil {
+	// Handle query plan requests
+	isQueryPlanRequest, _ := strconv.ParseBool(c.GetHeader(headers.IsQueryPlanRequest))
+	if isQueryPlanRequest {
+		c.IndentedJSON(http.StatusOK, constants.QueryPlanResponse)
+		return
+	}
+
+	// Handle query requests
+	isQueryRequest, _ := strconv.ParseBool(c.GetHeader(headers.IsQuery))
+	isQueryRequestAltHeader, _ := strconv.ParseBool(c.GetHeader(headers.Query))
+	if isQueryRequest || isQueryRequestAltHeader {
 		h.handleDocumentQuery(c, requestBody)
 		return
 	}
@@ -212,7 +222,7 @@ func (h *Handlers) DocumentsPost(c *gin.Context) {
 		return
 	}
 
-	isUpsert, _ := strconv.ParseBool(c.GetHeader("x-ms-documentdb-is-upsert"))
+	isUpsert, _ := strconv.ParseBool(c.GetHeader(headers.IsUpsert))
 	if isUpsert {
 		h.dataStore.DeleteDocument(databaseId, collectionId, requestBody["id"].(string))
 	}
@@ -247,11 +257,6 @@ func (h *Handlers) handleDocumentQuery(c *gin.Context, requestBody map[string]in
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
-	if c.GetHeader("x-ms-cosmos-is-query-plan-request") != "" {
-		c.IndentedJSON(http.StatusOK, constants.QueryPlanResponse)
-		return
-	}
-
 	var queryParameters map[string]interface{}
 	if paramsArray, ok := requestBody["parameters"].([]interface{}); ok {
 		queryParameters = parametersToMap(paramsArray)
@@ -266,7 +271,7 @@ func (h *Handlers) handleDocumentQuery(c *gin.Context, requestBody map[string]in
 	}
 
 	collection, _ := h.dataStore.GetCollection(databaseId, collectionId)
-	c.Header("x-ms-item-count", fmt.Sprintf("%d", len(docs)))
+	c.Header(headers.ItemCount, fmt.Sprintf("%d", len(docs)))
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"_rid":      collection.ResourceID,
 		"Documents": docs,

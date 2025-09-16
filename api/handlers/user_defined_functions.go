@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 )
@@ -16,7 +17,7 @@ func (h *Handlers) GetAllUserDefinedFunctions(c *gin.Context) {
 	udfs, status := h.dataStore.GetAllUserDefinedFunctions(databaseId, collectionId)
 
 	if status == datastore.StatusOk {
-		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(udfs)))
+		c.Header(headers.ItemCount, fmt.Sprintf("%d", len(udfs)))
 		c.IndentedJSON(http.StatusOK, gin.H{"_rid": "", "UserDefinedFunctions": udfs, "_count": len(udfs)})
 		return
 	}

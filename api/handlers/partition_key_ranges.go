@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/resourceid"
@@ -14,18 +15,18 @@ func (h *Handlers) GetPartitionKeyRanges(c *gin.Context) {
 	databaseId := c.Param("databaseId")
 	collectionId := c.Param("collId")
 
-	if c.Request.Header.Get("if-none-match") != "" {
+	if c.Request.Header.Get(headers.IfNoneMatch) != "" {
 		c.AbortWithStatus(http.StatusNotModified)
 		return
 	}
 
 	partitionKeyRanges, status := h.dataStore.GetPartitionKeyRanges(databaseId, collectionId)
 	if status == datastore.StatusOk {
-		c.Header("etag", "\"420\"")
-		c.Header("lsn", "420")
-		c.Header("x-ms-cosmos-llsn", "420")
-		c.Header("x-ms-global-committed-lsn", "420")
-		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(partitionKeyRanges)))
+		c.Header(headers.ETag, "\"420\"")
+		c.Header(headers.LSN, "420")
+		c.Header(headers.CosmosLsn, "420")
+		c.Header(headers.GlobalCommittedLsn, "420")
+		c.Header(headers.ItemCount, fmt.Sprintf("%d", len(partitionKeyRanges)))
 
 		collectionRid := collectionId
 		collection, _ := h.dataStore.GetCollection(databaseId, collectionId)

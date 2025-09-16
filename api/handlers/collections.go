@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/constants"
 	"github.com/pikami/cosmium/internal/datastore"
 )
@@ -16,7 +17,7 @@ func (h *Handlers) GetAllCollections(c *gin.Context) {
 	if status == datastore.StatusOk {
 		database, _ := h.dataStore.GetDatabase(databaseId)
 
-		c.Header("x-ms-item-count", fmt.Sprintf("%d", len(collections)))
+		c.Header(headers.ItemCount, fmt.Sprintf("%d", len(collections)))
 		c.IndentedJSON(http.StatusOK, gin.H{
 			"_rid":                database.ResourceID,
 			"DocumentCollections": collections,
