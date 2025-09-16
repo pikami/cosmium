@@ -105,10 +105,10 @@ All mentioned arguments can also be set using environment variables:
 
 Cosmium supports multiple storage backends for saving, loading, and managing data at runtime.
 
-| Backend  | Storage Location         | Write Behavior           | Memory Usage         | Supports Initial JSON Load |
-|----------|--------------------------|--------------------------|----------------------|----------------------------|
-| `json` (default) | JSON file on disk 📄 | On application exit ⏳ | 🛑 More than Badger | ✅ Yes                      |
-| `badger`  | BadgerDB database on disk ⚡ | Immediately on write 🚀 | ✅ Less than JSON  | ❌ No                       |
+| Backend  | Storage Location         | Write Behavior           | Memory Usage         |
+|----------|--------------------------|--------------------------|----------------------|
+| `json` (default) | JSON file on disk 📄 | On application exit ⏳ | 🛑 More than Badger |
+| `badger`  | BadgerDB database on disk ⚡ | Immediately on write 🚀 | ✅ Less than JSON  |
 
 
 The `badger` backend is generally recommended as it uses less memory and writes data to disk immediately. However, if you need to load initial data from a JSON file, use the `json` backend.

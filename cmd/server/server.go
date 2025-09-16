@@ -20,6 +20,7 @@ func main() {
 	switch configuration.DataStore {
 	case config.DataStoreBadger:
 		dataStore = badgerdatastore.NewBadgerDataStore(badgerdatastore.BadgerDataStoreOptions{
+			InitialDataFilePath: configuration.InitialDataFilePath,
 			PersistDataFilePath: configuration.PersistDataFilePath,
 		})
 		logger.InfoLn("Using Badger data store")

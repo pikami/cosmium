@@ -38,6 +38,7 @@ func CreateServerInstance(serverName *C.char, configurationJSON *C.char) int {
 	switch configuration.DataStore {
 	case config.DataStoreBadger:
 		dataStore = badgerdatastore.NewBadgerDataStore(badgerdatastore.BadgerDataStoreOptions{
+			InitialDataFilePath: configuration.InitialDataFilePath,
 			PersistDataFilePath: configuration.PersistDataFilePath,
 		})
 	default:

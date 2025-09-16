@@ -94,11 +94,6 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 			os.Exit(1)
 		}
 	}
-
-	if c.DataStore == DataStoreBadger && c.InitialDataFilePath != "" {
-		logger.ErrorLn("InitialData option is currently not supported with Badger data store")
-		os.Exit(1)
-	}
 }
 
 func (c *ServerConfig) ApplyDefaultsToEmptyFields() {
