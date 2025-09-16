@@ -24,7 +24,8 @@ func (r *BadgerDataStore) GetAllTriggers(databaseId string, collectionId string)
 		return nil, datastore.StatusNotFound
 	}
 
-	triggers, status := listByPrefix[datastore.Trigger](r.db, generateKey(resourceid.ResourceTypeTrigger, databaseId, collectionId, ""))
+	prefix := generateKey(resourceid.ResourceTypeTrigger, databaseId, collectionId, "") + "/"
+	triggers, status := listByPrefix[datastore.Trigger](r.db, prefix)
 	if status == datastore.StatusOk {
 		return triggers, datastore.StatusOk
 	}

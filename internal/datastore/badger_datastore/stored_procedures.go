@@ -24,7 +24,8 @@ func (r *BadgerDataStore) GetAllStoredProcedures(databaseId string, collectionId
 		return nil, datastore.StatusNotFound
 	}
 
-	storedProcedures, status := listByPrefix[datastore.StoredProcedure](r.db, generateKey(resourceid.ResourceTypeStoredProcedure, databaseId, collectionId, ""))
+	prefix := generateKey(resourceid.ResourceTypeStoredProcedure, databaseId, collectionId, "") + "/"
+	storedProcedures, status := listByPrefix[datastore.StoredProcedure](r.db, prefix)
 	if status == datastore.StatusOk {
 		return storedProcedures, datastore.StatusOk
 	}

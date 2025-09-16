@@ -24,7 +24,8 @@ func (r *BadgerDataStore) GetAllDocuments(databaseId string, collectionId string
 		return nil, datastore.StatusNotFound
 	}
 
-	docs, status := listByPrefix[datastore.Document](r.db, generateKey(resourceid.ResourceTypeDocument, databaseId, collectionId, ""))
+	prefix := generateKey(resourceid.ResourceTypeDocument, databaseId, collectionId, "") + "/"
+	docs, status := listByPrefix[datastore.Document](r.db, prefix)
 	if status == datastore.StatusOk {
 		return docs, datastore.StatusOk
 	}
@@ -45,7 +46,8 @@ func (r *BadgerDataStore) GetDocumentIterator(databaseId string, collectionId st
 		return nil, datastore.StatusNotFound
 	}
 
-	iter := NewBadgerDocumentIterator(txn, generateKey(resourceid.ResourceTypeDocument, databaseId, collectionId, ""))
+	prefix := generateKey(resourceid.ResourceTypeDocument, databaseId, collectionId, "") + "/"
+	iter := NewBadgerDocumentIterator(txn, prefix)
 	return iter, datastore.StatusOk
 }
 

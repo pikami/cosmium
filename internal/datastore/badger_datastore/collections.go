@@ -22,7 +22,8 @@ func (r *BadgerDataStore) GetAllCollections(databaseId string) ([]datastore.Coll
 		return nil, datastore.StatusNotFound
 	}
 
-	colls, status := listByPrefix[datastore.Collection](r.db, generateKey(resourceid.ResourceTypeCollection, databaseId, "", ""))
+	prefix := generateKey(resourceid.ResourceTypeCollection, databaseId, "", "") + "/"
+	colls, status := listByPrefix[datastore.Collection](r.db, prefix)
 	if status == datastore.StatusOk {
 		return colls, datastore.StatusOk
 	}
@@ -49,10 +50,10 @@ func (r *BadgerDataStore) DeleteCollection(databaseId string, collectionId strin
 	defer txn.Discard()
 
 	prefixes := []string{
-		generateKey(resourceid.ResourceTypeDocument, databaseId, collectionId, ""),
-		generateKey(resourceid.ResourceTypeTrigger, databaseId, collectionId, ""),
-		generateKey(resourceid.ResourceTypeStoredProcedure, databaseId, collectionId, ""),
-		generateKey(resourceid.ResourceTypeUserDefinedFunction, databaseId, collectionId, ""),
+		generateKey(resourceid.ResourceTypeDocument, databaseId, collectionId, "") + "/",
+		generateKey(resourceid.ResourceTypeTrigger, databaseId, collectionId, "") + "/",
+		generateKey(resourceid.ResourceTypeStoredProcedure, databaseId, collectionId, "") + "/",
+		generateKey(resourceid.ResourceTypeUserDefinedFunction, databaseId, collectionId, "") + "/",
 		collectionKey,
 	}
 	for _, prefix := range prefixes {

@@ -38,11 +38,11 @@ func (r *BadgerDataStore) DeleteDatabase(id string) datastore.DataStoreStatus {
 	defer txn.Discard()
 
 	prefixes := []string{
-		generateKey(resourceid.ResourceTypeCollection, id, "", ""),
-		generateKey(resourceid.ResourceTypeDocument, id, "", ""),
-		generateKey(resourceid.ResourceTypeTrigger, id, "", ""),
-		generateKey(resourceid.ResourceTypeStoredProcedure, id, "", ""),
-		generateKey(resourceid.ResourceTypeUserDefinedFunction, id, "", ""),
+		generateKey(resourceid.ResourceTypeCollection, id, "", "") + "/",
+		generateKey(resourceid.ResourceTypeDocument, id, "", "") + "/",
+		generateKey(resourceid.ResourceTypeTrigger, id, "", "") + "/",
+		generateKey(resourceid.ResourceTypeStoredProcedure, id, "", "") + "/",
+		generateKey(resourceid.ResourceTypeUserDefinedFunction, id, "", "") + "/",
 		databaseKey,
 	}
 	for _, prefix := range prefixes {

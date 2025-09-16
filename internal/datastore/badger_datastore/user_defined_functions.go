@@ -24,7 +24,8 @@ func (r *BadgerDataStore) GetAllUserDefinedFunctions(databaseId string, collecti
 		return nil, datastore.StatusNotFound
 	}
 
-	udfs, status := listByPrefix[datastore.UserDefinedFunction](r.db, generateKey(resourceid.ResourceTypeUserDefinedFunction, databaseId, collectionId, ""))
+	prefix := generateKey(resourceid.ResourceTypeUserDefinedFunction, databaseId, collectionId, "") + "/"
+	udfs, status := listByPrefix[datastore.UserDefinedFunction](r.db, prefix)
 	if status == datastore.StatusOk {
 		return udfs, datastore.StatusOk
 	}
