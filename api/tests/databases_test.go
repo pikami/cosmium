@@ -109,5 +109,26 @@ func Test_Databases(t *testing.T) {
 				panic(err)
 			}
 		})
+
+		t.Run("Should delete database with exactly matching name", func(t *testing.T) {
+			ts.DataStore.CreateDatabase(datastore.Database{
+				ID: testDatabaseName + "extra",
+			})
+			ts.DataStore.CreateDatabase(datastore.Database{
+				ID: testDatabaseName,
+			})
+
+			databaseResponse, err := client.NewDatabase(testDatabaseName)
+			assert.Nil(t, err)
+
+			readResponse, err := databaseResponse.Delete(context.TODO(), &azcosmos.DeleteDatabaseOptions{})
+			assert.Nil(t, err)
+			assert.Equal(t, readResponse.RawResponse.StatusCode, http.StatusNoContent)
+
+			dbs, status := ts.DataStore.GetAllDatabases()
+			assert.Equal(t, status, datastore.StatusOk)
+			assert.Len(t, dbs, 1)
+			assert.Equal(t, dbs[0].ID, testDatabaseName+"extra")
+		})
 	})
 }

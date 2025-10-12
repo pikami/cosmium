@@ -11,12 +11,12 @@ type Database struct {
 type DataStoreStatus int
 
 const (
-	StatusOk       = 1
-	StatusNotFound = 2
-	Conflict       = 3
-	BadRequest     = 4
-	IterEOF        = 5
-	Unknown        = 6
+	StatusOk       DataStoreStatus = 1
+	StatusNotFound DataStoreStatus = 2
+	Conflict       DataStoreStatus = 3
+	BadRequest     DataStoreStatus = 4
+	IterEOF        DataStoreStatus = 5
+	Unknown        DataStoreStatus = 6
 )
 
 type TriggerOperation string

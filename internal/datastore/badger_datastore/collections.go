@@ -54,13 +54,14 @@ func (r *BadgerDataStore) DeleteCollection(databaseId string, collectionId strin
 		generateKey(resourceid.ResourceTypeTrigger, databaseId, collectionId, "") + "/",
 		generateKey(resourceid.ResourceTypeStoredProcedure, databaseId, collectionId, "") + "/",
 		generateKey(resourceid.ResourceTypeUserDefinedFunction, databaseId, collectionId, "") + "/",
-		collectionKey,
 	}
 	for _, prefix := range prefixes {
 		if err := deleteKeysByPrefix(txn, prefix); err != nil {
 			return datastore.Unknown
 		}
 	}
+
+	deleteKey(txn, collectionKey)
 
 	err := txn.Commit()
 	if err != nil {

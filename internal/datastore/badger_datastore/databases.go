@@ -43,13 +43,14 @@ func (r *BadgerDataStore) DeleteDatabase(id string) datastore.DataStoreStatus {
 		generateKey(resourceid.ResourceTypeTrigger, id, "", "") + "/",
 		generateKey(resourceid.ResourceTypeStoredProcedure, id, "", "") + "/",
 		generateKey(resourceid.ResourceTypeUserDefinedFunction, id, "", "") + "/",
-		databaseKey,
 	}
 	for _, prefix := range prefixes {
 		if err := deleteKeysByPrefix(txn, prefix); err != nil {
 			return datastore.Unknown
 		}
 	}
+
+	deleteKey(txn, databaseKey)
 
 	err := txn.Commit()
 	if err != nil {

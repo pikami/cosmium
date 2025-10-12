@@ -121,5 +121,26 @@ func Test_Collections(t *testing.T) {
 				panic(err)
 			}
 		})
+
+		t.Run("Should delete collection with exactly matching name", func(t *testing.T) {
+			ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
+				ID: testCollectionName + "extra",
+			})
+			ts.DataStore.CreateCollection(testDatabaseName, datastore.Collection{
+				ID: testCollectionName,
+			})
+
+			collectionResponse, err := databaseClient.NewContainer(testCollectionName)
+			assert.Nil(t, err)
+
+			readResponse, err := collectionResponse.Delete(context.TODO(), &azcosmos.DeleteContainerOptions{})
+			assert.Nil(t, err)
+			assert.Equal(t, readResponse.RawResponse.StatusCode, http.StatusNoContent)
+
+			collections, status := ts.DataStore.GetAllCollections(testDatabaseName)
+			assert.Equal(t, status, datastore.StatusOk)
+			assert.Len(t, collections, 1)
+			assert.Equal(t, collections[0].ID, testCollectionName+"extra")
+		})
 	})
 }

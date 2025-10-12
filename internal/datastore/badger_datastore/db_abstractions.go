@@ -202,3 +202,22 @@ func deleteKeysByPrefix(txn *badger.Txn, prefix string) error {
 
 	return nil
 }
+
+func deleteKey(txn *badger.Txn, key string) error {
+	_, err := txn.Get([]byte(key))
+	if err == badger.ErrKeyNotFound {
+		return nil
+	}
+	if err != nil {
+		logger.ErrorLn("Error while checking if key exists:", err)
+		return err
+	}
+
+	err = txn.Delete([]byte(key))
+	if err != nil {
+		logger.ErrorLn("Error while deleting key:", err)
+		return err
+	}
+
+	return nil
+}

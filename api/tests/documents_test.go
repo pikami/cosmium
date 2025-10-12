@@ -425,7 +425,7 @@ func Test_Documents(t *testing.T) {
 			assert.Equal(t, int32(http.StatusNoContent), operationResponse.StatusCode)
 
 			_, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "12345")
-			assert.Equal(t, datastore.StatusNotFound, int(status))
+			assert.Equal(t, datastore.StatusNotFound, status)
 		})
 
 		t.Run("Should execute REPLACE transactional batch", func(t *testing.T) {
