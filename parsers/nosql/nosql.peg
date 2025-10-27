@@ -803,10 +803,33 @@ MathNumberBinExpression <- "NumberBin"i ws "(" ws ex1:SelectItem others:(ws "," 
 MathPiExpression <- "PI"i ws "(" ws ")" { return createFunctionCall(parsers.FunctionCallMathPi, []interface{}{}) }
 MathRandExpression <- "RAND"i ws "(" ws ")" { return createFunctionCall(parsers.FunctionCallMathRand, []interface{}{}) }
 
-InFunction <- ex1:SelectProperty ws In ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
-    return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))
-} / "(" ws ex1:SelectItem ws In ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" ws ")" {
-    return createFunctionCall(parsers.FunctionCallIn, append([]interface{}{ex1, ex2}, others.([]interface{})...))
+InFunction <- ex1:SelectProperty ws notIn:("NOT"i ws)? In ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" {
+    arguments := append([]interface{}{ex1, ex2}, others.([]interface{})...)
+    functionCall, _ := createFunctionCall(parsers.FunctionCallIn, arguments)
+    
+    if notIn != nil {
+        return parsers.SelectItem{
+            Type: parsers.SelectItemTypeFunctionCall,
+            Value: functionCall,
+            Invert: true,
+        }, nil
+    }
+    
+    return functionCall, nil
+}
+/ "(" ws ex1:SelectItem ws notIn:("NOT"i ws)? In ws "(" ws ex2:SelectItem others:(ws "," ws ex:SelectItem { return ex, nil })* ws ")" ws ")" {
+    arguments := append([]interface{}{ex1, ex2}, others.([]interface{})...)
+    functionCall, _ := createFunctionCall(parsers.FunctionCallIn, arguments)
+
+    if notIn != nil {
+        return parsers.SelectItem{
+            Type: parsers.SelectItemTypeFunctionCall,
+            Value: functionCall,
+            Invert: true,
+        }, nil
+    }
+    
+    return functionCall, nil
 }
 
 AvgAggregateExpression   <- "AVG"i "(" ws ex:SelectItem  ws ")" {

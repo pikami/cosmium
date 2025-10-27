@@ -112,6 +112,37 @@ func Test_Parse(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse NOT IN function", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id FROM c WHERE c.id NOT IN ("123", "456")`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "id"},
+						Type: parsers.SelectItemTypeField,
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.SelectItem{
+					Type:   parsers.SelectItemTypeFunctionCall,
+					Invert: true,
+					Value: parsers.FunctionCall{
+						Type: parsers.FunctionCallIn,
+						Arguments: []interface{}{
+							parsers.SelectItem{
+								Path: []string{"c", "id"},
+								Type: parsers.SelectItemTypeField,
+							},
+							testutils.SelectItem_Constant_String("123"),
+							testutils.SelectItem_Constant_String("456"),
+						},
+					},
+				},
+			},
+		)
+	})
+
 	t.Run("Should parse IN function with function call", func(t *testing.T) {
 		testQueryParse(
 			t,

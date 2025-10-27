@@ -149,6 +149,41 @@ func Test_Execute(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute NOT IN function", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "id"},
+						Type: parsers.SelectItemTypeField,
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.SelectItem{
+					Type:   parsers.SelectItemTypeFunctionCall,
+					Invert: true,
+					Value: parsers.FunctionCall{
+						Type: parsers.FunctionCallIn,
+						Arguments: []interface{}{
+							parsers.SelectItem{
+								Path: []string{"c", "id"},
+								Type: parsers.SelectItemTypeField,
+							},
+							testutils.SelectItem_Constant_String("123"),
+							testutils.SelectItem_Constant_String("456"),
+						},
+					},
+				},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "12345"},
+				map[string]interface{}{"id": "67890"},
+			},
+		)
+	})
+
 	t.Run("Should execute IN function with function call", func(t *testing.T) {
 		testQueryExecute(
 			t,
