@@ -7,6 +7,9 @@ int test_Databases();
 
 int main(int argc, char *argv[])
 {
+    /* Disable stdout buffering for CI environments without a real terminal */
+    setvbuf(stdout, NULL, _IONBF, 0);
+
     if (argc < 2)
     {
         fprintf(stderr, "Usage: %s <path_to_shared_library>\n", argv[0]);
@@ -14,12 +17,19 @@ int main(int argc, char *argv[])
     }
 
     const char *libPath = argv[1];
-    handle = dlopen(libPath, RTLD_LAZY);
+    handle = load_library(libPath);
     if (!handle)
     {
-        fprintf(stderr, "Failed to load shared library: %s\n", dlerror());
+        fprintf(stderr, "Failed to load shared library: %s\n", get_load_error());
         return EXIT_FAILURE;
     }
+
+    /* give the loaded library a short time to initialize */
+#ifdef _WIN32
+    Sleep(1000);
+#else
+    sleep(1);
+#endif
 
     printf("Running tests for library: %s\n", libPath);
     int results[] = {
@@ -41,6 +51,15 @@ int main(int argc, char *argv[])
 
     printf("Tests passed: %d/%d\n", numPassed, numTests);
 
-    dlclose(handle);
-    return EXIT_SUCCESS;
+    /* Exit explicitly before unloading the library.
+       Go runtime cleanup during FreeLibrary can set a non-zero exit code on Windows. */
+    int exitCode = (numPassed == numTests) ? EXIT_SUCCESS : EXIT_FAILURE;
+
+#ifdef _WIN32
+    ExitProcess(exitCode);
+#else
+    close_library(handle);
+#endif
+
+    return exitCode;
 }

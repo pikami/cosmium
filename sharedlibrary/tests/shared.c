@@ -1,13 +1,50 @@
 #include "shared.h"
 
-void *handle = NULL;
+lib_handle_t handle = NULL;
+
+char *get_load_error(void)
+{
+#ifdef _WIN32
+    DWORD error = GetLastError();
+    static char buf[256];
+    FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                   NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                   buf, sizeof(buf), NULL);
+    return buf;
+#else
+    return dlerror();
+#endif
+}
+
+lib_handle_t load_library(const char *path)
+{
+#ifdef _WIN32
+    return LoadLibraryA(path);
+#else
+    return dlopen(path, RTLD_LAZY);
+#endif
+}
+
+void close_library(lib_handle_t handle)
+{
+#ifdef _WIN32
+    FreeLibrary(handle);
+#else
+    dlclose(handle);
+#endif
+}
 
 void *load_function(const char *func_name)
 {
+#ifdef _WIN32
+    void *func = (void *)GetProcAddress(handle, func_name);
+#else
     void *func = dlsym(handle, func_name);
+#endif
+    
     if (!func)
     {
-        fprintf(stderr, "Failed to load function %s: %s\n", func_name, dlerror());
+        fprintf(stderr, "Failed to load function %s: %s\n", func_name, get_load_error());
     }
     return func;
 }

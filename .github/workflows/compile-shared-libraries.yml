@@ -7,6 +7,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    outputs:
+      artifact: shared-libraries
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -29,3 +32,58 @@ jobs:
         with:
           name: shared-libraries
           path: dist/*
+
+  test:
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            lib_ext: amd64.so
+          - os: windows-latest
+            lib_ext: amd64.dll
+          - os: macos-latest
+            lib_ext: arm64.dylib
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Download shared libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: shared-libraries
+          path: libs
+
+      - name: Install MinGW (GCC) on Windows
+        if: runner.os == 'Windows'
+        run: choco install mingw --no-progress
+
+      - name: Build test loader (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          mkdir build
+          gcc -Wall -o build/test_loader.exe sharedlibrary/tests/*.c
+
+      - name: Build test loader (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir build
+          gcc -Wall -ldl -o build/test_loader sharedlibrary/tests/*.c
+
+      - name: Run test (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          LIB=$(ls libs/*${{ matrix.lib_ext }} | head -n 1)
+          echo "Testing library: $LIB"
+          chmod +x build/test_loader
+          ./build/test_loader "$LIB"
+
+      - name: Run test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $lib = Get-ChildItem "libs/*${{ matrix.lib_ext }}" | Select-Object -First 1
+          Write-Host "Testing library: $($lib.FullName)"
+          .\build\test_loader.exe $lib.FullName

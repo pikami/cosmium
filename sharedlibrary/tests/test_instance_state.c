@@ -2,6 +2,16 @@
 
 int test_ServerInstanceStateMethods()
 {
+    /* Load FreeMemory function - must use this to free memory allocated by the DLL
+       because the DLL may use a different C runtime heap than the test loader */
+    typedef void (*FreeMemoryFn)(char *);
+    FreeMemoryFn FreeMemory = (FreeMemoryFn)load_function("FreeMemory");
+    if (!FreeMemory)
+    {
+        fprintf(stderr, "Failed to find FreeMemory function\n");
+        return 0;
+    }
+
     typedef int (*LoadServerInstanceStateFn)(char *, char *);
     LoadServerInstanceStateFn LoadServerInstanceState = (LoadServerInstanceStateFn)load_function("LoadServerInstanceState");
     if (!LoadServerInstanceState)
@@ -46,7 +56,7 @@ int test_ServerInstanceStateMethods()
     char *compact_state = compact_json(state);
     if (!compact_state)
     {
-        free(state);
+        FreeMemory(state);
         return 0;
     }
 
@@ -59,10 +69,12 @@ int test_ServerInstanceStateMethods()
         printf("GetServerInstanceState: State does not match expected value.\n");
         printf("Expected: %s\n", expected_state);
         printf("Actual:   %s\n", compact_state);
+        FreeMemory(state);
+        free(compact_state);
         return 0;
     }
 
-    free(state);
+    FreeMemory(state);
     free(compact_state);
     return 1;
 }
