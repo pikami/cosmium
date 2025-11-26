@@ -24,6 +24,19 @@ jobs:
           buildmode: c-shared
           buildvcs: true
 
+      - name: Install MinGW for cross-compilation
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-mingw-w64-x86-64 gcc-aarch64-linux-gnu
+
+      - name: Build tests for Linux
+        run: |
+          gcc -Wall -ldl -o dist/sharedlibrary_test_linux sharedlibrary/tests/*.c
+
+      - name: Build tests for Windows
+        run: |
+          x86_64-w64-mingw32-gcc -Wall -o dist/sharedlibrary_test_windows.exe sharedlibrary/tests/*.c
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

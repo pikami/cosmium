@@ -14,10 +14,10 @@ int main(int argc, char *argv[])
     }
 
     const char *libPath = argv[1];
-    handle = dlopen(libPath, RTLD_LAZY);
+    handle = load_library(libPath);
     if (!handle)
     {
-        fprintf(stderr, "Failed to load shared library: %s\n", dlerror());
+        fprintf(stderr, "Failed to load shared library: %s\n", get_load_error());
         return EXIT_FAILURE;
     }
 
@@ -41,6 +41,6 @@ int main(int argc, char *argv[])
 
     printf("Tests passed: %d/%d\n", numPassed, numTests);
 
-    dlclose(handle);
+    close_library(handle);
     return EXIT_SUCCESS;
 }

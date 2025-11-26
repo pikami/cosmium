@@ -14,10 +14,17 @@ GOVERSION=1.24.7
 DIST_DIR=dist
 
 SHARED_LIB_TEST_CC=gcc
-SHARED_LIB_TEST_CFLAGS=-Wall -ldl
-SHARED_LIB_TEST_TARGET=$(DIST_DIR)/sharedlibrary_test
 SHARED_LIB_TEST_DIR=./sharedlibrary/tests
 SHARED_LIB_TEST_SOURCES=$(wildcard $(SHARED_LIB_TEST_DIR)/*.c)
+
+# Platform-specific settings
+ifeq ($(OS),Windows_NT)
+    SHARED_LIB_TEST_TARGET=$(DIST_DIR)/sharedlibrary_test.exe
+    SHARED_LIB_TEST_CFLAGS=-Wall
+else
+    SHARED_LIB_TEST_TARGET=$(DIST_DIR)/sharedlibrary_test
+    SHARED_LIB_TEST_CFLAGS=-Wall -ldl
+endif
 
 all: test build-all
 
@@ -57,7 +64,13 @@ build-sharedlib-darwin-arm64:
 
 build-sharedlib-tests: build-sharedlib-linux-amd64
 	@echo "Building shared library tests..."
+	@mkdir -p $(DIST_DIR)
 	@$(SHARED_LIB_TEST_CC) $(SHARED_LIB_TEST_CFLAGS) -o $(SHARED_LIB_TEST_TARGET) $(SHARED_LIB_TEST_SOURCES)
+
+build-sharedlib-tests-windows:
+	@echo "Building shared library tests for Windows..."
+	@mkdir -p $(DIST_DIR)
+	@x86_64-w64-mingw32-gcc -Wall -o $(DIST_DIR)/sharedlibrary_test.exe $(SHARED_LIB_TEST_SOURCES)
 
 run-sharedlib-tests: build-sharedlib-tests
 	@echo "Running shared library tests..."
@@ -80,4 +93,4 @@ clean:
 	@$(GOCLEAN)
 	@rm -rf $(DIST_DIR)
 
-.PHONY: all test build-all build-macos build-linux clean generate-parser-nosql
+.PHONY: all test build-all build-macos build-linux clean generate-parser-nosql build-sharedlib-tests build-sharedlib-tests-windows run-sharedlib-tests xgo-compile-sharedlib
