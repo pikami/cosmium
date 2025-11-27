@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Cross-Compile with xgo
-        uses: crazy-max/ghaction-xgo@e22d3c8b089adba750d5a74738b8e95d96f0c991 # v3.1.0
+        uses: crazy-max/ghaction-xgo@acf46aa99b919eb9ef6bba89dfd13bafa680667f # v3.2.0
         with:
           xgo_version: latest
           go_version: 1.25.4
