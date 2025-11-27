@@ -1,6 +1,6 @@
 module github.com/pikami/cosmium
 
-go 1.24.7
+go 1.25.4
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.20.0
