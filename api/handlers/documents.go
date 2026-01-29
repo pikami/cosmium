@@ -11,6 +11,7 @@ import (
 	apimodels "github.com/pikami/cosmium/api/api_models"
 	"github.com/pikami/cosmium/api/headers"
 	"github.com/pikami/cosmium/internal/constants"
+	continuationtoken "github.com/pikami/cosmium/internal/continuation_token"
 	"github.com/pikami/cosmium/internal/converters"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/pikami/cosmium/internal/logger"
@@ -262,20 +263,50 @@ func (h *Handlers) handleDocumentQuery(c *gin.Context, requestBody map[string]in
 		queryParameters = parametersToMap(paramsArray)
 	}
 
+	collection, collectionStatus := h.dataStore.GetCollection(databaseId, collectionId)
+	if collectionStatus == datastore.StatusNotFound {
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
+		return
+	}
+
+	if collectionStatus != datastore.StatusOk {
+		c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
+		return
+	}
+
+	continuationToken := continuationtoken.GenerateDefault(collection.ResourceID)
+	continuationTokenHeader := c.GetHeader(headers.ContinuationToken)
+	if continuationTokenHeader != "" {
+		continuationToken = continuationtoken.FromString(continuationTokenHeader)
+	}
+
+	pageMaxItemCount, maxItemCountError := strconv.Atoi(c.GetHeader(headers.MaxItemCount))
+	if maxItemCountError != nil {
+		pageMaxItemCount = 1000
+	}
+
 	queryText := requestBody["query"].(string)
-	docs, status := h.executeQueryDocuments(databaseId, collectionId, queryText, queryParameters)
+	executeQueryResult, status := h.executeQueryDocuments(
+		databaseId, collectionId, queryText, queryParameters, pageMaxItemCount, continuationToken.Token.TotalResults)
 	if status != datastore.StatusOk {
 		// TODO: Currently we return everything if the query fails
+		logger.Infof("Query failed: %s", queryText)
 		h.GetAllDocuments(c)
 		return
 	}
 
-	collection, _ := h.dataStore.GetCollection(databaseId, collectionId)
-	c.Header(headers.ItemCount, fmt.Sprintf("%d", len(docs)))
+	resultCount := len(executeQueryResult.Rows)
+	if executeQueryResult.HasMorePages {
+		nextContinuationToken := continuationtoken.Generate(
+			collection.ResourceID, continuationToken.Token.PageIndex+1, continuationToken.Token.TotalResults+resultCount)
+		c.Header(headers.ContinuationToken, nextContinuationToken.ToString())
+	}
+
+	c.Header(headers.ItemCount, fmt.Sprintf("%d", resultCount))
 	c.IndentedJSON(http.StatusOK, gin.H{
 		"_rid":      collection.ResourceID,
-		"Documents": docs,
-		"_count":    len(docs),
+		"Documents": executeQueryResult.Rows,
+		"_count":    resultCount,
 	})
 }
 
@@ -377,16 +408,23 @@ func dataStoreStatusToResponseCode(status datastore.DataStoreStatus) int {
 	}
 }
 
-func (h *Handlers) executeQueryDocuments(databaseId string, collectionId string, query string, queryParameters map[string]interface{}) ([]memoryexecutor.RowType, datastore.DataStoreStatus) {
+func (h *Handlers) executeQueryDocuments(
+	databaseId string,
+	collectionId string,
+	query string,
+	queryParameters map[string]interface{},
+	pageMaxItemCount int,
+	pageCursor int,
+) (memoryexecutor.ExecuteQueryResult, datastore.DataStoreStatus) {
 	parsedQuery, err := nosql.Parse("", []byte(query))
 	if err != nil {
 		logger.Errorf("Failed to parse query: %s\nerr: %v", query, err)
-		return nil, datastore.BadRequest
+		return memoryexecutor.ExecuteQueryResult{}, datastore.BadRequest
 	}
 
 	allDocumentsIterator, status := h.dataStore.GetDocumentIterator(databaseId, collectionId)
 	if status != datastore.StatusOk {
-		return nil, status
+		return memoryexecutor.ExecuteQueryResult{}, status
 	}
 	defer allDocumentsIterator.Close()
 
@@ -394,8 +432,8 @@ func (h *Handlers) executeQueryDocuments(databaseId string, collectionId string,
 
 	if typedQuery, ok := parsedQuery.(parsers.SelectStmt); ok {
 		typedQuery.Parameters = queryParameters
-		return memoryexecutor.ExecuteQuery(typedQuery, rowsIterator), datastore.StatusOk
+		return memoryexecutor.ExecuteQuery(typedQuery, rowsIterator, pageCursor, pageMaxItemCount), datastore.StatusOk
 	}
 
-	return nil, datastore.BadRequest
+	return memoryexecutor.ExecuteQueryResult{}, datastore.BadRequest
 }

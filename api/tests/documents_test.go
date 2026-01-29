@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	"github.com/pikami/cosmium/api/config"
+	continuationtoken "github.com/pikami/cosmium/internal/continuation_token"
 	"github.com/pikami/cosmium/internal/datastore"
 	"github.com/stretchr/testify/assert"
 )
@@ -510,6 +511,48 @@ func Test_Documents(t *testing.T) {
 			var itemResponseBody map[string]interface{}
 			json.Unmarshal(operationResponse.ResourceBody, &itemResponseBody)
 			assert.Equal(t, "67890", itemResponseBody["id"])
+		})
+	})
+
+	runTestsWithPresets(t, "Test_Documents_With_Continuation_Token", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		collectionClient := documents_InitializeDb(t, ts)
+
+		t.Run("Should query document with continuation token", func(t *testing.T) {
+			context := context.TODO()
+			pager := collectionClient.NewQueryItemsPager(
+				"SELECT c.id, c[\"pk\"] FROM c ORDER BY c.id",
+				azcosmos.PartitionKey{},
+				&azcosmos.QueryOptions{
+					PageSizeHint: 1,
+				})
+
+			assert.True(t, pager.More())
+
+			firstResponse, err := pager.NextPage(context)
+			assert.Nil(t, err)
+			assert.Equal(t, 1, len(firstResponse.Items))
+			var firstItem map[string]interface{}
+			err = json.Unmarshal(firstResponse.Items[0], &firstItem)
+			assert.Nil(t, err)
+			assert.Equal(t, "12345", firstItem["id"])
+			assert.Equal(t, "123", firstItem["pk"])
+
+			firstContinuationToken := continuationtoken.FromString(*firstResponse.ContinuationToken)
+			assert.Equal(t, 1, firstContinuationToken.Token.PageIndex)
+			assert.Equal(t, 1, firstContinuationToken.Token.TotalResults)
+
+			assert.True(t, pager.More())
+			secondResponse, err := pager.NextPage(context)
+			assert.Nil(t, err)
+			assert.Equal(t, 1, len(secondResponse.Items))
+			var secondItem map[string]interface{}
+			err = json.Unmarshal(secondResponse.Items[0], &secondItem)
+			assert.Nil(t, err)
+			assert.Equal(t, "67890", secondItem["id"])
+			assert.Equal(t, "456", secondItem["pk"])
+			assert.Nil(t, secondResponse.ContinuationToken)
+
+			assert.False(t, pager.More())
 		})
 	})
 }

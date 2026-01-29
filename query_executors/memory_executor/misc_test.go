@@ -38,10 +38,10 @@ func testQueryExecute(
 	expectedData []memoryexecutor.RowType,
 ) {
 	iter := NewTestDocumentIterator(data)
-	result := memoryexecutor.ExecuteQuery(query, iter)
+	result := memoryexecutor.ExecuteQuery(query, iter, 0, 1000)
 
-	if !reflect.DeepEqual(result, expectedData) {
-		t.Errorf("execution result does not match expected data.\nExpected: %+v\nGot: %+v", expectedData, result)
+	if !reflect.DeepEqual(result.Rows, expectedData) {
+		t.Errorf("execution result does not match expected data.\nExpected: %+v\nGot: %+v", expectedData, result.Rows)
 	}
 }
 

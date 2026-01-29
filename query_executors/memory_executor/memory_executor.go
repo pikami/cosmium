@@ -5,18 +5,46 @@ import (
 	"github.com/pikami/cosmium/parsers"
 )
 
-func ExecuteQuery(query parsers.SelectStmt, documents rowTypeIterator) []RowType {
+type ExecuteQueryResult struct {
+	Rows         []RowType
+	HasMorePages bool
+}
+
+func ExecuteQuery(
+	query parsers.SelectStmt,
+	documents rowTypeIterator,
+	offset int,
+	limit int,
+) ExecuteQueryResult {
 	resultIter := executeQuery(query, &rowTypeToRowContextIterator{documents: documents, query: query})
-	result := make([]RowType, 0)
-	for {
+
+	result := &ExecuteQueryResult{
+		Rows:         make([]RowType, 0),
+		HasMorePages: false,
+	}
+
+	for i := 0; i < offset; i++ {
+		_, status := resultIter.Next()
+		if status != datastore.StatusOk {
+			break
+		}
+	}
+
+	for i := 0; i < limit; i++ {
 		row, status := resultIter.Next()
 		if status != datastore.StatusOk {
 			break
 		}
 
-		result = append(result, row)
+		result.Rows = append(result.Rows, row)
 	}
-	return result
+
+	_, status := resultIter.Next()
+	if status == datastore.StatusOk {
+		result.HasMorePages = true
+	}
+
+	return *result
 }
 
 func executeQuery(query parsers.SelectStmt, documents rowIterator) rowTypeIterator {

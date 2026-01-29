@@ -13,6 +13,8 @@ const (
 	ItemCount          = "x-ms-item-count"
 	LSN                = "lsn"
 	XDate              = "x-ms-date"
+	MaxItemCount       = "x-ms-max-item-count"
+	ContinuationToken  = "x-ms-continuation"
 
 	// Kinda retarded, but what can I do ¯\_(ツ)_/¯
 	IsQuery = "x-ms-documentdb-isquery" // Sent from python sdk and web explorer
