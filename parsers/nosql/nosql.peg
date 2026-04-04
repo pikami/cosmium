@@ -425,7 +425,15 @@ MulDivExpression <- left:SelectItemWithParentheses operations:(ws op:MultiplyOrD
     return makeMathExpression(left, operations)
 }
 
-SelectItemWithParentheses <- "(" ws ex:OrExpression ws ")" { return ex, nil }
+SelectItemWithParentheses <- inv:(Not ws)? "(" ws ex:OrExpression ws ")" {
+    if inv != nil {
+        if ex1, ok := ex.(parsers.SelectItem); ok {
+            ex1.Invert = true
+            return ex1, nil
+        }
+    }
+    return ex, nil
+}
     / inv:(Not ws)? ex:SelectItem {
     if inv != nil {
         ex1 := ex.(parsers.SelectItem)
