@@ -231,6 +231,42 @@ func Test_Execute_StringFunctions(t *testing.T) {
 		)
 	})
 
+	t.Run("Should execute function REGEXMATCH()", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{
+						Path: []string{"c", "id"},
+						Type: parsers.SelectItemTypeField,
+					},
+					{
+						Alias: "regexMatch",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallRegexMatch,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "str"},
+									Type: parsers.SelectItemTypeField,
+								},
+								testutils.SelectItem_Constant_String("COOL WORLD"),
+								testutils.SelectItem_Constant_String("i"),
+							},
+						},
+					},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+			mockData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"id": "123", "regexMatch": false},
+				map[string]interface{}{"id": "456", "regexMatch": false},
+				map[string]interface{}{"id": "789", "regexMatch": true},
+			},
+		)
+	})
+
 	t.Run("Should execute function INDEX_OF()", func(t *testing.T) {
 		testQueryExecute(
 			t,

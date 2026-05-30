@@ -107,6 +107,7 @@ const (
 	FunctionCallContains     FunctionCallType = "Contains"
 	FunctionCallEndsWith     FunctionCallType = "EndsWith"
 	FunctionCallStartsWith   FunctionCallType = "StartsWith"
+	FunctionCallRegexMatch   FunctionCallType = "RegexMatch"
 	FunctionCallIndexOf      FunctionCallType = "IndexOf"
 	FunctionCallToString     FunctionCallType = "ToString"
 	FunctionCallUpper        FunctionCallType = "Upper"

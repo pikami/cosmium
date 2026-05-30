@@ -681,6 +681,8 @@ ThreeArgumentStringFunctionExpression <- function:ThreeArgumentStringFunction ws
         functionType = parsers.FunctionCallEndsWith
     case "STARTSWITH":
         functionType = parsers.FunctionCallStartsWith
+    case "REGEXMATCH":
+        functionType = parsers.FunctionCallRegexMatch
     case "INDEX_OF":
         functionType = parsers.FunctionCallIndexOf
     }
@@ -688,7 +690,7 @@ ThreeArgumentStringFunctionExpression <- function:ThreeArgumentStringFunction ws
     return createFunctionCall(functionType, []interface{}{ex1, ex2, ignoreCase})
 }
 
-ThreeArgumentStringFunction <- ("CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i / "INDEX_OF"i) {
+ThreeArgumentStringFunction <- ("CONTAINS"i / "ENDSWITH"i / "STARTSWITH"i / "REGEXMATCH"i / "INDEX_OF"i) {
     return string(c.text), nil
 }
 

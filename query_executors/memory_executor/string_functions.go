@@ -2,6 +2,7 @@ package memoryexecutor
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/pikami/cosmium/internal/logger"
@@ -73,6 +74,46 @@ func (r rowContext) strings_StartsWith(arguments []interface{}) bool {
 	}
 
 	return strings.HasPrefix(str1, str2)
+}
+
+func (r rowContext) strings_RegexMatch(arguments []interface{}) bool {
+	value, valueOk := r.parseString(arguments[0])
+	pattern, patternOk := r.parseString(arguments[1])
+	if !valueOk || !patternOk {
+		return false
+	}
+
+	modifiers, ok := r.getStringFlag(arguments)
+	if !ok {
+		return false
+	}
+
+	regexPattern := pattern
+	if strings.Contains(modifiers, "x") {
+		regexPattern = stripRegexIgnoredWhitespace(regexPattern)
+	}
+
+	var flags strings.Builder
+	if strings.Contains(modifiers, "i") {
+		flags.WriteByte('i')
+	}
+	if strings.Contains(modifiers, "m") {
+		flags.WriteByte('m')
+	}
+	if strings.Contains(modifiers, "s") {
+		flags.WriteByte('s')
+	}
+	if flags.Len() > 0 {
+		regexPattern = "(?" + flags.String() + ")" + regexPattern
+	}
+
+	matched, err := regexp.MatchString(regexPattern, value)
+	if err != nil {
+		logger.Errorf("strings_RegexMatch - invalid pattern %q: %v", pattern, err)
+		return false
+	}
+
+	return matched
 }
 
 func (r rowContext) strings_Concat(arguments []interface{}) string {
@@ -318,6 +359,20 @@ func (r rowContext) getBoolFlag(arguments []interface{}) bool {
 	return ignoreCase
 }
 
+func (r rowContext) getStringFlag(arguments []interface{}) (string, bool) {
+	if len(arguments) <= 2 || arguments[2] == nil {
+		return "", true
+	}
+
+	flagItem := arguments[2].(parsers.SelectItem)
+	if value, ok := r.resolveSelectItem(flagItem).(string); ok {
+		return value, true
+	}
+
+	logger.ErrorLn("getStringFlag - got parameters of wrong type")
+	return "", false
+}
+
 func (r rowContext) parseString(argument interface{}) (value string, ok bool) {
 	exItem := argument.(parsers.SelectItem)
 	ex := r.resolveSelectItem(exItem)
@@ -327,6 +382,41 @@ func (r rowContext) parseString(argument interface{}) (value string, ok bool) {
 
 	logger.ErrorLn("StringEquals got parameters of wrong type")
 	return "", false
+}
+
+func stripRegexIgnoredWhitespace(pattern string) string {
+	var result strings.Builder
+	inCharClass := false
+	escaped := false
+
+	for _, r := range pattern {
+		if escaped {
+			result.WriteRune(r)
+			escaped = false
+			continue
+		}
+
+		if r == '\\' {
+			result.WriteRune(r)
+			escaped = true
+			continue
+		}
+
+		switch r {
+		case '[':
+			inCharClass = true
+		case ']':
+			inCharClass = false
+		}
+
+		if !inCharClass && (r == ' ' || r == '\t' || r == '\n' || r == '\r' || r == '\f') {
+			continue
+		}
+
+		result.WriteRune(r)
+	}
+
+	return result.String()
 }
 
 func convertToString(value interface{}) string {

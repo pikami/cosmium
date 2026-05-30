@@ -162,6 +162,8 @@ func (r rowContext) selectItem_SelectItemTypeFunctionCall(functionCall parsers.F
 		return r.strings_EndsWith(functionCall.Arguments)
 	case parsers.FunctionCallStartsWith:
 		return r.strings_StartsWith(functionCall.Arguments)
+	case parsers.FunctionCallRegexMatch:
+		return r.strings_RegexMatch(functionCall.Arguments)
 	case parsers.FunctionCallConcat:
 		return r.strings_Concat(functionCall.Arguments)
 	case parsers.FunctionCallIndexOf:
