@@ -25,7 +25,7 @@ func (r rowContext) array_Contains(arguments []interface{}) bool {
 	exprToSearch := r.resolveSelectItem(arguments[1].(parsers.SelectItem))
 
 	partialSearch := false
-	if len(arguments) > 2 {
+	if len(arguments) > 2 && arguments[2] != nil {
 		boolExpr := r.resolveSelectItem(arguments[2].(parsers.SelectItem))
 		if boolValue, ok := boolExpr.(bool); ok {
 			partialSearch = boolValue
