@@ -12,8 +12,10 @@ import (
 )
 
 type BadgerDataStore struct {
-	db       *badger.DB
-	gcTicker *time.Ticker
+	db        *badger.DB
+	gcTicker  *time.Ticker
+	gcDone    chan struct{}
+	gcStopped chan struct{}
 }
 
 type BadgerDataStoreOptions struct {
@@ -36,8 +38,10 @@ func NewBadgerDataStore(options BadgerDataStoreOptions) *BadgerDataStore {
 	gcTicker := time.NewTicker(5 * time.Minute)
 
 	ds := &BadgerDataStore{
-		db:       db,
-		gcTicker: gcTicker,
+		db:        db,
+		gcTicker:  gcTicker,
+		gcDone:    make(chan struct{}),
+		gcStopped: make(chan struct{}),
 	}
 
 	ds.initializeDataStore(options.InitialDataFilePath)
@@ -50,7 +54,8 @@ func NewBadgerDataStore(options BadgerDataStoreOptions) *BadgerDataStore {
 func (r *BadgerDataStore) Close() {
 	if r.gcTicker != nil {
 		r.gcTicker.Stop()
-		r.gcTicker = nil
+		close(r.gcDone)
+		<-r.gcStopped
 	}
 
 	r.db.Close()
@@ -63,11 +68,19 @@ func (r *BadgerDataStore) DumpToJson() (string, error) {
 }
 
 func (r *BadgerDataStore) runGarbageCollector() {
-	for range r.gcTicker.C {
-	again:
-		err := r.db.RunValueLogGC(0.7)
-		if err == nil {
-			goto again
+	defer close(r.gcStopped)
+
+	for {
+		select {
+		case <-r.gcTicker.C:
+			for {
+				err := r.db.RunValueLogGC(0.7)
+				if err != nil {
+					break
+				}
+			}
+		case <-r.gcDone:
+			return
 		}
 	}
 }
