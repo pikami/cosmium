@@ -4,6 +4,7 @@ const (
 	AIM                = "A-Im"
 	Authorization      = "authorization"
 	CosmosLsn          = "x-ms-cosmos-llsn"
+	ErrorCode          = "x-ms-error-code"
 	ETag               = "etag"
 	GlobalCommittedLsn = "x-ms-global-committed-lsn"
 	IfMatch            = "if-match"

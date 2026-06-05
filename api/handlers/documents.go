@@ -105,6 +105,7 @@ func (h *Handlers) ReplaceDocument(c *gin.Context) {
 
 	if ifMatch := c.GetHeader(headers.IfMatch); ifMatch != "" {
 		if existingDocument["_etag"] != ifMatch {
+			c.Header(headers.ErrorCode, "PreconditionFailed")
 			c.JSON(http.StatusPreconditionFailed, constants.PreconditionFailedResponse)
 			return
 		}

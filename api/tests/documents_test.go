@@ -403,7 +403,7 @@ func Test_Documents(t *testing.T) {
 			var respErr *azcore.ResponseError
 			if errors.As(err, &respErr) {
 				assert.Equal(t, http.StatusPreconditionFailed, respErr.StatusCode)
-				assert.Equal(t, "PreconditionFailed", respErr.ErrorCode)
+				assert.Equal(t, "PreconditionFailed", respErr.RawResponse.Header.Get("x-ms-error-code"))
 
 				responseBody, readErr := io.ReadAll(respErr.RawResponse.Body)
 				assert.Nil(t, readErr)
