@@ -6,6 +6,7 @@ const (
 	CosmosLsn          = "x-ms-cosmos-llsn"
 	ETag               = "etag"
 	GlobalCommittedLsn = "x-ms-global-committed-lsn"
+	IfMatch            = "if-match"
 	IfNoneMatch        = "if-none-match"
 	IsBatchRequest     = "x-ms-cosmos-is-batch-request"
 	IsQueryPlanRequest = "x-ms-cosmos-is-query-plan-request"

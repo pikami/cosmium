@@ -47,6 +47,9 @@ func (h *Handlers) GetDocument(c *gin.Context) {
 
 	document, status := h.dataStore.GetDocument(databaseId, collectionId, documentId)
 	if status == datastore.StatusOk {
+		if etag, ok := document["_etag"].(string); ok {
+			c.Header(headers.ETag, etag)
+		}
 		c.IndentedJSON(http.StatusOK, document)
 		return
 	}
@@ -90,7 +93,24 @@ func (h *Handlers) ReplaceDocument(c *gin.Context) {
 		return
 	}
 
-	status := h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
+	existingDocument, status := h.dataStore.GetDocument(databaseId, collectionId, documentId)
+	if status == datastore.StatusNotFound {
+		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
+		return
+	}
+	if status != datastore.StatusOk {
+		c.IndentedJSON(http.StatusInternalServerError, constants.UnknownErrorResponse)
+		return
+	}
+
+	if ifMatch := c.GetHeader(headers.IfMatch); ifMatch != "" {
+		if existingDocument["_etag"] != ifMatch {
+			c.JSON(http.StatusPreconditionFailed, constants.PreconditionFailedResponse)
+			return
+		}
+	}
+
+	status = h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
 	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
 		return

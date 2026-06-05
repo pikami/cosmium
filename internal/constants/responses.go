@@ -35,3 +35,7 @@ var UnknownErrorResponse = gin.H{"message": "Unknown error"}
 var NotFoundResponse = gin.H{"message": "NotFound"}
 var ConflictResponse = gin.H{"message": "Conflict"}
 var BadRequestResponse = gin.H{"message": "BadRequest"}
+var PreconditionFailedResponse = gin.H{
+	"code":    "PreconditionFailed",
+	"message": "Operation cannot be performed because one of the specified precondition is not met.",
+}
