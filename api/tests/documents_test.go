@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"sync"
@@ -376,6 +377,80 @@ func Test_Documents(t *testing.T) {
 			)
 			assert.NotNil(t, r)
 			assert.Nil(t, err2)
+		})
+	})
+
+	runTestsWithPresets(t, "Test_Documents_ETag_OptimisticConcurrency", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		collectionClient := documents_InitializeDb(t, ts)
+
+		t.Run("Should fail replace with incorrect etag", func(t *testing.T) {
+			context := context.TODO()
+
+			item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": true}
+			bytes, err := json.Marshal(item)
+			assert.Nil(t, err)
+
+			wrongETag := azcore.ETag("\"incorrect-etag\"")
+			_, err = collectionClient.ReplaceItem(
+				context,
+				azcosmos.PartitionKey{},
+				"12345",
+				bytes,
+				&azcosmos.ItemOptions{IfMatchEtag: &wrongETag},
+			)
+			assert.NotNil(t, err)
+
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) {
+				assert.Equal(t, http.StatusPreconditionFailed, respErr.StatusCode)
+				assert.Equal(t, "PreconditionFailed", respErr.RawResponse.Header.Get("x-ms-error-code"))
+
+				responseBody, readErr := io.ReadAll(respErr.RawResponse.Body)
+				assert.Nil(t, readErr)
+				assert.JSONEq(t,
+					`{"code":"PreconditionFailed","message":"Operation cannot be performed because one of the specified precondition is not met."}`,
+					string(responseBody),
+				)
+			} else {
+				panic(err)
+			}
+
+			document, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "12345")
+			assert.Equal(t, datastore.StatusOk, status)
+			assert.Equal(t, false, document["isCool"])
+		})
+
+		t.Run("Should replace with correct etag", func(t *testing.T) {
+			context := context.TODO()
+
+			readResponse, err := collectionClient.ReadItem(context, azcosmos.PartitionKey{}, "12345", nil)
+			assert.Nil(t, err)
+			assert.NotEmpty(t, readResponse.ETag)
+
+			var item map[string]interface{}
+			err = json.Unmarshal(readResponse.Value, &item)
+			assert.Nil(t, err)
+			assert.Equal(t, string(readResponse.ETag), item["_etag"])
+
+			item["pk"] = "999"
+			item["isCool"] = true
+			bytes, err := json.Marshal(item)
+			assert.Nil(t, err)
+
+			etag := readResponse.ETag
+			_, err = collectionClient.ReplaceItem(
+				context,
+				azcosmos.PartitionKey{},
+				"12345",
+				bytes,
+				&azcosmos.ItemOptions{IfMatchEtag: &etag},
+			)
+			assert.Nil(t, err)
+
+			document, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "12345")
+			assert.Equal(t, datastore.StatusOk, status)
+			assert.Equal(t, "999", document["pk"])
+			assert.Equal(t, true, document["isCool"])
 		})
 	})
 
