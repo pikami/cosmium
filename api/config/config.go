@@ -23,6 +23,7 @@ const (
 func ParseFlags() ServerConfig {
 	host := flag.String("Host", "localhost", "Hostname")
 	port := flag.Int("Port", 8081, "Listen port")
+	rntbdPort := flag.Int("RntbdPort", 10000, "RNTBD listen port")
 	explorerPath := flag.String("ExplorerDir", "", "Path to cosmos-explorer files")
 	tlsCertificatePath := flag.String("Cert", "", "Hostname")
 	tlsCertificateKey := flag.String("CertKey", "", "Hostname")
@@ -35,6 +36,7 @@ func ParseFlags() ServerConfig {
 	flag.Var(logLevel, "LogLevel", fmt.Sprintf("Sets the logging level %s", logLevel.AllowedValuesList()))
 	dataStore := NewEnumValue("json", []string{DataStoreJson, DataStoreBadger})
 	flag.Var(dataStore, "DataStore", fmt.Sprintf("Sets the data store %s", dataStore.AllowedValuesList()))
+	enableRntbd := flag.Bool("ExperimentalEnableRntbd", false, "EXPERIMENTAL: Enable RNTBD (CosmosDB Direct Connection Mode)")
 
 	flag.Parse()
 	setFlagsFromEnvironment()
@@ -42,6 +44,7 @@ func ParseFlags() ServerConfig {
 	config := ServerConfig{}
 	config.Host = *host
 	config.Port = *port
+	config.RntbdPort = *rntbdPort
 	config.ExplorerPath = *explorerPath
 	config.TLS_CertificatePath = *tlsCertificatePath
 	config.TLS_CertificateKey = *tlsCertificateKey
@@ -52,6 +55,7 @@ func ParseFlags() ServerConfig {
 	config.AccountKey = *accountKey
 	config.LogLevel = logLevel.value
 	config.DataStore = dataStore.value
+	config.EnableRntbd = *enableRntbd
 
 	config.PopulateCalculatedFields()
 
@@ -62,6 +66,7 @@ func (c *ServerConfig) PopulateCalculatedFields() {
 	c.DatabaseAccount = c.Host
 	c.DatabaseDomain = c.Host
 	c.DatabaseEndpoint = fmt.Sprintf("https://%s:%d/", c.Host, c.Port)
+	c.RntbdEndpoint = fmt.Sprintf("rntbd://%s:%d/", c.Host, c.RntbdPort)
 	c.ExplorerBaseUrlLocation = ExplorerBaseUrlLocation
 
 	switch c.LogLevel {

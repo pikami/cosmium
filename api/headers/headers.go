@@ -21,4 +21,10 @@ const (
 	// Kinda retarded, but what can I do ¯\_(ツ)_/¯
 	IsQuery = "x-ms-documentdb-isquery" // Sent from python sdk and web explorer
 	Query   = "x-ms-documentdb-query"   // Sent from Go sdk
+
+	// I kinda don't use these, but I've seen them in the wild xd
+	SupportedCapabilities     = "x-ms-cosmos-sdk-supportedcapabilities"
+	ClientRetryAttemptCount   = "x-ms-client-retry-attempt-count"
+	RemainingTimeInMsOnClient = "x-ms-remaining-time-in-ms-on-client"
+	ConsistencyLevel          = "x-ms-consistency-level"
 )

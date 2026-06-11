@@ -31,6 +31,7 @@ func (s *ApiServer) CreateRouter(dataStore datastore.DataStore) {
 
 	router := gin.Default(func(e *gin.Engine) {
 		e.RedirectTrailingSlash = false
+		e.RemoveExtraSlash = true
 	})
 
 	if s.config.LogLevel == "debug" {
@@ -79,6 +80,7 @@ func (s *ApiServer) CreateRouter(dataStore datastore.DataStore) {
 
 	router.GET("/offers", handlers.GetOffers)
 	router.GET("/", routeHandlers.GetServerInfo)
+	router.GET("//addresses", routeHandlers.GetAddresses)
 
 	router.GET("/cosmium/export", routeHandlers.CosmiumExport)
 

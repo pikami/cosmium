@@ -11,6 +11,7 @@ import (
 	badgerdatastore "github.com/pikami/cosmium/internal/datastore/badger_datastore"
 	jsondatastore "github.com/pikami/cosmium/internal/datastore/json_datastore"
 	"github.com/pikami/cosmium/internal/logger"
+	"github.com/pikami/cosmium/internal/rntbd"
 )
 
 func main() {
@@ -38,6 +39,15 @@ func main() {
 		panic(err)
 	}
 
+	if configuration.EnableRntbd {
+		rntbdServer := rntbd.NewRntbdServer(configuration.RntbdPort, server)
+		err = rntbdServer.Start()
+		if err != nil {
+			panic(err)
+		}
+		defer rntbdServer.Stop()
+	}
+
 	waitForExit(server, dataStore)
 }
 
@@ -50,6 +60,5 @@ func waitForExit(server *api.ApiServer, dataStore datastore.DataStore) {
 
 	// Stop the server
 	server.Stop()
-
 	dataStore.Close()
 }
