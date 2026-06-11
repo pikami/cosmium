@@ -3,7 +3,7 @@ name: goreleaser
 on:
   push:
     tags:
-      - '*'
+      - "*"
 
 permissions:
   contents: write
@@ -14,20 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.24.7
+          go-version: 1.26.3
 
       - name: Cross-Compile with xgo
-        uses: crazy-max/ghaction-xgo@e22d3c8b089adba750d5a74738b8e95d96f0c991 # v3.1.0
+        uses: crazy-max/ghaction-xgo@de82f877ff4552f03b66c146f608233849e9c3dc # v4.0.0
         with:
           xgo_version: latest
-          go_version: 1.24.7
+          go_version: 1.26.3
           dest: sharedlibrary_dist
           pkg: sharedlibrary
           prefix: cosmium
