@@ -149,6 +149,32 @@ func Test_Parse_Were(t *testing.T) {
 		)
 	})
 
+	t.Run("Should correctly parse single-quoted string literals", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id FROM c WHERE c.id = '12345' AND c.string = 'it\'s'`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{{Path: []string{"c", "id"}}},
+				Table:       parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				Filters: parsers.LogicalExpression{
+					Operation: parsers.LogicalExpressionTypeAnd,
+					Expressions: []interface{}{
+						parsers.ComparisonExpression{
+							Operation: "=",
+							Left:      parsers.SelectItem{Path: []string{"c", "id"}},
+							Right:     testutils.SelectItem_Constant_String("12345"),
+						},
+						parsers.ComparisonExpression{
+							Operation: "=",
+							Left:      parsers.SelectItem{Path: []string{"c", "string"}},
+							Right:     testutils.SelectItem_Constant_String("it's"),
+						},
+					},
+				},
+			},
+		)
+	})
+
 	t.Run("Should correctly parse NOT conditions", func(t *testing.T) {
 		testQueryParse(
 			t,

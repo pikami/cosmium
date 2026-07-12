@@ -134,6 +134,34 @@ func Test_Documents(t *testing.T) {
 			)
 		})
 
+		t.Run("Should query document with single-quoted string literal", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				`select c.id
+				FROM c
+				WHERE c.id='67890'
+				ORDER BY c.id`,
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "67890"},
+				},
+			)
+		})
+
+		t.Run("Should query document with escaped single-quoted string literal", func(t *testing.T) {
+			ts.DataStore.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{"id": "apostrophe-doc", "pk": "ap", "name": "it's"})
+
+			testCosmosQuery(t, collectionClient,
+				`select c.id
+				FROM c
+				WHERE c.name='it\'s'
+				ORDER BY c.id`,
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "apostrophe-doc"},
+				},
+			)
+		})
+
 		t.Run("Should query document with query parameters", func(t *testing.T) {
 			testCosmosQuery(t, collectionClient,
 				`select c.id
