@@ -509,6 +509,8 @@ IntegerLiteral <- number:Integer {
 }
 StringLiteral <- "\"" chars:StringCharacter* "\"" {
     return parsers.Constant{Type: parsers.ConstantTypeString,Value: joinStrings(chars.([]interface{}))}, nil
+} / "'" chars:SingleQuotedStringCharacter* "'" {
+    return parsers.Constant{Type: parsers.ConstantTypeString,Value: joinStrings(chars.([]interface{}))}, nil
 }
 FloatLiteral <- [0-9]+"."[0-9]+ {
     floatValue, _ := strconv.ParseFloat(string(c.text), 64)
@@ -867,6 +869,10 @@ Integer <- [0-9]+ {
 }
 
 StringCharacter <- !('"' / "\\") . { return string(c.text), nil }
+  / "\\" seq:EscapeSequenceCharacter { return seq, nil }
+
+SingleQuotedStringCharacter <- !("'" / "\\") . { return string(c.text), nil }
+  / "''" { return "'", nil }
   / "\\" seq:EscapeSequenceCharacter { return seq, nil }
 
 EscapeSequenceCharacter <- char:EscapeCharacter

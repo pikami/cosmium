@@ -134,6 +134,19 @@ func Test_Documents(t *testing.T) {
 			)
 		})
 
+		t.Run("Should query document with single-quoted string literal", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				`select c.id
+				FROM c
+				WHERE c.id='67890'
+				ORDER BY c.id`,
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "67890"},
+				},
+			)
+		})
+
 		t.Run("Should query document with query parameters", func(t *testing.T) {
 			testCosmosQuery(t, collectionClient,
 				`select c.id
