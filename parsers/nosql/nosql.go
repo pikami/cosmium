@@ -8344,30 +8344,20 @@ var g = &grammar{
 					&actionExpr{
 						pos: position{line: 875, col: 5, offset: 32994},
 						run: (*parser).callonSingleQuotedStringCharacter9,
-						expr: &litMatcher{
-							pos:        position{line: 875, col: 5, offset: 32994},
-							val:        "''",
-							ignoreCase: false,
-							want:       "\"''\"",
-						},
-					},
-					&actionExpr{
-						pos: position{line: 876, col: 5, offset: 33023},
-						run: (*parser).callonSingleQuotedStringCharacter11,
 						expr: &seqExpr{
-							pos: position{line: 876, col: 5, offset: 33023},
+							pos: position{line: 875, col: 5, offset: 32994},
 							exprs: []any{
 								&litMatcher{
-									pos:        position{line: 876, col: 5, offset: 33023},
+									pos:        position{line: 875, col: 5, offset: 32994},
 									val:        "\\",
 									ignoreCase: false,
 									want:       "\"\\\\\"",
 								},
 								&labeledExpr{
-									pos:   position{line: 876, col: 10, offset: 33028},
+									pos:   position{line: 875, col: 10, offset: 32999},
 									label: "seq",
 									expr: &ruleRefExpr{
-										pos:  position{line: 876, col: 14, offset: 33032},
+										pos:  position{line: 875, col: 14, offset: 33003},
 										name: "EscapeSequenceCharacter",
 									},
 								},
@@ -8379,85 +8369,97 @@ var g = &grammar{
 		},
 		{
 			name: "EscapeSequenceCharacter",
-			pos:  position{line: 878, col: 1, offset: 33077},
+			pos:  position{line: 877, col: 1, offset: 33048},
 			expr: &labeledExpr{
-				pos:   position{line: 878, col: 28, offset: 33104},
+				pos:   position{line: 877, col: 28, offset: 33075},
 				label: "char",
 				expr: &ruleRefExpr{
-					pos:  position{line: 878, col: 33, offset: 33109},
+					pos:  position{line: 877, col: 33, offset: 33080},
 					name: "EscapeCharacter",
 				},
 			},
 		},
 		{
 			name: "EscapeCharacter",
-			pos:  position{line: 880, col: 1, offset: 33126},
+			pos:  position{line: 879, col: 1, offset: 33097},
 			expr: &choiceExpr{
-				pos: position{line: 880, col: 20, offset: 33145},
+				pos: position{line: 879, col: 20, offset: 33116},
 				alternatives: []any{
-					&litMatcher{
-						pos:        position{line: 880, col: 20, offset: 33145},
-						val:        "'",
-						ignoreCase: false,
-						want:       "\"'\"",
-					},
-					&litMatcher{
-						pos:        position{line: 881, col: 5, offset: 33153},
-						val:        "\"",
-						ignoreCase: false,
-						want:       "\"\\\"\"",
-					},
-					&litMatcher{
-						pos:        position{line: 882, col: 5, offset: 33161},
-						val:        "\\",
-						ignoreCase: false,
-						want:       "\"\\\\\"",
+					&actionExpr{
+						pos: position{line: 879, col: 20, offset: 33116},
+						run: (*parser).callonEscapeCharacter2,
+						expr: &litMatcher{
+							pos:        position{line: 879, col: 20, offset: 33116},
+							val:        "'",
+							ignoreCase: false,
+							want:       "\"'\"",
+						},
 					},
 					&actionExpr{
-						pos: position{line: 883, col: 5, offset: 33170},
-						run: (*parser).callonEscapeCharacter5,
+						pos: position{line: 880, col: 5, offset: 33144},
+						run: (*parser).callonEscapeCharacter4,
 						expr: &litMatcher{
-							pos:        position{line: 883, col: 5, offset: 33170},
+							pos:        position{line: 880, col: 5, offset: 33144},
+							val:        "\"",
+							ignoreCase: false,
+							want:       "\"\\\"\"",
+						},
+					},
+					&actionExpr{
+						pos: position{line: 881, col: 5, offset: 33173},
+						run: (*parser).callonEscapeCharacter6,
+						expr: &litMatcher{
+							pos:        position{line: 881, col: 5, offset: 33173},
+							val:        "\\",
+							ignoreCase: false,
+							want:       "\"\\\\\"",
+						},
+					},
+					&actionExpr{
+						pos: position{line: 882, col: 5, offset: 33203},
+						run: (*parser).callonEscapeCharacter8,
+						expr: &litMatcher{
+							pos:        position{line: 882, col: 5, offset: 33203},
 							val:        "b",
 							ignoreCase: false,
 							want:       "\"b\"",
 						},
 					},
 					&actionExpr{
-						pos: position{line: 884, col: 5, offset: 33199},
-						run: (*parser).callonEscapeCharacter7,
+						pos: position{line: 883, col: 5, offset: 33232},
+						run: (*parser).callonEscapeCharacter10,
 						expr: &litMatcher{
-							pos:        position{line: 884, col: 5, offset: 33199},
+							pos:        position{line: 883, col: 5, offset: 33232},
 							val:        "f",
 							ignoreCase: false,
 							want:       "\"f\"",
 						},
 					},
 					&actionExpr{
-						pos: position{line: 885, col: 5, offset: 33228},
-						run: (*parser).callonEscapeCharacter9,
+						pos: position{line: 884, col: 5, offset: 33261},
+						run: (*parser).callonEscapeCharacter12,
 						expr: &litMatcher{
-							pos:        position{line: 885, col: 5, offset: 33228},
+							pos:        position{line: 884, col: 5, offset: 33261},
 							val:        "n",
 							ignoreCase: false,
 							want:       "\"n\"",
 						},
 					},
 					&actionExpr{
-						pos: position{line: 886, col: 5, offset: 33257},
-						run: (*parser).callonEscapeCharacter11,
+						pos: position{line: 885, col: 5, offset: 33290},
+						run: (*parser).callonEscapeCharacter14,
 						expr: &litMatcher{
-							pos:        position{line: 886, col: 5, offset: 33257},
+							pos:        position{line: 885, col: 5, offset: 33290},
 							val:        "r",
 							ignoreCase: false,
 							want:       "\"r\"",
 						},
 					},
 					&actionExpr{
-						pos: position{line: 887, col: 5, offset: 33286},
-						run: (*parser).callonEscapeCharacter13,
+						pos: position{line: 886, col: 5, offset: 33319},
+						run: (*parser).callonEscapeCharacter16,
 						expr: &litMatcher{
-							pos:        position{line: 887, col: 5, offset: 33286},
+							pos:        position{line: 886, col: 5, offset: 33319},
 							val:        "t",
 							ignoreCase: false,
 							want:       "\"t\"",
@@ -8468,25 +8470,25 @@ var g = &grammar{
 		},
 		{
 			name: "non_escape_character",
-			pos:  position{line: 889, col: 1, offset: 33312},
+			pos:  position{line: 888, col: 1, offset: 33345},
 			expr: &actionExpr{
-				pos: position{line: 889, col: 25, offset: 33336},
+				pos: position{line: 888, col: 25, offset: 33369},
 				run: (*parser).callonnon_escape_character1,
 				expr: &seqExpr{
-					pos: position{line: 889, col: 25, offset: 33336},
+					pos: position{line: 888, col: 25, offset: 33369},
 					exprs: []any{
 						&notExpr{
-							pos: position{line: 889, col: 25, offset: 33336},
+							pos: position{line: 888, col: 25, offset: 33369},
 							expr: &ruleRefExpr{
-								pos:  position{line: 889, col: 27, offset: 33338},
+								pos:  position{line: 888, col: 27, offset: 33371},
 								name: "escape_character",
 							},
 						},
 						&labeledExpr{
-							pos:   position{line: 889, col: 45, offset: 33356},
+							pos:   position{line: 888, col: 45, offset: 33389},
 							label: "char",
 							expr: &anyMatcher{
-								line: 889, col: 50, offset: 33361,
+								line: 888, col: 50, offset: 33394,
 							},
 						},
 					},
@@ -8495,11 +8497,11 @@ var g = &grammar{
 		},
 		{
 			name: "ws",
-			pos:  position{line: 892, col: 1, offset: 33400},
+			pos:  position{line: 891, col: 1, offset: 33433},
 			expr: &zeroOrMoreExpr{
-				pos: position{line: 892, col: 7, offset: 33406},
+				pos: position{line: 891, col: 7, offset: 33439},
 				expr: &charClassMatcher{
-					pos:        position{line: 892, col: 7, offset: 33406},
+					pos:        position{line: 891, col: 7, offset: 33439},
 					val:        "[ \\t\\n\\r]",
 					chars:      []rune{' ', '\t', '\n', '\r'},
 					ignoreCase: false,
@@ -8509,11 +8511,11 @@ var g = &grammar{
 		},
 		{
 			name: "wss",
-			pos:  position{line: 894, col: 1, offset: 33418},
+			pos:  position{line: 893, col: 1, offset: 33451},
 			expr: &oneOrMoreExpr{
-				pos: position{line: 894, col: 8, offset: 33425},
+				pos: position{line: 893, col: 8, offset: 33458},
 				expr: &charClassMatcher{
-					pos:        position{line: 894, col: 8, offset: 33425},
+					pos:        position{line: 893, col: 8, offset: 33458},
 					val:        "[ \\t\\n\\r]",
 					chars:      []rune{' ', '\t', '\n', '\r'},
 					ignoreCase: false,
@@ -8523,11 +8525,11 @@ var g = &grammar{
 		},
 		{
 			name: "EOF",
-			pos:  position{line: 896, col: 1, offset: 33437},
+			pos:  position{line: 895, col: 1, offset: 33470},
 			expr: &notExpr{
-				pos: position{line: 896, col: 8, offset: 33444},
+				pos: position{line: 895, col: 8, offset: 33477},
 				expr: &anyMatcher{
-					line: 896, col: 9, offset: 33445,
+					line: 895, col: 9, offset: 33478,
 				},
 			},
 		},
@@ -10310,74 +10312,94 @@ func (p *parser) callonSingleQuotedStringCharacter2() (any, error) {
 	return p.cur.onSingleQuotedStringCharacter2()
 }
 
-func (c *current) onSingleQuotedStringCharacter9() (any, error) {
-	return "'", nil
+func (c *current) onSingleQuotedStringCharacter9(seq any) (any, error) {
+	return seq, nil
 }
 
 func (p *parser) callonSingleQuotedStringCharacter9() (any, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onSingleQuotedStringCharacter9()
+	return p.cur.onSingleQuotedStringCharacter9(stack["seq"])
 }
 
-func (c *current) onSingleQuotedStringCharacter11(seq any) (any, error) {
-	return seq, nil
+func (c *current) onEscapeCharacter2() (any, error) {
+	return "'", nil
 }
 
-func (p *parser) callonSingleQuotedStringCharacter11() (any, error) {
+func (p *parser) callonEscapeCharacter2() (any, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onSingleQuotedStringCharacter11(stack["seq"])
+	return p.cur.onEscapeCharacter2()
 }
 
-func (c *current) onEscapeCharacter5() (any, error) {
+func (c *current) onEscapeCharacter4() (any, error) {
+	return "\"", nil
+}
+
+func (p *parser) callonEscapeCharacter4() (any, error) {
+	stack := p.vstack[len(p.vstack)-1]
+	_ = stack
+	return p.cur.onEscapeCharacter4()
+}
+
+func (c *current) onEscapeCharacter6() (any, error) {
+	return "\\", nil
+}
+
+func (p *parser) callonEscapeCharacter6() (any, error) {
+	stack := p.vstack[len(p.vstack)-1]
+	_ = stack
+	return p.cur.onEscapeCharacter6()
+}
+
+func (c *current) onEscapeCharacter8() (any, error) {
 	return "\b", nil
 }
 
-func (p *parser) callonEscapeCharacter5() (any, error) {
+func (p *parser) callonEscapeCharacter8() (any, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onEscapeCharacter5()
+	return p.cur.onEscapeCharacter8()
 }
 
-func (c *current) onEscapeCharacter7() (any, error) {
+func (c *current) onEscapeCharacter10() (any, error) {
 	return "\f", nil
 }
 
-func (p *parser) callonEscapeCharacter7() (any, error) {
+func (p *parser) callonEscapeCharacter10() (any, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onEscapeCharacter7()
+	return p.cur.onEscapeCharacter10()
 }
 
-func (c *current) onEscapeCharacter9() (any, error) {
+func (c *current) onEscapeCharacter12() (any, error) {
 	return "\n", nil
 }
 
-func (p *parser) callonEscapeCharacter9() (any, error) {
+func (p *parser) callonEscapeCharacter12() (any, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onEscapeCharacter9()
+	return p.cur.onEscapeCharacter12()
 }
 
-func (c *current) onEscapeCharacter11() (any, error) {
+func (c *current) onEscapeCharacter14() (any, error) {
 	return "\r", nil
 }
 
-func (p *parser) callonEscapeCharacter11() (any, error) {
+func (p *parser) callonEscapeCharacter14() (any, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onEscapeCharacter11()
+	return p.cur.onEscapeCharacter14()
 }
 
-func (c *current) onEscapeCharacter13() (any, error) {
+func (c *current) onEscapeCharacter16() (any, error) {
 	return "\t", nil
 }
 
-func (p *parser) callonEscapeCharacter13() (any, error) {
+func (p *parser) callonEscapeCharacter16() (any, error) {
 	stack := p.vstack[len(p.vstack)-1]
 	_ = stack
-	return p.cur.onEscapeCharacter13()
+	return p.cur.onEscapeCharacter16()
 }
 
 func (c *current) onnon_escape_character1(char any) (any, error) {

@@ -872,14 +872,13 @@ StringCharacter <- !('"' / "\\") . { return string(c.text), nil }
   / "\\" seq:EscapeSequenceCharacter { return seq, nil }
 
 SingleQuotedStringCharacter <- !("'" / "\\") . { return string(c.text), nil }
-  / "''" { return "'", nil }
   / "\\" seq:EscapeSequenceCharacter { return seq, nil }
 
 EscapeSequenceCharacter <- char:EscapeCharacter
 
-EscapeCharacter <- "'"
-  / '"'
-  / "\\"
+EscapeCharacter <- "'" { return "'", nil }
+  / '"' { return "\"", nil }
+  / "\\" { return "\\", nil }
   / "b" { return "\b", nil }
   / "f" { return "\f", nil }
   / "n" { return "\n", nil }

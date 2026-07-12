@@ -152,7 +152,7 @@ func Test_Parse_Were(t *testing.T) {
 	t.Run("Should correctly parse single-quoted string literals", func(t *testing.T) {
 		testQueryParse(
 			t,
-			`SELECT c.id FROM c WHERE c.id = '12345' AND c.string = 'it''s'`,
+			`SELECT c.id FROM c WHERE c.id = '12345' AND c.string = 'it\'s'`,
 			parsers.SelectStmt{
 				SelectItems: []parsers.SelectItem{{Path: []string{"c", "id"}}},
 				Table:       parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
