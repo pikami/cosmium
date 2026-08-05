@@ -387,7 +387,11 @@ AsClause <- (ws As)? ws !ExcludedKeywords alias:Identifier {
     return alias, nil
 }
 
-ExcludedKeywords <- Select / Top / As / From / In / Join / Exists / Where / And / Or / Not / GroupBy / OrderBy / Offset
+ExcludedKeywords <- (
+    Select / Top / As / From / In / Join / Exists / Where / And / Or / Not / Offset /
+    ("GROUP"i wss "BY"i) /
+    ("ORDER"i wss "BY"i)
+) ![a-zA-Z0-9_]
 
 DotFieldAccess <- "." id:Identifier {
     return id, nil

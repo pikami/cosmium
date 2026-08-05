@@ -99,6 +99,17 @@ func Test_Documents(t *testing.T) {
 			)
 		})
 
+		t.Run("Should query document with 'orderByItems' alias", func(t *testing.T) {
+			testCosmosQuery(t, collectionClient,
+				`SELECT c.id, c["pk"] AS orderByItems FROM c ORDER BY c.id`,
+				nil,
+				[]interface{}{
+					map[string]interface{}{"id": "12345", "orderByItems": "123"},
+					map[string]interface{}{"id": "67890", "orderByItems": "456"},
+				},
+			)
+		})
+
 		t.Run("Should query VALUE array", func(t *testing.T) {
 			testCosmosQuery(t, collectionClient,
 				"SELECT VALUE [c.id, c[\"pk\"]] FROM c ORDER BY c.id",

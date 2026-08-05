@@ -159,6 +159,26 @@ func Test_Parse_Select(t *testing.T) {
 		)
 	})
 
+	t.Run("Should parse SELECT with orderByItems alias", func(t *testing.T) {
+		testQueryParse(
+			t,
+			`SELECT c.id, c["pk"] AS orderByItems FROM c ORDER BY c.id`,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "id"}},
+					{Alias: "orderByItems", Path: []string{"c", "pk"}},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+				OrderExpressions: []parsers.OrderExpression{
+					{
+						SelectItem: testutils.SelectItem_Path("c", "id"),
+						Direction:  parsers.OrderDirectionAsc,
+					},
+				},
+			},
+		)
+	})
+
 	t.Run("Should parse SELECT object", func(t *testing.T) {
 		testQueryParse(
 			t,
