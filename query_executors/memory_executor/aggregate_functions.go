@@ -1,7 +1,7 @@
 package memoryexecutor
 
 import (
-	"math"
+	"strings"
 
 	"github.com/pikami/cosmium/parsers"
 )
@@ -44,57 +44,72 @@ func (r rowContext) aggregate_Count(arguments []interface{}) interface{} {
 }
 
 func (r rowContext) aggregate_Max(arguments []interface{}) interface{} {
-	selectExpression := arguments[0].(parsers.SelectItem)
-	max := 0.0
-	count := 0
-
-	for _, item := range r.grouppedRows {
-		value := item.resolveSelectItem(selectExpression)
-		if numericValue, ok := value.(float64); ok {
-			if numericValue > max {
-				max = numericValue
-			}
-			count++
-		} else if numericValue, ok := value.(int); ok {
-			if float64(numericValue) > max {
-				max = float64(numericValue)
-			}
-			count++
-		}
-	}
-
-	if count > 0 {
-		return max
-	} else {
-		return nil
-	}
+	return r.aggregateMinMax(arguments, true)
 }
 
 func (r rowContext) aggregate_Min(arguments []interface{}) interface{} {
+	return r.aggregateMinMax(arguments, false)
+}
+
+func (r rowContext) aggregateMinMax(arguments []interface{}, isMax bool) interface{} {
 	selectExpression := arguments[0].(parsers.SelectItem)
-	min := math.MaxFloat64
-	count := 0
+	var extremeNumber float64
+	hasNumber := false
+	var extremeString string
+	hasString := false
 
 	for _, item := range r.grouppedRows {
 		value := item.resolveSelectItem(selectExpression)
-		if numericValue, ok := value.(float64); ok {
-			if numericValue < min {
-				min = numericValue
+
+		if numericValue, ok := aggregateNumber(value); ok {
+			if !hasNumber || numberIsExtreme(numericValue, extremeNumber, isMax) {
+				extremeNumber = numericValue
+				hasNumber = true
 			}
-			count++
-		} else if numericValue, ok := value.(int); ok {
-			if float64(numericValue) < min {
-				min = float64(numericValue)
+			continue
+		}
+
+		if strValue, ok := value.(string); ok {
+			if !hasString || stringIsExtreme(strValue, extremeString, isMax) {
+				extremeString = strValue
+				hasString = true
 			}
-			count++
 		}
 	}
 
-	if count > 0 {
-		return min
-	} else {
-		return nil
+	if hasNumber {
+		return extremeNumber
 	}
+	if hasString {
+		return extremeString
+	}
+	return nil
+}
+
+func aggregateNumber(value interface{}) (float64, bool) {
+	switch numericValue := value.(type) {
+	case float64:
+		return numericValue, true
+	case int:
+		return float64(numericValue), true
+	default:
+		return 0, false
+	}
+}
+
+func numberIsExtreme(candidate, current float64, isMax bool) bool {
+	if isMax {
+		return candidate > current
+	}
+	return candidate < current
+}
+
+func stringIsExtreme(candidate, current string, isMax bool) bool {
+	comparison := strings.Compare(candidate, current)
+	if isMax {
+		return comparison > 0
+	}
+	return comparison < 0
 }
 
 func (r rowContext) aggregate_Sum(arguments []interface{}) interface{} {
