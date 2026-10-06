@@ -176,6 +176,94 @@ func Test_Execute_AggregateFunctions(t *testing.T) {
 		)
 	})
 
+	mixedTypeData := []memoryexecutor.RowType{
+		map[string]interface{}{"key": "numbers", "value": 10},
+		map[string]interface{}{"key": "numbers", "value": "zebra"},
+		map[string]interface{}{"key": "numbers", "value": 2},
+		map[string]interface{}{"key": "strings", "value": "mango"},
+		map[string]interface{}{"key": "strings", "value": "apple"},
+		map[string]interface{}{"key": "strings", "value": true},
+		map[string]interface{}{"key": "empty", "value": "b"},
+		map[string]interface{}{"key": "empty", "value": ""},
+		map[string]interface{}{"key": "single", "value": "zebra"},
+		map[string]interface{}{"key": "single", "value": 5},
+		map[string]interface{}{"key": "single", "value": "apple"},
+		map[string]interface{}{"key": "other", "value": true},
+		map[string]interface{}{"key": "other", "flag": false},
+	}
+
+	t.Run("Should execute function MAX() on strings and mixed types", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "key"}},
+					{
+						Alias: "max",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallAggregateMax,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "value"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				GroupBy: []parsers.SelectItem{
+					{Path: []string{"c", "key"}},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+			mixedTypeData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"key": "numbers", "max": 10.0},
+				map[string]interface{}{"key": "strings", "max": "mango"},
+				map[string]interface{}{"key": "empty", "max": "b"},
+				map[string]interface{}{"key": "single", "max": 5.0},
+				map[string]interface{}{"key": "other", "max": nil},
+			},
+		)
+	})
+
+	t.Run("Should execute function MIN() on strings and mixed types", func(t *testing.T) {
+		testQueryExecute(
+			t,
+			parsers.SelectStmt{
+				SelectItems: []parsers.SelectItem{
+					{Path: []string{"c", "key"}},
+					{
+						Alias: "min",
+						Type:  parsers.SelectItemTypeFunctionCall,
+						Value: parsers.FunctionCall{
+							Type: parsers.FunctionCallAggregateMin,
+							Arguments: []interface{}{
+								parsers.SelectItem{
+									Path: []string{"c", "value"},
+									Type: parsers.SelectItemTypeField,
+								},
+							},
+						},
+					},
+				},
+				GroupBy: []parsers.SelectItem{
+					{Path: []string{"c", "key"}},
+				},
+				Table: parsers.Table{SelectItem: testutils.SelectItem_Path("c")},
+			},
+			mixedTypeData,
+			[]memoryexecutor.RowType{
+				map[string]interface{}{"key": "numbers", "min": 2.0},
+				map[string]interface{}{"key": "strings", "min": "apple"},
+				map[string]interface{}{"key": "empty", "min": ""},
+				map[string]interface{}{"key": "single", "min": 5.0},
+				map[string]interface{}{"key": "other", "min": nil},
+			},
+		)
+	})
+
 	t.Run("Should execute function SUM()", func(t *testing.T) {
 		testQueryExecute(
 			t,
