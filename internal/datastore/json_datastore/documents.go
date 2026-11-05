@@ -45,6 +45,14 @@ func (r *JsonDataStore) GetDocument(databaseId string, collectionId string, docu
 }
 
 func (r *JsonDataStore) DeleteDocument(databaseId string, collectionId string, documentId string) datastore.DataStoreStatus {
+	return r.deleteDocument(databaseId, collectionId, documentId, "")
+}
+
+func (r *JsonDataStore) DeleteDocumentIfMatch(databaseId string, collectionId string, documentId string, ifMatch string) datastore.DataStoreStatus {
+	return r.deleteDocument(databaseId, collectionId, documentId, ifMatch)
+}
+
+func (r *JsonDataStore) deleteDocument(databaseId string, collectionId string, documentId string, ifMatch string) datastore.DataStoreStatus {
 	r.storeState.Lock()
 	defer r.storeState.Unlock()
 
@@ -56,8 +64,16 @@ func (r *JsonDataStore) DeleteDocument(databaseId string, collectionId string, d
 		return datastore.StatusNotFound
 	}
 
-	if _, ok := r.storeState.Documents[databaseId][collectionId][documentId]; !ok {
+	document, ok := r.storeState.Documents[databaseId][collectionId][documentId]
+	if !ok {
 		return datastore.StatusNotFound
+	}
+
+	if ifMatch != "" {
+		etag, _ := document["_etag"].(string)
+		if etag != ifMatch {
+			return datastore.PreconditionFailed
+		}
 	}
 
 	delete(r.storeState.Documents[databaseId][collectionId], documentId)

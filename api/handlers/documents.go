@@ -67,7 +67,7 @@ func (h *Handlers) DeleteDocument(c *gin.Context) {
 	collectionId := c.Param("collId")
 	documentId := c.Param("docId")
 
-	status := h.dataStore.DeleteDocument(databaseId, collectionId, documentId)
+	status := h.dataStore.DeleteDocumentIfMatch(databaseId, collectionId, documentId, c.GetHeader(headers.IfMatch))
 	if status == datastore.StatusOk {
 		c.Status(http.StatusNoContent)
 		return
@@ -75,6 +75,12 @@ func (h *Handlers) DeleteDocument(c *gin.Context) {
 
 	if status == datastore.StatusNotFound {
 		c.IndentedJSON(http.StatusNotFound, constants.NotFoundResponse)
+		return
+	}
+
+	if status == datastore.PreconditionFailed {
+		c.Header(headers.ErrorCode, "PreconditionFailed")
+		c.JSON(http.StatusPreconditionFailed, constants.PreconditionFailedResponse)
 		return
 	}
 
@@ -424,6 +430,8 @@ func dataStoreStatusToResponseCode(status datastore.DataStoreStatus) int {
 		return http.StatusConflict
 	case datastore.BadRequest:
 		return http.StatusBadRequest
+	case datastore.PreconditionFailed:
+		return http.StatusPreconditionFailed
 	default:
 		return http.StatusInternalServerError
 	}

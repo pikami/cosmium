@@ -670,3 +670,128 @@ func Test_Documents(t *testing.T) {
 		})
 	})
 }
+
+func Test_Documents_Delete_IfMatch(t *testing.T) {
+	presets := []testPreset{PresetJsonStore, PresetBadgerStore}
+
+	runTestsWithPresets(t, "Test_Documents_Delete_IfMatch", presets, func(t *testing.T, ts *TestServer, client *azcosmos.Client) {
+		collectionClient := documents_InitializeDb(t, ts)
+
+		t.Run("Should fail delete with stale etag", func(t *testing.T) {
+			ctx := context.TODO()
+
+			readResponse, err := collectionClient.ReadItem(ctx, azcosmos.PartitionKey{}, "12345", nil)
+			assert.Nil(t, err)
+			staleETag := readResponse.ETag
+			assert.NotEmpty(t, staleETag)
+
+			item := map[string]interface{}{"id": "12345", "pk": "123", "isCool": true}
+			bytes, err := json.Marshal(item)
+			assert.Nil(t, err)
+
+			_, err = collectionClient.ReplaceItem(ctx, azcosmos.PartitionKey{}, "12345", bytes, nil)
+			assert.Nil(t, err)
+
+			updated, err := collectionClient.ReadItem(ctx, azcosmos.PartitionKey{}, "12345", nil)
+			assert.Nil(t, err)
+			assert.NotEmpty(t, updated.ETag)
+			assert.NotEqual(t, string(staleETag), string(updated.ETag))
+
+			_, err = collectionClient.DeleteItem(
+				ctx,
+				azcosmos.PartitionKey{},
+				"12345",
+				&azcosmos.ItemOptions{IfMatchEtag: &staleETag},
+			)
+			assert.NotNil(t, err)
+
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) {
+				assert.Equal(t, http.StatusPreconditionFailed, respErr.StatusCode)
+				assert.Equal(t, "PreconditionFailed", respErr.RawResponse.Header.Get("x-ms-error-code"))
+
+				responseBody, readErr := io.ReadAll(respErr.RawResponse.Body)
+				assert.Nil(t, readErr)
+				assert.JSONEq(t,
+					`{"code":"PreconditionFailed","message":"Operation cannot be performed because one of the specified precondition is not met."}`,
+					string(responseBody),
+				)
+			} else {
+				panic(err)
+			}
+
+			document, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "12345")
+			assert.Equal(t, datastore.StatusOk, status)
+			assert.Equal(t, true, document["isCool"])
+			assert.Equal(t, string(updated.ETag), document["_etag"])
+		})
+
+		t.Run("Should delete with matching etag", func(t *testing.T) {
+			ctx := context.TODO()
+
+			readResponse, err := collectionClient.ReadItem(ctx, azcosmos.PartitionKey{}, "67890", nil)
+			assert.Nil(t, err)
+			etag := readResponse.ETag
+			assert.NotEmpty(t, etag)
+
+			response, err := collectionClient.DeleteItem(
+				ctx,
+				azcosmos.PartitionKey{},
+				"67890",
+				&azcosmos.ItemOptions{IfMatchEtag: &etag},
+			)
+			assert.Nil(t, err)
+			assert.Equal(t, http.StatusNoContent, response.RawResponse.StatusCode)
+
+			_, status := ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "67890")
+			assert.Equal(t, datastore.StatusNotFound, status)
+		})
+
+		t.Run("Should delete unconditionally", func(t *testing.T) {
+			ctx := context.TODO()
+			_, status := ts.DataStore.CreateDocument(testDatabaseName, testCollectionName, map[string]interface{}{
+				"id": "unconditional-delete", "pk": "pk", "isCool": false,
+			})
+			assert.Equal(t, datastore.StatusOk, status)
+
+			response, err := collectionClient.DeleteItem(ctx, azcosmos.PartitionKey{}, "unconditional-delete", nil)
+			assert.Nil(t, err)
+			assert.Equal(t, http.StatusNoContent, response.RawResponse.StatusCode)
+
+			_, status = ts.DataStore.GetDocument(testDatabaseName, testCollectionName, "unconditional-delete")
+			assert.Equal(t, datastore.StatusNotFound, status)
+		})
+
+		t.Run("Should return not found when deleting a missing document", func(t *testing.T) {
+			_, err := collectionClient.DeleteItem(context.TODO(), azcosmos.PartitionKey{}, "missing-document", nil)
+			assertDocumentDeleteNotFound(t, err)
+		})
+
+		t.Run("Should return not found when deleting a missing document with if-match", func(t *testing.T) {
+			etag := azcore.ETag("\"stale-etag\"")
+			_, err := collectionClient.DeleteItem(
+				context.TODO(),
+				azcosmos.PartitionKey{},
+				"missing-document-if-match",
+				&azcosmos.ItemOptions{IfMatchEtag: &etag},
+			)
+			assertDocumentDeleteNotFound(t, err)
+		})
+	})
+}
+
+func assertDocumentDeleteNotFound(t *testing.T, err error) {
+	t.Helper()
+	assert.NotNil(t, err)
+
+	var respErr *azcore.ResponseError
+	if errors.As(err, &respErr) {
+		assert.Equal(t, http.StatusNotFound, respErr.StatusCode)
+		responseBody, readErr := io.ReadAll(respErr.RawResponse.Body)
+		assert.Nil(t, readErr)
+		assert.JSONEq(t, `{"message":"NotFound"}`, string(responseBody))
+		return
+	}
+
+	panic(err)
+}

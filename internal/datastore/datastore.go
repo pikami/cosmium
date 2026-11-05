@@ -15,6 +15,11 @@ type DataStore interface {
 	GetDocumentIterator(databaseId string, collectionId string) (DocumentIterator, DataStoreStatus)
 	GetDocument(databaseId string, collectionId string, documentId string) (Document, DataStoreStatus)
 	DeleteDocument(databaseId string, collectionId string, documentId string) DataStoreStatus
+	// DeleteDocumentIfMatch removes a document when ifMatch is empty or equals its _etag.
+	// The comparison and delete happen together, so a concurrent update cannot land between them.
+	// A mismatched etag returns PreconditionFailed and leaves the document in place.
+	// A missing document returns StatusNotFound.
+	DeleteDocumentIfMatch(databaseId string, collectionId string, documentId string, ifMatch string) DataStoreStatus
 	CreateDocument(databaseId string, collectionId string, document map[string]interface{}) (Document, DataStoreStatus)
 
 	GetAllTriggers(databaseId string, collectionId string) ([]Trigger, DataStoreStatus)
