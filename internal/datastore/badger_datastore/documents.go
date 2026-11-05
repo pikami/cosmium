@@ -64,20 +64,36 @@ func (r *BadgerDataStore) GetDocument(databaseId string, collectionId string, do
 }
 
 func (r *BadgerDataStore) DeleteDocument(databaseId string, collectionId string, documentId string) datastore.DataStoreStatus {
+	return r.deleteDocument(databaseId, collectionId, documentId, "")
+}
+
+func (r *BadgerDataStore) DeleteDocumentIfMatch(databaseId string, collectionId string, documentId string, ifMatch string) datastore.DataStoreStatus {
+	return r.deleteDocument(databaseId, collectionId, documentId, ifMatch)
+}
+
+func (r *BadgerDataStore) deleteDocument(databaseId string, collectionId string, documentId string, ifMatch string) datastore.DataStoreStatus {
 	documentKey := generateDocumentKey(databaseId, collectionId, documentId)
 
 	txn := r.db.NewTransaction(true)
 	defer txn.Discard()
 
-	exists, err := keyExists(txn, documentKey)
-	if err != nil {
-		return datastore.Unknown
-	}
-	if !exists {
+	var document datastore.Document
+	status := getKey(txn, documentKey, &document)
+	if status == datastore.StatusNotFound {
 		return datastore.StatusNotFound
 	}
+	if status != datastore.StatusOk {
+		return status
+	}
 
-	err = txn.Delete([]byte(documentKey))
+	if ifMatch != "" {
+		etag, _ := document["_etag"].(string)
+		if etag != ifMatch {
+			return datastore.PreconditionFailed
+		}
+	}
+
+	err := txn.Delete([]byte(documentKey))
 	if err != nil {
 		logger.ErrorLn("Error while deleting document:", err)
 		return datastore.Unknown
