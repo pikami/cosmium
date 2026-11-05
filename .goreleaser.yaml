@@ -1,3 +1,5 @@
+version: 2
+
 builds:
   - binary: cosmium
     main: ./cmd/server
@@ -30,13 +32,13 @@ brews:
 
 archives:
   - id: bundle
-    format: tar.gz
+    formats: [tar.gz]
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
   - id: shared-libraries
     meta: true
-    format: "tar.gz"
+    formats: [tar.gz]
     wrap_in_directory: true
     name_template: "{{ .ProjectName }}_{{ .Version }}_shared-libraries"
     files:
